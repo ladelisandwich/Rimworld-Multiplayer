@@ -9,16 +9,20 @@ namespace Multiplayer.Client.Desyncs;
 
 // Desync traces on .NET. The Mono walker (DeferredStackTracingImpl) reads return addresses off the stack for next
 // to nothing; here a traced call records a System.Diagnostics.StackTrace, about 20 µs each on .NET 10 at the game's
-// stack depth, so only the first MaxTracesPerTick calls of a tick are traced and only with the "slow" tracing
-// setting on. Frames are hashed by declaring type and method name (GenText.StableStringHash), never by address, so
-// the hashes compare between clients. Frames of the runtime's own libraries are left out, their IL differs per OS.
+// stack depth, so only the first MaxTracesPerTick calls of each map (and the world) per tick are traced, and only
+// with the "slow" tracing setting on. Frames are hashed by declaring type and method name (GenText.StableStringHash),
+// never by address, so the hashes compare between clients. Left out because they aren't the same on every client:
+// frames of the runtime's own libraries (their IL differs per OS) and runtime-generated stubs (InvokeStub_*, which
+// CoreCLR emits for a reflection target only after a few invocations of it; seen as a false "Trace hashes don't
+// match" on Oct 19).
 public static class ManagedStackTracing
 {
     public const int MaxTracesPerTick = 200;
     private const int HashInfluence = DeferredStackTracingImpl.HashInfluence;
 
-    public static int tracesThisTick;
+    public static int tracesThisTick; // for the current map or world context
     private static int lastTimer = -1;
+    private static readonly Dictionary<int, int> tracesThisTickByContext = new();
 
     private sealed class FrameInfo
     {
@@ -39,12 +43,15 @@ public static class ManagedStackTracing
         if (timer != lastTimer)
         {
             lastTimer = timer;
-            tracesThisTick = 0;
+            tracesThisTickByContext.Clear();
         }
 
+        // One budget per map and one for the world, so a busy first map can't starve the others of traces
+        int context = Multiplayer.MapContext?.uniqueID ?? -1;
+        tracesThisTickByContext.TryGetValue(context, out tracesThisTick);
         if (!ignoreCap && tracesThisTick >= MaxTracesPerTick)
             return false;
-        tracesThisTick++;
+        tracesThisTickByContext[context] = ++tracesThisTick;
 
         var frames = new StackTrace(1, false).GetFrames() ?? Array.Empty<StackFrame>();
         var item = new StackTraceLogItemManaged();
@@ -86,7 +93,9 @@ public static class ManagedStackTracing
                     || ns.StartsWith("HarmonyLib")
                     || ns.StartsWith("MonoMod")
                     || ns == "System"
-                    || ns.StartsWith("System.");
+                    || ns.StartsWith("System.")
+                    // Other dynamic methods are the runtime's and the engine's stubs (InvokeStub_*, InvokeMessageMethod_*)
+                    || type == null && !harmonySuffix.IsMatch(method.Name);
 
         frameInfos[method] = info = new FrameInfo { name = name, hash = GenText.StableStringHash(name), skip = skip };
         return info;

@@ -217,7 +217,9 @@ namespace Multiplayer.Client
         [DebugAction(MultiplayerLocalCategory, name = "Trigger desync", allowedGameStates = AllowedGameStates.Playing)]
         public static void TriggerDesync()
         {
-            Multiplayer.game.asyncWorldTimeComp.randState++;
+            // The random state checks compare the iteration count (the high half); a bump of the seed alone (the
+            // low half) only showed up through the trace hashes, so with tracing off this action did nothing
+            Multiplayer.game.asyncWorldTimeComp.randState += 1UL << 32;
 
             if (Native.IsMono)
             {

@@ -209,8 +209,13 @@ or IL.
 - [ ] 8 Determinism scan and fixes (tools, assessment, hit counters, FastTileFinder.Closest done Oct 19). 65-min two-instance session Oct 19 13:52-14:57: 0 game errors from the mod, but the client desynced 4 times on its own map ("Wrong random state on map 1": 2 min after creating the faction, then at 14:44 and within a minute of each of the two rejoins). Reports hold no traces (desync tracing is Mono-only until task 10), so the cause is open; "Patch hit counts" wasn't run (dev mode off). Rerun with dev mode on and the hit counts dumped before quitting once task 10 brings traces back.
 - [ ] 9 Arbiter, logs, Steam, UI
 - [ ] 10 Rituals verified, desync tools (Oct 19: .NET desync traces 
-(ManagedStackTracing) and the JIT list (EventListener) built; ritual test and 
-the forced-desync report check pending)
+(ManagedStackTracing) and the JIT list (EventListener) built and checked in 
+game at 16:30: both sides' reports carry readable traces and ~1500 jitted 
+methods; a false "Trace hashes don't match" from InvokeStub_* frames fixed 
+afterwards. Ritual test still pending (no "MP ritual sync hook hit" lines in 
+any log yet). The recurring genuine desync, client's own map a few minutes 
+after creating its faction, happened again at 16:27 (Desync-05) with tracing 
+off; the next tracing run should catch it.)
 - [ ] 11 Release zip
 - [ ] Extra (Oct 19, user request): multifaction fixes. Custom and fluid 
 ideoligions for new factions (Page_ConfigureIdeo_Multifaction), quest raids 
@@ -259,7 +264,18 @@ maps native addresses from the Mono stack walker; Harmony's public API can't).
   player tracing alone can't cause a false "Trace hashes don't match", but 
   two tracing players must run the same build. The host's "Log desync 
   traces" server setting (on by default) must be on as well. "Trigger 
-  desync" records one trace regardless of the setting. Untested in game.
+  desync" records one trace regardless of the setting. Checked in game Oct 
+  19 (Desync-06..08 under ~/.rw-mp-test/client/MpDesyncs): traces and the 
+  JIT list present on both sides, hashes equal for equal traces. Two 
+  lessons: (1) dynamic methods without a declaring type other than Harmony's 
+  _PatchN replacements must be dropped (InvokeStub_<Type>.<Method> appears 
+  on one client and not the other, since CoreCLR emits it for a reflection 
+  target only after some invocations; InvokeMessageMethod_* is the engine's); 
+  (2) the trace budget is per map and world, not per tick, or the first map 
+  uses the 200 and the others never get traced. The traces also show that 
+  the random state checks compare only the iteration count (state >> 32): 
+  the old "Trigger desync" bumped the seed, which only the trace hashes 
+  noticed; it now bumps the iteration count.
   - JittedMethods: the Mono profiler callback is replaced on .NET by an 
   EventListener on the runtime's Microsoft-Windows-DotNETRuntime 
   MethodLoadVerbose events (JIT keyword 0x10), started only with slow tracing 
