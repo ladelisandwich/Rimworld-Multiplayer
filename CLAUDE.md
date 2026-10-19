@@ -34,6 +34,14 @@ method it patches, at the right MethodDesc offset (checked in 0Harmony
 3.0.0-rc.3). It can't stop inlining into callers that were already JIT'ed. 
 Never write into MethodHandle/TypeHandle memory: Mono's layouts corrupt 
 CoreCLR's MethodDesc (found in task 6: MpUtil.MarkNoInlining).
+- On .NET 10, Enum.GetHashCode and ValueTuple.GetHashCode are stable across 
+processes (checked); System.HashCode is not. Assembly-CSharp 1.7 makes no 
+direct string.GetHashCode call. Its simulation-relevant HashCode.Combine 
+uses are int overloads (Map.NextGenSeed, Gravship.ConstantRandSeed, trap 
+avoidance, LayoutWorker RandBlocks), covered by Combine2..8 when they fire.
+- 1.6 -> 1.7: all 315 lambda lookups resolve to the same members with the 
+same IL; the nine transpiled methods with changed IL are benign (see 
+docs/rwdiff-1.6-1.7.md, Review).
 - Tiered compilation drops Harmony patches (found in task 6, 1.7.4982). A 
 patch runs until the runtime re-JITs the hot method at tier 1, then the 
 original body runs again with no error logged. Seen on 
@@ -141,6 +149,16 @@ Prepatcher; saves the game's Assembly-CSharp.dll to ~/rw-builds/<game version>/)
 - Release zip: ./scripts/build_release.sh -> Multiplayer-1.7-v<version>.zip in 
 the repo root, holding one Multiplayer-1.7 folder. Both scripts share 
 scripts/common.sh, which refuses to ship Harmony, game or .NET dlls.
+- Tools (not part of the mod): dotnet run -c Release --project 
+Source/Tools/DeterminismScan -- <Assembly-CSharp.dll> docs/determinism-scan.md 
+(keeps the hand-written "## Multiplayer assessment" section); 
+python3 scripts/mp_targets.py . > targets.txt && dotnet run -c Release 
+--project Source/Tools/RwDiff -- ~/rw-builds/<old>/Assembly-CSharp.dll 
+<new Assembly-CSharp.dll> targets.txt docs/rwdiff-<old>-<new>.md (keeps 
+"## Review"). Re-run both after a game update.
+- In game, dev mode: Debug actions > Multiplayer > "Patch hit counts" logs 
+how often each determinism patch ran (PatchHitCounter) and the ritual sync 
+hook hits; "Patch hit counts: reset" zeroes them.
 - Mod layout: About, Defs, Languages, Textures and LoadFolders.xml (v1.7 -> "/" 
 and "1.7") at the root; the build writes 1.7/Assemblies (MultiplayerLoader and 
 third-party dlls, loaded by the game) and 1.7/AssembliesCustom (Multiplayer and 
@@ -183,7 +201,7 @@ or IL.
 - [x] 5 Packaged for 1.7 and installed; game loads it (main menu and hosting reached Oct 19)
 - [x] 6 First-launch log clean (hosted session on 1.7.4982, Oct 19: 0 errors, no Multiplayer warnings)
 - [x] 7 Host and join on one PC (Oct 19: client joined and created a faction, ~15 min of play, 0 errors, no desync; the long session is task 8's test)
-- [ ] 8 Determinism scan and fixes
+- [ ] 8 Determinism scan and fixes (tools, assessment, hit counters, FastTileFinder.Closest done Oct 19; 2-3 hour session with hit counts pending)
 - [ ] 9 Arbiter, logs, Steam, UI
 - [ ] 10 Rituals verified, desync tools
 - [ ] 11 Release zip

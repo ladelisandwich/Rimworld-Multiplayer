@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Compares two RimWorld Assembly-CSharp.dll builds for the things Multiplayer depends on by name or IL:
+       lambda lookups (compiler-generated names) and transpiled methods. Not part of the mod.
+       Usage: dotnet run -c Release [args: old.dll new.dll targets.txt output.md]; targets.txt comes from
+       scripts/mp_targets.py -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <RootNamespace>Multiplayer.Tools.RwDiff</RootNamespace>
+  </PropertyGroup>
+
+</Project>
