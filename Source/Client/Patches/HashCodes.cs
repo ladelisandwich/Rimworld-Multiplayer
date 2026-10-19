@@ -35,6 +35,7 @@ namespace Multiplayer.Client.Patches
             if (Multiplayer.Client == null)
                 return map.GetHashCode();
 
+            PatchHitCounter.Hit("WindManager.BaseWindSpeedAt map hash");
             return map.Tile;
         }
     }
@@ -47,6 +48,7 @@ namespace Multiplayer.Client.Patches
 
         static void Postfix(GlowGrid __instance)
         {
+            PatchHitCounter.Hit("GlowGrid litGlowers comparer");
             litGlowers(__instance) = new HashSet<CompGlower>(new CompGlowerEquality());
         }
 
@@ -79,7 +81,11 @@ namespace Multiplayer.Client.Patches
             }
         }
 
-        static int CombineHashes(int seed, Map map) => Gen.HashCombineInt(seed, map?.uniqueID ?? -1);
+        static int CombineHashes(int seed, Map map)
+        {
+            PatchHitCounter.Hit("TargetInfo.GetHashCode map combine");
+            return Gen.HashCombineInt(seed, map?.uniqueID ?? -1);
+        }
     }
 
     // todo does this cause issues?
@@ -90,6 +96,7 @@ namespace Multiplayer.Client.Patches
 
         static void Postfix(Tradeable __instance, ref int __result)
         {
+            PatchHitCounter.Hit("Tradeable.GetHashCode");
             __result = RuntimeHelpers.GetHashCode(__instance);
         }
     }
@@ -136,6 +143,8 @@ namespace Multiplayer.Client.Patches
             if (Multiplayer.Client == null)
                 return true;
 
+            PatchHitCounter.Hit("HashCode.Combine<int x2>");
+
             __result = Gen.HashCombineInt(value1, value2);
             return false;
         }
@@ -151,6 +160,8 @@ namespace Multiplayer.Client.Patches
         {
             if (Multiplayer.Client == null)
                 return true;
+
+            PatchHitCounter.Hit("HashCode.Combine<int x3>");
 
             __result = DeterministicHash.HashCombineInt(value1, value2, value3);
             return false;
@@ -168,6 +179,8 @@ namespace Multiplayer.Client.Patches
             if (Multiplayer.Client == null)
                 return true;
 
+            PatchHitCounter.Hit("HashCode.Combine<int x4>");
+
             __result = Gen.HashCombineInt(value1, value2, value3, value4);
             return false;
         }
@@ -184,6 +197,8 @@ namespace Multiplayer.Client.Patches
             if (Multiplayer.Client == null)
                 return true;
 
+            PatchHitCounter.Hit("HashCode.Combine<int x5>");
+
             __result = DeterministicHash.HashCombineInt(value1, value2, value3, value4, value5);
             return false;
         }
@@ -199,6 +214,8 @@ namespace Multiplayer.Client.Patches
         {
             if (Multiplayer.Client == null)
                 return true;
+
+            PatchHitCounter.Hit("HashCode.Combine<int x6>");
 
             __result = DeterministicHash.HashCombineInt(value1, value2, value3,
                                                   value4, value5, value6);
@@ -217,6 +234,8 @@ namespace Multiplayer.Client.Patches
             if (Multiplayer.Client == null)
                 return true;
 
+            PatchHitCounter.Hit("HashCode.Combine<int x7>");
+
             __result = DeterministicHash.HashCombineInt(value1, value2, value3, value4,
                                                   value5, value6, value7);
             return false;
@@ -233,6 +252,8 @@ namespace Multiplayer.Client.Patches
         {
             if (Multiplayer.Client == null)
                 return true;
+
+            PatchHitCounter.Hit("HashCode.Combine<int x8>");
 
             __result = DeterministicHash.HashCombineInt(value1, value2, value3, value4,
                                                   value5, value6, value7, value8);

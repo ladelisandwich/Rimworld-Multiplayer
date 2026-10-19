@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Scans RimWorld's Assembly-CSharp.dll for calls that can differ between processes or run in parallel.
+       Not part of the mod. Usage: dotnet run -c Release [args: Assembly-CSharp.dll output.md] -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <RootNamespace>Multiplayer.Tools.DeterminismScan</RootNamespace>
+  </PropertyGroup>
+
+</Project>

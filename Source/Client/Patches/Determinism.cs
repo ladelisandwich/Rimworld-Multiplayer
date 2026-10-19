@@ -523,8 +523,8 @@ namespace Multiplayer.Client.Patches
                     // Replace deltaTime with a constant value.
                     // We use 1/60 since 1 second at speed 1 the deltaTime
                     // should (in perfect situation) be 60 ticks.
-                    ci.opcode = OpCodes.Ldc_R4;
-                    ci.operand = 1f / GenTicks.TicksPerRealSecond;
+                    ci.opcode = OpCodes.Call;
+                    ci.operand = AccessTools.Method(typeof(MapBrightnessLerpPatch), nameof(FixedDeltaTime));
 
                     patchCount++;
                 }
@@ -535,6 +535,12 @@ namespace Multiplayer.Client.Patches
             const int expectedPatches = 1;
             if (patchCount != expectedPatches)
                 Log.Error($"Replaced an incorrect amount of Time.deltaTime calls for GameConditionManager.MapBrightnessTracker:Tick (expected: {expectedPatches}, patched: {patchCount}). Was the original method changed?");
+        }
+
+        static float FixedDeltaTime()
+        {
+            PatchHitCounter.Hit("MapBrightnessTracker fixed deltaTime");
+            return 1f / GenTicks.TicksPerRealSecond;
         }
     }
 
@@ -559,7 +565,11 @@ namespace Multiplayer.Client.Patches
             }
         }
 
-        static void Prefix() => Rand.PushState();
+        static void Prefix()
+        {
+            PatchHitCounter.Hit("UndercaveMapComponent collapse");
+            Rand.PushState();
+        }
 
         static void Postfix(UndercaveMapComponent __instance)
         {
@@ -729,25 +739,47 @@ namespace Multiplayer.Client.Patches
     // across parallel Unity Job batches. Thread scheduling differs between machines, so clients get
     // different candidate tile sets. Force single-batch execution in MP so tiles are processed in
     // tileId order, making the first 50 valid tiles consistent across all clients.
-    [HarmonyPatch(typeof(FastTileFinder), nameof(FastTileFinder.Query))]
+    // Closest schedules the same job with the same counter, so it gets the same treatment (1.7 check).
+    [HarmonyPatch]
     static class FastTileFinderQueryDeterminismPatch
     {
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static IEnumerable<MethodBase> TargetMethods()
+        {
+            yield return AccessTools.Method(typeof(FastTileFinder), nameof(FastTileFinder.Query));
+            yield return AccessTools.Method(typeof(FastTileFinder), nameof(FastTileFinder.Closest));
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase original)
         {
             var getIdealBatchCount = AccessTools.Method(typeof(UnityData), nameof(UnityData.GetIdealBatchCount));
             var getBatchCount = AccessTools.Method(typeof(FastTileFinderQueryDeterminismPatch), nameof(GetBatchCount));
+            var patchCount = 0;
 
             foreach (var instr in instructions)
             {
                 if (instr.Calls(getIdealBatchCount))
+                {
                     yield return new CodeInstruction(OpCodes.Call, getBatchCount);
+                    patchCount++;
+                }
                 else
                     yield return instr;
             }
+
+            const int expectedPatches = 1;
+            if (patchCount != expectedPatches)
+                Log.Error($"Replaced an incorrect amount of UnityData.GetIdealBatchCount calls for {original.DeclaringType}:{original.Name} (expected: {expectedPatches}, patched: {patchCount}). Was the original method changed?");
         }
 
-        static int GetBatchCount(int length) =>
-            Multiplayer.Client != null ? length : UnityData.GetIdealBatchCount(length);
+        // One batch of the whole array: the job then walks the tiles in id order on one thread
+        static int GetBatchCount(int length)
+        {
+            if (Multiplayer.Client == null)
+                return UnityData.GetIdealBatchCount(length);
+
+            PatchHitCounter.Hit("FastTileFinder single batch");
+            return length;
+        }
     }
 
 

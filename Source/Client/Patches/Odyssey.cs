@@ -29,6 +29,7 @@ namespace Multiplayer.Client.Patches
             if (Multiplayer.Client == null)
                 return body.GetHashCode();
 
+            PatchHitCounter.Hit("FishShadowComponent water body hash");
             return Gen.HashCombineInt(body.map?.uniqueID ?? 0, body.rootCell.x, body.rootCell.z, (int)body.waterBodyType);
         }
     }

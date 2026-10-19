@@ -47,6 +47,9 @@ public static class SyncRituals
         return !target.syncMethod.DoSync(__instance, __args);
     }
 
+    public static IEnumerable<(string name, int hits)> GetHitCounts() =>
+        hookTargets.Select(kv => ($"{kv.Value.name} ({kv.Key.Item2.Name})", kv.Value.hits));
+
     private static MethodInfo syncMethod = AccessTools.Method("Multiplayer.Client.Sync:Method");
 
     // Registers the SyncMethods and patches their targets with HookPrefix
