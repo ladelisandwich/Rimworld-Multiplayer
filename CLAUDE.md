@@ -47,6 +47,17 @@ Workaround: launch with DOTNET_TieredCompilation=0 (Steam launch options
 startup when tiering is on, and in game when the TickManagerUpdate patch 
 stops firing. To dig into MonoMod, set MONOMOD_LogToFile=<path> (and 
 MONOMOD_LogSpam=1) in the environment and look for "Updating detour" lines.
+- With tiered compilation off, every method is JIT'ed fully optimized on 
+its first call, so a tiny method gets inlined into any caller compiled 
+before Harmony patched it. MonoMod's NotInline flag only protects callers 
+compiled after the patch. Found in task 6: LoadedObjectDirectory.Clear (24 
+bytes of IL) inlined into CrossRefHandler.Clear, compiled during mod 
+settings loading, so LoadedObjectsClearPatch never ran and every synced 
+exposable wiped SharedCrossRefs. Fixed by doing the work in ScribeUtil 
+itself. Other small targets reachable during startup (Prefs getters in 
+SettingsPatches, DirectXmlSaver.XElementFromObject) deserve the same 
+suspicion. Audit: list patch targets, read IL body sizes with 
+System.Reflection.Metadata, look at anything under ~40 bytes.
 - Harmony 3 verifies generated IL. Returning a struct needs 
 Ldloca/Initobj/Ldloc, not just Initobj (SyncTemplates, fixed in task 6).
 - Harmony 3 rejects __instance when the target is a lambda on a <>c 
@@ -220,11 +231,7 @@ would still need tiering off. Needs its own in-game test with tiering on.
 - Test saves: a save from a modded 1.6 game loaded with -mod= loses those 
 mods and logs game errors (research, apparel, jobs) that have nothing to do 
 with Multiplayer. Test with a new colony or a vanilla save.
-- Open (task 6, 1.7.4982): synced Equip/Wear orders reference ground items 
-that aren't in SharedCrossRefs ("Could not resolve reference to object with 
-loadID Thing_Gun_... curParent=Equip"), so the job targets a cell and 
-TryMakePreToilReservations fails. Not a load-order change: ScribeLoader, 
-CrossRefHandler, Map, Scribe_TargetInfo and LoadIDsWantedBank are identical 
-to 1.6. ScribeUtil.SupplyMissingThingRefs logs each case with ThingsById 
-state and registers the thing when it exists; LoadPatch logs a directory 
-summary after each load. Read those lines in the next log to find the cause.
+- ScribeUtil.SupplyMissingThingRefs and LogSharedCrossRefsSummary (task 6) 
+stay in as diagnostics: a "references Thing_... which isn't in the shared 
+cross refs" warning or a nonzero "spawned things missing" count means the 
+shared directory lost entries again.

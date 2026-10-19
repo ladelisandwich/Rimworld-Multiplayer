@@ -91,12 +91,14 @@ namespace Multiplayer.Client
                 loader.curXmlParent = null;
                 loader.curParent = null;
                 loader.curPathRelToParent = null;
-                loader.crossRefs.ResolveAllCrossReferences();
+                ResolveAllCrossReferences(loader.crossRefs);
                 loader.initer.DoAllPostLoadInits();
             }
             catch (Exception e)
             {
                 Log.Error("Exception in FinalizeLoading(): " + e);
+                // ForceStop clears the cross refs, which must not hit the shared directory
+                RestoreDefaultCrossRefs();
                 loader.ForceStop();
                 throw;
             }
@@ -104,6 +106,53 @@ namespace Multiplayer.Client
             {
                 loading = false;
             }
+        }
+
+        // CrossRefHandler.ResolveAllCrossReferences, minus the final Clear() of the loaded object directory. The
+        // directory is the shared one here, and vanilla Clear() would empty it. LoadedObjectsClearPatch used to
+        // catch that, but LoadedObjectDirectory.Clear is tiny: with tiered compilation off, the JIT inlines it
+        // into CrossRefHandler.Clear, which is compiled while mod settings load, before any patch exists. So the
+        // patch never saw those calls on 1.7 and every synced exposable wiped the directory. This does the same
+        // work without relying on either patch.
+        private static void ResolveAllCrossReferences(CrossRefHandler crossRefs)
+        {
+            Scribe.mode = LoadSaveMode.ResolvingCrossRefs;
+
+            foreach (var exposable in crossRefs.crossReferencingExposables)
+                if (exposable is ILoadReferenceable reffable)
+                    sharedCrossRefs.RegisterLoadedTemp(reffable);
+
+            foreach (var exposable in crossRefs.crossReferencingExposables)
+            {
+                try
+                {
+                    Scribe.loader.curParent = exposable;
+                    Scribe.loader.curPathRelToParent = null;
+                    exposable.ExposeData();
+                }
+                catch (Exception e)
+                {
+                    Log.Error("Could not resolve cross refs: " + e);
+                }
+            }
+
+            Scribe.loader.curParent = null;
+            Scribe.loader.curPathRelToParent = null;
+            Scribe.mode = LoadSaveMode.Inactive;
+
+            // What CrossRefHandler.Clear(errorIfNotEmpty: true) does, apart from clearing the directory
+            crossRefs.loadIDs.ConfirmClear();
+            crossRefs.crossReferencingExposables.Clear();
+            RestoreDefaultCrossRefs();
+        }
+
+        // What LoadedObjectsClearPatch does when the Harmony patch gets to run
+        private static void RestoreDefaultCrossRefs()
+        {
+            if (Scribe.loader.crossRefs.loadedObjectDirectory is not SharedCrossRefs shared) return;
+
+            Scribe.loader.crossRefs.loadedObjectDirectory = defaultCrossRefs;
+            shared.UnregisterAllTemp();
         }
 
         public static XmlDocument LoadDocument(byte[] data)

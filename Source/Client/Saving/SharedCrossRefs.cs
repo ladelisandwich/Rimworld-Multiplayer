@@ -10,6 +10,18 @@ public class SharedCrossRefs : LoadedObjectDirectory
     // Used in CrossRefs patches
     public HashSet<string> tempKeys = new();
 
+    // Same as LoadedObjectsRegisterPatch, for code paths that don't go through the Harmony patch
+    public void RegisterLoadedTemp(ILoadReferenceable reffable)
+    {
+        if (reffable == null) return;
+
+        string key = reffable.GetUniqueLoadID();
+        if (allObjectsByLoadID.ContainsKey(key)) return;
+
+        tempKeys.Add(key);
+        allObjectsByLoadID.Add(key, reffable);
+    }
+
     public void Unregister(ILoadReferenceable reffable)
     {
         allObjectsByLoadID.Remove(reffable.GetUniqueLoadID());
