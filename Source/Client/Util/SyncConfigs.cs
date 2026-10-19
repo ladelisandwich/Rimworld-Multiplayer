@@ -57,7 +57,6 @@ public static class SyncConfigs
         "derekbickley.ltocolonygroupsfinal",
         "dra.multiplayercustomtickrates", // syncs its own settings
         "merthsoft.designatorshapes" // settings for UI and stuff meaningless for MP
-        //"zetrith.prepatcher",
     ];
 
     public const string HugsLibId = "unlimitedhugs.hugslib";

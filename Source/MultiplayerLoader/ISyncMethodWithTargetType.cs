@@ -3,7 +3,7 @@ using Multiplayer.API;
 
 namespace MultiplayerLoader;
 
-public interface ISyncMethodForPrepatcher : ISyncMethod
+public interface ISyncMethodWithTargetType : ISyncMethod
 {
     Type TargetType { get; }
 }

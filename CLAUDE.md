@@ -105,7 +105,7 @@ or IL.
 - End every task by updating Progress and Known gaps below.
 ## Progress
 - [x] 1 Branch, tools, this file
-- [ ] 2 Prepatcher removed, ritual sync on Harmony
+- [x] 2 Prepatcher removed, ritual sync on Harmony (in-game check is task 10)
 - [ ] 3 Builds for net10.0 with Harmony 3 and 1.7 DLLs
 - [ ] 4 Mono layer off
 - [ ] 5 Packaged for 1.7 and installed; game loads it
@@ -116,4 +116,9 @@ or IL.
 - [ ] 10 Rituals verified, desync tools
 - [ ] 11 Release zip
 ## Known gaps
-- none yet
+- DontSetResolution (debug builds only) is now a Harmony patch applied in the 
+mod constructor, so it can't stop resolution changes the game makes before 
+mods load. Prepatcher's version ran before game startup.
+- Ritual role sync (SyncRituals, 8 hooks) only has build-time checks. Confirm 
+in game in task 10 by looking for "MP ritual sync hook hit" lines in a dev-mode 
+log.

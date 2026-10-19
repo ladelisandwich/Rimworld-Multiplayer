@@ -107,4 +107,14 @@ namespace Multiplayer.Client
             return !TypeCache.typeByFullName.TryGetValue(name, out __result) && !TypeCache.typeByName.TryGetValue(name, out __result);
         }
     }
+
+    // Debug builds only: keep the game from changing the window resolution
+    [EarlyPatch]
+    [HarmonyPatch(typeof(ResolutionUtility), nameof(ResolutionUtility.SetResolutionRaw))]
+    static class DontSetResolution
+    {
+        static bool Prepare() => MpVersion.IsDebug;
+
+        static bool Prefix() => false;
+    }
 }
