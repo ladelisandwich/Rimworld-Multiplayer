@@ -220,3 +220,11 @@ would still need tiering off. Needs its own in-game test with tiering on.
 - Test saves: a save from a modded 1.6 game loaded with -mod= loses those 
 mods and logs game errors (research, apparel, jobs) that have nothing to do 
 with Multiplayer. Test with a new colony or a vanilla save.
+- Open (task 6, 1.7.4982): synced Equip/Wear orders reference ground items 
+that aren't in SharedCrossRefs ("Could not resolve reference to object with 
+loadID Thing_Gun_... curParent=Equip"), so the job targets a cell and 
+TryMakePreToilReservations fails. Not a load-order change: ScribeLoader, 
+CrossRefHandler, Map, Scribe_TargetInfo and LoadIDsWantedBank are identical 
+to 1.6. ScribeUtil.SupplyMissingThingRefs logs each case with ThingsById 
+state and registers the thing when it exists; LoadPatch logs a directory 
+summary after each load. Read those lines in the next log to find the cause.

@@ -39,6 +39,7 @@ namespace Multiplayer.Client
             }
 
             Log.Message("Game loaded");
+            ScribeUtil.LogSharedCrossRefsSummary();
 
             if (Multiplayer.Client != null)
             {

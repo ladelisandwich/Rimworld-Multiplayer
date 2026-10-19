@@ -163,6 +163,58 @@ namespace Multiplayer.Client
             MpLog.Debug($"Cross ref supply: {sharedCrossRefs.allObjectsByLoadID.Count} {sharedCrossRefs.allObjectsByLoadID.LastOrDefault()} {Faction.OfPlayer}");
         }
 
+        private static readonly HashSet<string> reportedMissingRefs = new();
+
+        // On 1.7 synced jobs sometimes reference spawned things that aren't in the shared cross refs (seen with
+        // Equip/Wear orders). Until the cause is known this reports each case once, with what ThingsById knows
+        // about the thing, and registers the thing when it exists so the reference still resolves.
+        private static void SupplyMissingThingRefs()
+        {
+            var directory = sharedCrossRefs.allObjectsByLoadID;
+
+            foreach (var record in Scribe.loader.crossRefs.loadIDs.idsRead.Values)
+            {
+                var id = record.targetLoadID;
+                if (id.NullOrEmpty() || id == "null" || !typeof(Thing).IsAssignableFrom(record.targetType)) continue;
+                if (directory.ContainsKey(id)) continue;
+
+                Multiplayer.ThingsById.TryGetValue(Thing.IDNumberFromThingID(id), out var thing);
+                bool found = thing != null && thing.GetUniqueLoadID() == id;
+
+                if (reportedMissingRefs.Add(id))
+                {
+                    var known = found
+                        ? $"ThingsById has it: spawned={thing.Spawned}, map={thing.Map?.uniqueID.ToString() ?? "none"}, destroyed={thing.Destroyed}, holder={thing.ParentHolder.ToStringSafe()}"
+                        : thing != null ? $"ThingsById has a different thing with that number: {thing}" : "ThingsById doesn't have it";
+                    Log.Warning($"Multiplayer: {record.parent.ToStringSafe()} ({record.pathRelToParent}) references {id}, which isn't in the shared cross refs ({directory.Count} entries). {known}");
+                    LogSharedCrossRefsSummary();
+                }
+
+                if (found)
+                    directory[id] = thing;
+            }
+        }
+
+        public static void LogSharedCrossRefsSummary()
+        {
+            int total = 0, missing = 0;
+            var examples = new List<string>();
+
+            foreach (var map in Find.Maps)
+                foreach (var thing in map.listerThings.AllThings)
+                {
+                    if (!thing.def.HasThingIDNumber) continue;
+                    total++;
+                    var id = thing.GetUniqueLoadID();
+                    if (sharedCrossRefs.allObjectsByLoadID.ContainsKey(id)) continue;
+                    missing++;
+                    if (examples.Count < 5) examples.Add(id);
+                }
+
+            Log.Message($"Multiplayer: shared cross refs hold {sharedCrossRefs.allObjectsByLoadID.Count} entries, " +
+                        $"{missing} of {total} spawned things missing" + (missing > 0 ? $" (e.g. {examples.Join(", ")})" : ""));
+        }
+
         public static byte[] WriteExposable(IExposable element, string name = RootNode, bool indent = false, Action beforeElement = null)
         {
             StartWriting(indent);
@@ -189,6 +241,7 @@ namespace Multiplayer.Client
                 removedMapRefs = null;
             }
 
+            SupplyMissingThingRefs();
             FinalizeLoading();
 
             // Default cross refs restored in LoadedObjectsClearPatch
