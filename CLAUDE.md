@@ -206,7 +206,7 @@ or IL.
 - [x] 5 Packaged for 1.7 and installed; game loads it (main menu and hosting reached Oct 19)
 - [x] 6 First-launch log clean (hosted session on 1.7.4982, Oct 19: 0 errors, no Multiplayer warnings)
 - [x] 7 Host and join on one PC (Oct 19: client joined and created a faction, ~15 min of play, 0 errors, no desync; the long session is task 8's test)
-- [ ] 8 Determinism scan and fixes (tools, assessment, hit counters, FastTileFinder.Closest done Oct 19; 2-3 hour session with hit counts pending)
+- [ ] 8 Determinism scan and fixes (tools, assessment, hit counters, FastTileFinder.Closest done Oct 19). 65-min two-instance session Oct 19 13:52-14:57: 0 game errors from the mod, but the client desynced 4 times on its own map ("Wrong random state on map 1": 2 min after creating the faction, then at 14:44 and within a minute of each of the two rejoins). Reports hold no traces (desync tracing is Mono-only until task 10), so the cause is open; "Patch hit counts" wasn't run (dev mode off). Rerun with dev mode on and the hit counts dumped before quitting once task 10 brings traces back.
 - [ ] 9 Arbiter, logs, Steam, UI
 - [ ] 10 Rituals verified, desync tools
 - [ ] 11 Release zip
@@ -291,6 +291,31 @@ or resting pawns rolling fast: the PawnDownedWiggler runs per tick. Cosmetic,
 same on 1.6.
 - Stability notes for the port: docs/desync-risks-1.7.md (checked facts, 
 watch items, untested cross-OS float math).
+- Found in the Oct 19 long-run logs (~/.rw-mp-test/*/config/.../Logs/Player.log, 
+replays in ~/.rw-mp-test/host/MpReplays):
+  - Desync reports said "Log file not found:/tmp/rimworld_log": LogGenerator 
+  used Unity's log paths. On 1.7 it now reads Application.consoleLogPath 
+  (UnityStubs: <log data root>/Logs/Player.log). Fixed.
+  - Server NRE "Exception ticking the server" in PacketWriter.BindRemaining 
+  when rejecting a duplicate connection (UsernameAlreadyOnline): the 
+  ServerDisconnectPacket had no data. BindRemaining now writes nothing for 
+  null. The duplicate connection itself came from the client's -connect= 
+  retry; the second attempt joined fine.
+  - "Inconsistent player <host> map. Last known map: -1, however received 
+  command with transition: 0 -> 1" (server, once): VTRSync only reports the 
+  viewed map on change, so the server learns the host's first map late. 
+  Upstream behaviour, harmless (commands still reach the host).
+  - "Tried to double-add designation" on both sides: the client designated 
+  the same wall twice before the first command executed. Upstream behaviour, 
+  the second designate throws and is skipped on every client alike.
+  - "Could not resolve reference to object with loadID Battle_N" ×8 on the 
+  client while loading the rejoin save, and "Thing-needing designation (Hunt 
+  target=null)" on both sides: vanilla load-time cleanup of dead references; 
+  deterministic.
+  - The repeated desync (14:44, then right after each rejoin) is on the 
+  client's own map, which the host doesn't view. Map.MapUpdate is identical 
+  in 1.6 and 1.7 and the map held nothing unusual (3 colonists, dormant 
+  mechs, corpses, wild animals), so no 1.7-specific lead; needs traces.
 - Multifaction storyteller (Oct 19 fixes, in-game check pending):
   - Quest raids (QuestPart_ThreatsGenerator, "raids for N days" quests) fired 
   once per player faction because every faction's storyteller ticks every map 

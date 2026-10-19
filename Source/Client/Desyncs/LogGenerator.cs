@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Multiplayer.Common;
 using UnityEngine;
 using Verse;
 
@@ -168,6 +169,13 @@ namespace Multiplayer.Client
             if (TryGetCommandLineOptionValue("logfile") is { } cmdLog)
             {
                 return cmdLog;
+            }
+
+            // RimWorld 1.7 (Waylith) writes <log data root>/Logs/Player.log on every platform, which UnityStubs
+            // exposes as consoleLogPath. The paths below are Unity's.
+            if (!Native.IsMono)
+            {
+                return Application.consoleLogPath;
             }
 
             return UnityData.platform switch

@@ -326,6 +326,8 @@ public sealed class PacketWriter(ByteWriter writer) : PacketBuffer(true)
 
     public override void BindRemaining(ref byte[] obj, int maxLength = DefaultMaxLength)
     {
+        // No remaining bytes to write; the reader gets an empty array (ServerDisconnectPacket without data)
+        if (obj == null) return;
         if (obj.Length > maxLength) throw new WriterException($"Remaining bytes too big ({obj.Length}>{maxLength})");
         writer.WriteRaw(obj);
     }
