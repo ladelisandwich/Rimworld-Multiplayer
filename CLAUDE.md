@@ -69,8 +69,8 @@ LaxAssemblyBinding=true, AssemblyNameRedirects
 UnityEngine*/Unity.*/Assembly-CSharp-firstpass -> UnityStubs, 
 EnableUnsafeBinaryFormatterSerialization=true.
 - Mods folder: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/common/RimWorld/Mods 
-(GenFilePaths: parent of dataPath; the game creates it at startup, and the 
-1.7 update removed the empty one). Workshop mods: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/workshop/content/294100
+(GenFilePaths: parent of dataPath; the game creates it at startup. 
+Recreated by the first 1.7.4982 launch on Oct 19, currently empty). Workshop mods: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/workshop/content/294100
 - Player.log: ~/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Logs/Player.log 
 (RimWorld.dll Bootstrap.ResolveLogDataRoot: honors XDG_CONFIG_HOME, but NOT 
 -savedatafolder, which only moves the cache root. Two instances started 
@@ -78,6 +78,11 @@ with different -savedatafolder still share this log folder. The older
 ../Player.log is from 1.6.)
 - Harmony mod 1.7 folder and 0Harmony version: <Workshop folder>/2009463077/1.7/Assemblies, 
 mod 3.0.1.0, 0Harmony 3.0.0-rc.3 (AssemblyVersion 3.0.0.0)
+- DLCs: Royalty, Ideology, Biotech, Odyssey. No Anomaly, so the psychic 
+ritual half of the task 10 ritual test can't be run here.
+- Switching between 1.6 and 1.7 resets Config/ModsConfig.xml (the active mod 
+list is version-stamped). The 1.6 list was lost on Oct 19; restore it from 
+ModLists/*.rml or a save's mod list when going back to 1.6.
 - Saved 1.6 Assembly-CSharp.dll for diffing: ~/rw-builds/1.6.4871/Assembly-CSharp.dll
 ## Build and install
 - Build: dotnet build Source/Multiplayer.sln -c Release
