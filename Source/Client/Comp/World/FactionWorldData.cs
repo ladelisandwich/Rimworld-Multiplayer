@@ -17,11 +17,17 @@ public class FactionWorldData : IExposable
     public Storyteller storyteller;
     public StoryWatcher storyWatcher;
 
+    // The faction's TickManager.lastSettleTicksInt: the storyteller measures "days since settling" from it for
+    // the early-game threat ramp, the adaptation grace period and every incident's earliest day, so a faction
+    // created mid-game needs its own clock. -1 means "not set yet" (saves from before this field).
+    public int settleTick = -1;
+
     public FactionWorldData() { }
 
     public void ExposeData()
     {
         Scribe_Values.Look(ref factionId, "factionId");
+        Scribe_Values.Look(ref settleTick, "settleTick", -1);
 
         Scribe_Deep.Look(ref researchManager, "researchManager");
         Scribe_Deep.Look(ref drugPolicyDatabase, "drugPolicyDatabase");
@@ -65,6 +71,7 @@ public class FactionWorldData : IExposable
         return new FactionWorldData()
         {
             factionId = factionId,
+            settleTick = Find.TickManager.TicksGame,
 
             researchManager = new ResearchManager(),
             drugPolicyDatabase = new DrugPolicyDatabase(),
@@ -83,6 +90,7 @@ public class FactionWorldData : IExposable
         return new FactionWorldData()
         {
             factionId = factionId == int.MinValue ? Faction.OfPlayer.loadID : factionId,
+            settleTick = Find.TickManager.lastSettleTicksInt,
 
             researchManager = Find.ResearchManager,
             drugPolicyDatabase = Current.Game.drugPolicyDatabase,

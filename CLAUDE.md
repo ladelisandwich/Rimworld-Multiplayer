@@ -210,6 +210,11 @@ or IL.
 - [ ] 9 Arbiter, logs, Steam, UI
 - [ ] 10 Rituals verified, desync tools
 - [ ] 11 Release zip
+- [ ] Extra (Oct 19, user request): multifaction fixes. Custom and fluid 
+ideoligions for new factions (Page_ConfigureIdeo_Multifaction), quest raids 
+no longer fire once per faction (StorytellerFactionTick), per-faction settle 
+tick so a new faction gets the early-game threat ramp and grace periods 
+(FactionWorldData.settleTick). Builds and tests pass; in-game check pending.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -286,3 +291,37 @@ or resting pawns rolling fast: the PawnDownedWiggler runs per tick. Cosmetic,
 same on 1.6.
 - Stability notes for the port: docs/desync-risks-1.7.md (checked facts, 
 watch items, untested cross-OS float math).
+- Multifaction storyteller (Oct 19 fixes, in-game check pending):
+  - Quest raids (QuestPart_ThreatsGenerator, "raids for N days" quests) fired 
+  once per player faction because every faction's storyteller ticks every map 
+  and the quest list is shared; the same deterministic interval seed made 
+  both land at once, so one colony saw a doubled raid. The filter is now in 
+  StorytellerFactionTick (mod code, runs for sure). The old 
+  QuestPartsListForReadingPatch stays but patches a one-line getter the .NET 
+  JIT inlines, so don't rely on it; if the mod ever stops replacing 
+  StorytellerTick, move the filter again.
+  - Days since settling were one shared TickManager clock, so a faction 
+  created on day 60 skipped Cassandra's 0.70 to 1.00 ramp, the 30-day 
+  adaptation grace and every incident's earliestDay (infestations, mech 
+  clusters, late raid types). Each FactionWorldData now carries settleTick, 
+  swapped into TickManager.lastSettleTicksInt by 
+  MultiplayerWorldComp.SetFaction. Saves from before the field get the 
+  shared value (-1 marker), so existing factions keep their old ramp; only 
+  factions created after this change start fresh.
+  - World.PlayerWealthForStoryteller (quest points) still adds the gear of 
+  every player faction's caravans (Caravan.PlayerWealthForStoryteller counts 
+  equipment regardless of faction). Maps are already per faction through 
+  IsPlayerHome. Small, left alone.
+- Custom ideoligions for new factions (Page_ConfigureIdeo_Multifaction): the 
+draft is kept out of IdeoManager and the player faction; it's added to the 
+manager's list only during WindowStack.WindowStackOnGUI (DraftIdeoVisibleToUi) 
+so the game's editor and its dialogs find it. The finished ideo travels as a 
+string in IdeologyData.CustomIdeoXml in the game's external-ideo format 
+(GameDataSaveLoader.isSavingOrLoadingExternalIdeo) and gets new ids inside 
+the CreateFaction command. Picking an existing ideo from the editor's list 
+shares it (IdeologyData.ExistingIdeoId). Loading a saved ideo into a fluid 
+draft rejects one with too many or disallowed memes instead of offering to 
+strip them like the game does. If the editor misbehaves in game, check that 
+Page_ConfigureIdeo.PostOpen is still skipped (Window.PostOpen is called 
+through a non-virtual AccessTools.MethodDelegate) and that nothing else 
+reads IdeoManager during OnGUI expecting only real ideos.

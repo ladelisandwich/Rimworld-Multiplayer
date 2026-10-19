@@ -44,6 +44,11 @@ public static class FactionCreator
     {
         var executingOnlyOnIssuer = TickPatch.currentExecutingCmdIssuedBySelf;
 
+        // Read here, in the command, so the ideoligion's new ids match on every client
+        Ideo customIdeo = creationData.chooseIdeoInfo.CustomIdeoXml.NullOrEmpty()
+            ? null
+            : IdeoTransfer.Read(creationData.chooseIdeoInfo.CustomIdeoXml);
+
         LongEventHandler.QueueLongEvent(() =>
         {
             var scenario = creationData.scenarioDef?.scenario ?? Current.Game.Scenario;
@@ -55,7 +60,8 @@ public static class FactionCreator
                 creationData.factionName,
                 creationData.factionColor,
                 scenario.playerFaction.factionDef,
-                creationData.chooseIdeoInfo
+                creationData.chooseIdeoInfo,
+                customIdeo
             );
 
             if (creationData.generateMap)
@@ -210,7 +216,7 @@ public static class FactionCreator
         }
     }
 
-    private static Faction NewFactionWithIdeo(string name, Color color, FactionDef def, IdeologyData chooseIdeoInfo)
+    private static Faction NewFactionWithIdeo(string name, Color color, FactionDef def, IdeologyData chooseIdeoInfo, Ideo customIdeo)
     {
         var faction = new Faction
         {
@@ -223,7 +229,25 @@ public static class FactionCreator
 
         faction.ideos = new FactionIdeosTracker(faction);
 
-        if (!ModsConfig.IdeologyActive || Find.IdeoManager.classicMode || chooseIdeoInfo.SelectedIdeo == null)
+        var existingIdeo = chooseIdeoInfo.ExistingIdeoId < 0
+            ? null
+            : Find.IdeoManager.IdeosListForReading.FirstOrDefault(i => i.id == chooseIdeoInfo.ExistingIdeoId);
+
+        if (!ModsConfig.IdeologyActive || Find.IdeoManager.classicMode)
+        {
+            faction.ideos.SetPrimary(Faction.OfPlayer.ideos.PrimaryIdeo);
+        }
+        else if (customIdeo != null)
+        {
+            // Made in the editor (Page_ConfigureIdeo_Multifaction)
+            faction.ideos.SetPrimary(customIdeo);
+            Find.IdeoManager.Add(customIdeo);
+        }
+        else if (existingIdeo != null)
+        {
+            faction.ideos.SetPrimary(existingIdeo);
+        }
+        else if (chooseIdeoInfo.SelectedIdeo == null)
         {
             faction.ideos.SetPrimary(Faction.OfPlayer.ideos.PrimaryIdeo);
         }

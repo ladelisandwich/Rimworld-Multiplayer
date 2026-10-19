@@ -24,6 +24,9 @@ public class MultiplayerWorldComp : IHasSessionData
 
     private int currentFactionId;
 
+    // The faction whose settle tick is in TickManager right now (see FactionWorldData.settleTick)
+    private FactionWorldData settleClockOwner;
+
     public MultiplayerWorldComp(World world)
     {
         this.world = world;
@@ -155,6 +158,18 @@ public class MultiplayerWorldComp : IHasSessionData
             return;
 
         Game game = Current.Game;
+
+        // TickManager.lastSettleTicksInt is swapped like the fields below, but the game writes to it in place
+        // (MoveColonyUtility resets it), so the active faction's value is saved back first
+        var tickManager = game.tickManager;
+        settleClockOwner ??= factionData.Values.FirstOrDefault(d => d.researchManager == game.researchManager);
+        if (settleClockOwner != null)
+            settleClockOwner.settleTick = tickManager.lastSettleTicksInt;
+        if (data.settleTick < 0) // from a save without per-faction settle ticks: every faction shared this one
+            data.settleTick = tickManager.lastSettleTicksInt;
+        tickManager.lastSettleTicksInt = data.settleTick;
+        settleClockOwner = data;
+
         game.researchManager = data.researchManager;
         game.drugPolicyDatabase = data.drugPolicyDatabase;
         game.outfitDatabase = data.outfitDatabase;

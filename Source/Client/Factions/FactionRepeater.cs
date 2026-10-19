@@ -162,7 +162,7 @@ namespace Multiplayer.Client
         static bool Prefix() =>
             FactionRepeater.Template(
                 Multiplayer.game?.worldComp.factionData,
-                d => d.storyteller.StorytellerTick(),
+                d => StorytellerFactionTick.Tick(d.storyteller),
                 null,
                 ref ignore
             );

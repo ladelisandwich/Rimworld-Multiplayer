@@ -56,6 +56,8 @@ public class StorytellerTargetsPatch
 
 // The MP Mod's ticker calls Storyteller.StorytellerTick() on both the World and each Map, each tick
 // This patch aims to ensure each "spawn raid" Quest is only triggered once, to prevent 2x or 3x sized raids
+// On .NET the getter is inlined into its callers and this patch doesn't run there; the filter that counts is
+// in StorytellerFactionTick, which also keeps the quest raids of one faction from firing for every faction.
 [HarmonyPatch(typeof(Quest), nameof(Quest.PartsListForReading), MethodType.Getter)]
 public class QuestPartsListForReadingPatch
 {
