@@ -79,6 +79,7 @@ namespace Multiplayer.Client
             }
 
             KeyIsDownPatch.shouldQueue = shouldQueue;
+            currentHandler = handler;
 
             try
             {
@@ -86,6 +87,7 @@ namespace Multiplayer.Client
             }
             finally
             {
+                currentHandler = null;
                 MouseCellPatch.result = null;
                 KeyIsDownPatch.shouldQueue = null;
                 Find.Selector.selected = prevSelected;
@@ -94,6 +96,9 @@ namespace Multiplayer.Client
 
             return handler;
         }
+
+        // The handler whose command is being executed, for diagnostics
+        public static SyncHandler currentHandler;
 
         public static void WriteContext(SyncHandler handler, ByteWriter data)
         {

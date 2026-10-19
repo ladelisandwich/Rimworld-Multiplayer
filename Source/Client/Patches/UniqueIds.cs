@@ -125,20 +125,11 @@ namespace Multiplayer.Client.Patches
     {
         static void Prefix(CrossRefHandler __instance, bool errorIfNotEmpty)
         {
-            // If called from CrossRefHandler.ResolveAllCrossReferences and exposing during playtime, fix object ids
+            // If called from CrossRefHandler.ResolveAllCrossReferences and exposing during playtime, fix object ids.
+            // ScribeUtil.ResolveAllCrossReferences no longer goes through Clear(), it calls ReassignNegativeIdsInTemp
+            // itself; this stays for any other path.
             if (errorIfNotEmpty && ScribeUtil.loading)
-            {
-                foreach (var key in ScribeUtil.sharedCrossRefs.tempKeys)
-                {
-                    var obj = ScribeUtil.sharedCrossRefs.allObjectsByLoadID[key];
-                    if (obj is Thing { thingIDNumber: < 0 } t)
-                        t.thingIDNumber = Find.UniqueIDsManager.GetNextThingID();
-                    else if (obj is Gene { loadID: < 0 } g)
-                        g.loadID = Find.UniqueIDsManager.GetNextGeneID();
-                    else if (obj is Hediff { loadID: < 0 } h)
-                        h.loadID = Find.UniqueIDsManager.GetNextHediffID();
-                }
-            }
+                ScribeUtil.sharedCrossRefs.ReassignNegativeIdsInTemp();
         }
     }
 

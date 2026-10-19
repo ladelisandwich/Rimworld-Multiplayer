@@ -248,3 +248,10 @@ shared directory lost entries again.
 ModFile.GetHashCode and StackTrace.Hash now use GenText.StableStringHash. 
 The remaining GetHashCode calls in the client are local-only (window ids, 
 tooltip ids, dictionary keys, menu animation seed).
+- Multifaction "create faction" (FactionCreator) deep-saves pawns generated in 
+the interface, which carry negative ids. ScribeUtil.ResolveAllCrossReferences 
+must call SharedCrossRefs.ReassignNegativeIdsInTemp before dropping temp 
+keys (it replaced the CrossRefHandler.Clear path that 
+CrossRefHandler_Clear_Patch hooked). Missed in the first version: pawns 
+with ids like -3 reached the simulation and WorkGiver_Fish crashed on 
+CardinalDirections[(i + thingIDNumber) % 4].

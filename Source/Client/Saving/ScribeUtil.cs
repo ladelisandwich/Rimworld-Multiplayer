@@ -140,9 +140,11 @@ namespace Multiplayer.Client
             Scribe.loader.curPathRelToParent = null;
             Scribe.mode = LoadSaveMode.Inactive;
 
-            // What CrossRefHandler.Clear(errorIfNotEmpty: true) does, apart from clearing the directory
+            // What CrossRefHandler.Clear(errorIfNotEmpty: true) does, apart from clearing the directory, plus the
+            // id fix-up that CrossRefHandler_Clear_Patch did when that Clear was still being called from here
             crossRefs.loadIDs.ConfirmClear();
             crossRefs.crossReferencingExposables.Clear();
+            sharedCrossRefs.ReassignNegativeIdsInTemp();
             RestoreDefaultCrossRefs();
         }
 
@@ -221,11 +223,18 @@ namespace Multiplayer.Client
         {
             var directory = sharedCrossRefs.allObjectsByLoadID;
 
+            // Objects deep-loaded by this very read get registered when the cross refs are resolved, so a
+            // reference to one of them isn't missing
+            HashSet<string> deepLoaded = null;
+            foreach (var exposable in Scribe.loader.crossRefs.crossReferencingExposables)
+                if (exposable is ILoadReferenceable reffable)
+                    (deepLoaded ??= new HashSet<string>()).Add(reffable.GetUniqueLoadID());
+
             foreach (var record in Scribe.loader.crossRefs.loadIDs.idsRead.Values)
             {
                 var id = record.targetLoadID;
                 if (id.NullOrEmpty() || id == "null" || !typeof(Thing).IsAssignableFrom(record.targetType)) continue;
-                if (directory.ContainsKey(id)) continue;
+                if (directory.ContainsKey(id) || deepLoaded != null && deepLoaded.Contains(id)) continue;
 
                 Multiplayer.ThingsById.TryGetValue(Thing.IDNumberFromThingID(id), out var thing);
                 bool found = thing != null && thing.GetUniqueLoadID() == id;
@@ -235,7 +244,7 @@ namespace Multiplayer.Client
                     var known = found
                         ? $"ThingsById has it: spawned={thing.Spawned}, map={thing.Map?.uniqueID.ToString() ?? "none"}, destroyed={thing.Destroyed}, holder={thing.ParentHolder.ToStringSafe()}"
                         : thing != null ? $"ThingsById has a different thing with that number: {thing}" : "ThingsById doesn't have it";
-                    Log.Warning($"Multiplayer: {record.parent.ToStringSafe()} ({record.pathRelToParent}) references {id}, which isn't in the shared cross refs ({directory.Count} entries). {known}");
+                    Log.Warning($"Multiplayer: {record.parent.ToStringSafe()} ({record.pathRelToParent}) references {id}, which isn't in the shared cross refs ({directory.Count} entries), while handling {SyncUtil.currentHandler?.ToString() ?? "no sync command"}. {known}");
                     LogSharedCrossRefsSummary();
                 }
 

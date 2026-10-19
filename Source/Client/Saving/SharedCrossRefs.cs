@@ -27,6 +27,22 @@ public class SharedCrossRefs : LoadedObjectDirectory
         allObjectsByLoadID.Remove(reffable.GetUniqueLoadID());
     }
 
+    // Things, genes and hediffs created in the interface get negative ids (UniqueIdsPatch). When one arrives
+    // deep-saved in a synced command it gets a real id here, before the temporary keys are dropped.
+    public void ReassignNegativeIdsInTemp()
+    {
+        foreach (var key in tempKeys)
+        {
+            var obj = allObjectsByLoadID[key];
+            if (obj is Thing { thingIDNumber: < 0 } t)
+                t.thingIDNumber = Find.UniqueIDsManager.GetNextThingID();
+            else if (obj is Gene { loadID: < 0 } g)
+                g.loadID = Find.UniqueIDsManager.GetNextGeneID();
+            else if (obj is Hediff { loadID: < 0 } h)
+                h.loadID = Find.UniqueIDsManager.GetNextHediffID();
+        }
+    }
+
     public void UnregisterAllTemp()
     {
         foreach (var key in tempKeys)
