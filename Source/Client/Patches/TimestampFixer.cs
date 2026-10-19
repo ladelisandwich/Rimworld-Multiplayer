@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml;
 using HarmonyLib;
 using Multiplayer.Client.Util;
 using Multiplayer.Common;
@@ -42,11 +44,40 @@ public static class TimestampFixer
         try
         {
             // Auxiliary save which is used to visit the pawn's data
-            Scribe.saver.DebugOutputFor(p);
+            VisitExposable(p);
         }
         finally
         {
             currentOffset = null;
+        }
+    }
+
+    // Like ScribeSaver.DebugOutputFor, but with saveDestroyedThings: a pawn that was just killed is passed to the
+    // world from Pawn.Destroy, and DebugOutputFor logs "Deep-saving destroyed thing" for it. The output isn't
+    // needed, only the traversal that RegisterDeepSaved_ProcessExposable hooks.
+    private static void VisitExposable(IExposable exposable)
+    {
+        if (Scribe.mode != LoadSaveMode.Inactive)
+        {
+            Log.Error($"Multiplayer: can't fix timestamps while Scribe mode is {Scribe.mode}");
+            return;
+        }
+
+        try
+        {
+            using var writer = XmlWriter.Create(TextWriter.Null, new XmlWriterSettings { OmitXmlDeclaration = true });
+            Scribe.saver.writer = writer;
+            Scribe.mode = LoadSaveMode.Saving;
+            Scribe.saver.savingForDebug = true;
+            Scribe_Deep.Look(ref exposable, true, "saveable");
+        }
+        catch (Exception e)
+        {
+            Log.Error("Multiplayer: exception while fixing timestamps: " + e);
+        }
+        finally
+        {
+            Scribe.saver.ForceStop();
         }
     }
 

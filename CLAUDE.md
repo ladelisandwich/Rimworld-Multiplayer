@@ -173,7 +173,7 @@ or IL.
 - [x] 3 Builds for net10.0 with Harmony 3 and 1.7 DLLs
 - [x] 4 Mono layer off
 - [x] 5 Packaged for 1.7 and installed; game loads it (main menu and hosting reached Oct 19)
-- [ ] 6 First-launch log clean
+- [x] 6 First-launch log clean (hosted session on 1.7.4982, Oct 19: 0 errors, no Multiplayer warnings)
 - [ ] 7 Host and join on one PC
 - [ ] 8 Determinism scan and fixes
 - [ ] 9 Arbiter, logs, Steam, UI
