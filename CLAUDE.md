@@ -34,6 +34,23 @@ method it patches, at the right MethodDesc offset (checked in 0Harmony
 3.0.0-rc.3). It can't stop inlining into callers that were already JIT'ed. 
 Never write into MethodHandle/TypeHandle memory: Mono's layouts corrupt 
 CoreCLR's MethodDesc (found in task 6: MpUtil.MarkNoInlining).
+- Tiered compilation drops Harmony patches (found in task 6, 1.7.4982). A 
+patch runs until the runtime re-JITs the hot method at tier 1, then the 
+original body runs again with no error logged. Seen on 
+TickManager.TickManagerUpdate (1 patched frame, then 2125 vanilla), 
+LoadedObjectDirectory.RegisterLoaded, Pawn_JobTracker.StartJob/EndCurrentJob, 
+GenSpawn.Spawn, ThingWithComps.InitializeComps. MonoMod has a re-apply path 
+(its compileMethod JIT hook; the game's libclrjit.so carries the JIT GUID 
+MonoMod expects) but it doesn't take effect on WaylithClr; cause unknown. 
+Workaround: launch with DOTNET_TieredCompilation=0 (Steam launch options 
+"DOTNET_TieredCompilation=0 %command%"). HarmonyPatchWatchdog logs an error at 
+startup when tiering is on, and in game when the TickManagerUpdate patch 
+stops firing. To dig into MonoMod, set MONOMOD_LogToFile=<path> (and 
+MONOMOD_LogSpam=1) in the environment and look for "Updating detour" lines.
+- Harmony 3 verifies generated IL. Returning a struct needs 
+Ldloca/Initobj/Ldloc, not just Initobj (SyncTemplates, fixed in task 6).
+- Harmony 3 rejects __instance when the target is a lambda on a <>c 
+display class (PatchGravshipPreLaunchCancel, fixed in task 6).
 - Unity Jobs and Burst are replaced by Waylith.Jobs (WaylithJobRuntime). 
 Parallel game code is a desync suspect.
 - Prepatcher can't work on 1.7. Don't use it, Mono.Cecil assembly rewriting, 
@@ -110,7 +127,8 @@ and "1.7") at the root; the build writes 1.7/Assemblies (MultiplayerLoader and
 third-party dlls, loaded by the game) and 1.7/AssembliesCustom (Multiplayer and 
 MultiplayerCommon with pdbs, loaded by MultiplayerLoader). Version is 
 0.11.5.17 (MpVersion.SimpleVersion).
-- Test launch: Steam launch options "%command% -mod=brrainz.harmony,Multiplayer-1.7". 
+- Test launch: Steam launch options 
+"DOTNET_TieredCompilation=0 %command% -mod=brrainz.harmony,Multiplayer-1.7". 
 1.7 matches -mod entries by packageId, then by folder name; the folder name 
 picks this port even while the Workshop Multiplayer (same packageId) is 
 installed. The log then has "Running with command line mod list: ...".
@@ -135,7 +153,7 @@ or IL.
 - [x] 2 Prepatcher removed, ritual sync on Harmony (in-game check is task 10)
 - [x] 3 Builds for net10.0 with Harmony 3 and 1.7 DLLs
 - [x] 4 Mono layer off
-- [ ] 5 Packaged for 1.7 and installed; game loads it (packaged and installed Oct 19, first launch pending)
+- [x] 5 Packaged for 1.7 and installed; game loads it (main menu and hosting reached Oct 19)
 - [ ] 6 First-launch log clean
 - [ ] 7 Host and join on one PC
 - [ ] 8 Determinism scan and fixes
@@ -183,3 +201,14 @@ Desync traces and the JIT list come back in task 10:
 1.7's ModAssemblyHandler, so a running game keeps the dlls mapped. Installing 
 over a running game must replace files (delete, then copy), not overwrite them 
 in place.
+- Tiered compilation must be off (DOTNET_TieredCompilation=0) or Harmony 
+patches get dropped mid-session (see Facts). Friends need the launch option 
+too until there's an in-mod fix. Candidate in-mod fix: clear 
+MethodDesc.m_bFlags2 bit 0x20 (IsEligibleForTieredCompilation) on each 
+original before Harmony compiles it (prefix on 
+HarmonyLib.PatchFunctions.UpdateWrapper); only helps methods not yet 
+compiled, so startup-compiled targets (UIRootOnGUI, LongEventsUpdate, Log) 
+would still need tiering off. Needs its own in-game test with tiering on.
+- Test saves: a save from a modded 1.6 game loaded with -mod= loses those 
+mods and logs game errors (research, apparel, jobs) that have nothing to do 
+with Multiplayer. Test with a new colony or a vanilla save.

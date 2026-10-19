@@ -39,6 +39,11 @@ namespace Multiplayer.Client
                 if (pInfo.IsOut) {
                     pType = pType.GetElementType();
                     yield return new CodeInstruction(OpCodes.Ldarg, argIndex);
+                    if (AccessTools.IsStruct(pType)) {
+                        // initobj takes the address that Ldarg pushed and stores a default struct there
+                        yield return new CodeInstruction(OpCodes.Initobj, pType);
+                        continue;
+                    }
                     yield return CreateDefaultCodes(gen, pType).Last();
                     if (AccessTools.IsClass(pType))
                         yield return new CodeInstruction(OpCodes.Stind_Ref);
@@ -102,9 +107,12 @@ namespace Multiplayer.Client
                 yield break;
             }
             if (AccessTools.IsStruct(type)) {
+                // initobj leaves nothing on the stack, so load the zeroed local afterwards. Without the Ldloc the
+                // generated method returned a struct from an empty stack. Mono ran that anyway, .NET rejects the IL.
                 var v = generator.DeclareLocal(type);
                 yield return new CodeInstruction(OpCodes.Ldloca, v);
                 yield return new CodeInstruction(OpCodes.Initobj, type);
+                yield return new CodeInstruction(OpCodes.Ldloc, v);
                 yield break;
             }
             if (AccessTools.IsValue(type)) {

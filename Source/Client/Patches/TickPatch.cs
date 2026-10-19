@@ -61,8 +61,13 @@ namespace Multiplayer.Client
         [TweakValue("Multiplayer")]
         public static bool doSimulate = true;
 
+        // Last frame this prefix ran, read by HarmonyPatchWatchdog
+        public static int lastPrefixFrame = -1;
+
         static bool Prefix()
         {
+            lastPrefixFrame = Time.frameCount;
+
             if (Multiplayer.Client == null) return true;
             if (!ShouldHandle) return false;
             if (Frozen) return false;

@@ -114,6 +114,7 @@ namespace Multiplayer.Client
             else
             {
                 Log.Message($"Multiplayer: running on {RuntimeInformation.FrameworkDescription}, Mono-only features off");
+                HarmonyPatchWatchdog.CheckTieredCompilation();
             }
 
             MultiplayerLoader.Multiplayer.settingsWindowDrawer =

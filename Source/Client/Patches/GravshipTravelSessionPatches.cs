@@ -33,7 +33,9 @@ namespace Multiplayer.Client.Patches
             return MpMethodUtil.GetLambda(typeof(GravshipUtility), nameof(GravshipUtility.PreLaunchConfirmation), lambdaOrdinal: 4);
         }
 
-        static void Postfix(Dialog_MessageBox __instance)
+        // The target is a lambda on RimWorld.<>c, so __instance was never a Dialog_MessageBox. Harmony 3 refuses the
+        // binding; the parameter was unused anyway.
+        static void Postfix()
         {
             if (Multiplayer.Client == null) return;
             if (!Multiplayer.ExecutingCmds) return;
