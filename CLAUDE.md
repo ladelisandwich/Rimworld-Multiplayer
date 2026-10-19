@@ -217,7 +217,10 @@ tick so a new faction gets the early-game threat ramp and grace periods
 (FactionWorldData.settleTick). First in-game check (Oct 19 15:20): the 
 custom-ideo command was rejected on every client ("String too long"), fixed 
 by sending the ideo gzipped in pieces; a preset-ideo faction was created 
-fine. Second check pending (fluid ideo end to end, a pawn with an addiction).
+fine. Second check (Oct 19 15:41): a client faction with a fluid ideo 
+created end to end, 0 errors, no desync. Not yet seen in game: a starting 
+pawn with an addiction (the ReadExposable fix), a doubled quest raid, the 
+settle clock.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -357,6 +360,16 @@ strip them like the game does. If the editor misbehaves in game, check that
 Page_ConfigureIdeo.PostOpen is still skipped (Window.PostOpen is called 
 through a non-virtual AccessTools.MethodDelegate) and that nothing else 
 reads IdeoManager during OnGUI expecting only real ideos.
+- Precept choices in the ideo editor follow the game's rules: an alternative 
+is greyed out with "Requires meme: X" when the draft lacks that meme 
+(Corpses: Don't care needs one), and a fluid ideo gets exactly one meme at 
+creation (IdeoFoundation.MemeCountRangeFluidAbsolute). Nothing in the mod 
+restricts precepts; the editor is the game's with editMode GameStart.
+- Host quit with Steam P2P on: the game shuts Steam down while the server 
+thread still ticks, so SteamP2PNetManager.Tick threw "Steamworks is not 
+initialized" ~2000 times in the last second (Oct 19 15:44 log). Tick now 
+returns when SteamManager.Initialized is false. The two run_two.sh 
+instances get Steam P2P because the Steam client is running on this PC.
 - Synced exposables load under ProgramState.MapInitializing 
 (ScribeUtil.ReadExposable swaps it in while the game is Playing). Found in 
 the Oct 19 multifaction check: starting pawn "Daz" (an addiction hediff) 

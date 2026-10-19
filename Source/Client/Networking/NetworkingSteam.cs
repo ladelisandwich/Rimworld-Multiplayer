@@ -126,6 +126,10 @@ namespace Multiplayer.Client.Networking
 
         public void Tick()
         {
+            // The game shuts Steam down on quit while the server thread is still ticking: every tick after that
+            // threw "Steamworks is not initialized" until the process ended
+            if (!SteamManager.Initialized) return;
+
             foreach (var packet in SteamP2PIntegration.ReadPackets(0))
             {
                 var playerManager = server.playerManager;
