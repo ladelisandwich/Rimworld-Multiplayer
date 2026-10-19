@@ -51,6 +51,14 @@ MONOMOD_LogSpam=1) in the environment and look for "Updating detour" lines.
 Ldloca/Initobj/Ldloc, not just Initobj (SyncTemplates, fixed in task 6).
 - Harmony 3 rejects __instance when the target is a lambda on a <>c 
 display class (PatchGravshipPreLaunchCancel, fixed in task 6).
+- ConstructorInfo.Invoke on a type initializer (TypeInitializer.Invoke) re-ran 
+the static constructor on Mono. On .NET it's a no-op once the type is 
+initialized. MultiplayerGame used it to reset DebugSettings and 
+SymbolResolver_SingleThing; on 1.7 that left every DebugSettings bool false 
+(no damage, no storyteller, and Effecter children skipped because 
+anomalyDarkeningFX gates them, which crashed every progress-bar toil). Fixed 
+in task 6 by snapshotting the defaults at startup. RuntimeHelpers.RunClassConstructor 
+only ensures a cctor ran, it never re-runs it either.
 - Unity Jobs and Burst are replaced by Waylith.Jobs (WaylithJobRuntime). 
 Parallel game code is a desync suspect.
 - Prepatcher can't work on 1.7. Don't use it, Mono.Cecil assembly rewriting, 

@@ -34,6 +34,18 @@ namespace Multiplayer.Client
 
         public Faction RealPlayerFaction => myFaction ?? myFactionLoading;
 
+        // Invoking a type initializer through reflection re-ran it on Mono. On .NET it does nothing once the type
+        // is initialized, so the defaults are captured at startup (InitMultiplayer) and restored from here.
+        private static Dictionary<FieldInfo, object> debugSettingsDefaults;
+
+        public static void CaptureDebugSettingsDefaults()
+        {
+            debugSettingsDefaults ??= typeof(DebugSettings)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(f => !f.IsLiteral && !f.IsInitOnly)
+                .ToDictionary(f => f, f => f.GetValue(null));
+        }
+
         public MultiplayerGame()
         {
             DeferredStackTracing.acc = 0;
@@ -64,17 +76,16 @@ namespace Multiplayer.Client
 
             SetThingMakerSeed(1);
 
-            foreach (var field in typeof(DebugSettings).GetFields(BindingFlags.Public | BindingFlags.Static))
-                if (!field.IsLiteral && field.FieldType == typeof(bool))
-                    field.SetValue(null, default(bool));
-
-            typeof(DebugSettings).TypeInitializer.Invoke(null, null);
+            CaptureDebugSettingsDefaults();
+            foreach (var (field, value) in debugSettingsDefaults)
+                field.SetValue(null, value);
 
             foreach (var resolver in DefDatabase<RuleDef>.AllDefs.SelectMany(r => r.resolvers))
                 if (resolver is SymbolResolver_EdgeThing edgeThing)
                     edgeThing.randomRotations = new List<int>() { 0, 1, 2, 3 };
 
-            typeof(SymbolResolver_SingleThing).TypeInitializer.Invoke(null, null);
+            // Same reason as DebugSettings above: reset the shuffled static array by hand
+            SymbolResolver_SingleThing.tmpRotations = [Rot4.North, Rot4.South, Rot4.West, Rot4.East];
 
             FactionCreator.ClearData();
         }
