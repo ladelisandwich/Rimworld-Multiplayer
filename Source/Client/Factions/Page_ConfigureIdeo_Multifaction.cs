@@ -14,8 +14,9 @@ namespace Multiplayer.Client.Factions;
 // The game's ideoligion editor, used from a running multiplayer game to make the ideoligion of a new faction.
 // The editor expects the ideoligion it edits to be in IdeoManager and to be the player faction's primary, which
 // in a running game would change the simulation on this client only. So the draft is kept out of the game: it is
-// never the primary of any faction and it's only in IdeoManager's list while the UI draws (DraftIdeoVisibleToUi),
-// which is where the editor looks for it. The finished ideoligion travels in the faction creation command.
+// never the primary of any faction, only its details are drawn (not the game's ideo list, whose "Delete custom"
+// button would act on the player faction's live primary), and it's in IdeoManager's list only while a window
+// draws (DraftIdeoVisibleToUi) for the editor's dialogs. The finished ideoligion travels in the creation command.
 public class Page_ConfigureIdeo_Multifaction : Page_ConfigureIdeo
 {
     public static Page_ConfigureIdeo_Multifaction Open { get; private set; }
@@ -48,7 +49,6 @@ public class Page_ConfigureIdeo_Multifaction : Page_ConfigureIdeo
         }
 
         ideo = draft;
-        IdeoUIUtility.SetSelected(draft);
 
         if (!draft.memes.Any())
             Find.WindowStack.Add(new Dialog_ChooseMemes(draft, MemeCategory.Structure, initialSelection: true));
@@ -65,10 +65,11 @@ public class Page_ConfigureIdeo_Multifaction : Page_ConfigureIdeo
 
     public override void DoIdeos(Rect rect)
     {
-        // No Create button (it would make the player faction's ideoligion) and only the draft is editable
-        IdeoUIUtility.DoIdeoListAndDetails(GetMainRect(rect), ref scrollPosition_ideoList, ref scrollViewHeight_ideoList,
-            ref scrollPosition_ideoDetails, ref scrollViewHeight_ideoDetails,
-            editMode: true, showCreateIdeoButton: false, onlyEditIdeo: draft, ideoLoadedFromFile: UseLoadedIdeo);
+        // The details pane of IdeoUIUtility.DoIdeoListAndDetails, for the draft alone
+        Rect inRect = GetMainRect(rect).ContractedBy(17f);
+        inRect.yMax += 8f;
+        IdeoUIUtility.DoIdeoDetails(inRect, draft, ref scrollPosition_ideoDetails, ref scrollViewHeight_ideoDetails,
+            editMode: true, ideoLoadedFromFile: UseLoadedIdeo);
     }
 
     // The editor's Load button: a saved ideoligion replaces the draft
@@ -84,7 +85,6 @@ public class Page_ConfigureIdeo_Multifaction : Page_ConfigureIdeo
         loaded.Fluid = fluid;
         draft = loaded;
         ideo = loaded;
-        IdeoUIUtility.SetSelected(loaded);
     }
 
     public override void Notify_ClosedChooseMemesDialog()
@@ -129,18 +129,7 @@ public class Page_ConfigureIdeo_Multifaction : Page_ConfigureIdeo
             return false;
         }
 
-        if (ideo == draft)
-        {
-            presetPage.customIdeo = IdeoTransfer.Write(draft);
-            presetPage.existingIdeoId = -1;
-        }
-        else
-        {
-            // An ideoligion already in the game, picked from the list (the game allows this at game start too)
-            presetPage.customIdeo = null;
-            presetPage.existingIdeoId = ideo.id;
-        }
-
+        presetPage.customIdeo = IdeoTransfer.Write(draft);
         return true;
     }
 
@@ -148,16 +137,16 @@ public class Page_ConfigureIdeo_Multifaction : Page_ConfigureIdeo
     {
         draft = null;
         ideo = null;
-        IdeoUIUtility.UnselectCurrent();
         presetPage.customIdeo = null;
-        presetPage.existingIdeoId = -1;
         base.DoBack();
     }
 }
 
-// Puts the draft into IdeoManager's list for the duration of the UI pass only, so the editor and its dialogs
-// find it while the simulation (ticks, saves, sync) never sees it
-[HarmonyPatch(typeof(WindowStack), nameof(WindowStack.WindowStackOnGUI))]
+// Puts the draft into IdeoManager's list while a window's contents draw, so the editor's dialogs find it while
+// the simulation (ticks, saves, sync) never sees it. The hook is Window.InnerWindowOnGUI, not
+// WindowStack.WindowStackOnGUI: GUI.Window queues the contents and the GUI dispatcher runs them after
+// WindowStackOnGUI has returned (GUI.RunPendingWindow), so a patch there covered nothing that mattered.
+[HarmonyPatch(typeof(Window), nameof(Window.InnerWindowOnGUI))]
 static class DraftIdeoVisibleToUi
 {
     static void Prefix(ref Ideo __state)

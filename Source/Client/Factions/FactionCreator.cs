@@ -229,10 +229,6 @@ public static class FactionCreator
 
         faction.ideos = new FactionIdeosTracker(faction);
 
-        var existingIdeo = chooseIdeoInfo.ExistingIdeoId < 0
-            ? null
-            : Find.IdeoManager.IdeosListForReading.FirstOrDefault(i => i.id == chooseIdeoInfo.ExistingIdeoId);
-
         if (!ModsConfig.IdeologyActive || Find.IdeoManager.classicMode)
         {
             faction.ideos.SetPrimary(Faction.OfPlayer.ideos.PrimaryIdeo);
@@ -242,10 +238,6 @@ public static class FactionCreator
             // Made in the editor (Page_ConfigureIdeo_Multifaction)
             faction.ideos.SetPrimary(customIdeo);
             Find.IdeoManager.Add(customIdeo);
-        }
-        else if (existingIdeo != null)
-        {
-            faction.ideos.SetPrimary(existingIdeo);
         }
         else if (chooseIdeoInfo.SelectedIdeo == null)
         {

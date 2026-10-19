@@ -344,22 +344,32 @@ replays in ~/.rw-mp-test/host/MpReplays):
   equipment regardless of faction). Maps are already per faction through 
   IsPlayerHome. Small, left alone.
 - Custom ideoligions for new factions (Page_ConfigureIdeo_Multifaction): the 
-draft is kept out of IdeoManager and the player faction; it's added to the 
-manager's list only during WindowStack.WindowStackOnGUI (DraftIdeoVisibleToUi) 
-so the game's editor and its dialogs find it. The finished ideo travels in 
+draft is kept out of IdeoManager and the player faction; only its details 
+pane is drawn (IdeoUIUtility.DoIdeoDetails, not the ideo list) and it's added 
+to the manager's list only while a window's contents draw 
+(DraftIdeoVisibleToUi on Window.InnerWindowOnGUI) so the editor's dialogs 
+find it. The first version hooked WindowStack.WindowStackOnGUI, which was 
+useless: GUI.Window queues the contents and the GUI dispatcher runs them 
+after WindowStackOnGUI returns (GUI.RunPendingWindow), so the draft wasn't 
+in the list when the player clicked its row, the game's SelectOrMakeNewIdeo 
+added it for real and made it the spectator faction's primary, and the 
+editor showed "Delete custom" and a read-only pane (Oct 19 screenshot). The 
+list is gone for the same reason: its "Delete custom" button targets the 
+player faction's primary, which on a client is another faction's live ideo. 
+The finished ideo travels in 
 IdeologyData.CustomIdeo in the game's external-ideo format 
 (GameDataSaveLoader.isSavingOrLoadingExternalIdeo), gzipped and base64-encoded 
 in pieces of 30000 chars because synced strings are capped at 32767 chars 
 (ByteReader) and an ideo is ~35 KB of XML (found in the first in-game check: 
 "String too long (35285>32767)" on every client, no faction created, the 
 player dropped back to the world map). It gets new ids inside the 
-CreateFaction command. Picking an existing ideo from the editor's list 
-shares it (IdeologyData.ExistingIdeoId). Loading a saved ideo into a fluid 
+CreateFaction command. Loading a saved ideo into a fluid 
 draft rejects one with too many or disallowed memes instead of offering to 
 strip them like the game does. If the editor misbehaves in game, check that 
 Page_ConfigureIdeo.PostOpen is still skipped (Window.PostOpen is called 
-through a non-virtual AccessTools.MethodDelegate) and that nothing else 
-reads IdeoManager during OnGUI expecting only real ideos.
+through a non-virtual AccessTools.MethodDelegate), that the precept tooltip 
+ends with the green "Click to edit" (edit mode on), and that nothing else 
+reads IdeoManager during a window's OnGUI expecting only real ideos.
 - Precept choices in the ideo editor follow the game's rules: an alternative 
 is greyed out with "Requires meme: X" when the draft lacks that meme 
 (Corpses: Don't care needs one), and a fluid ideo gets exactly one meme at 

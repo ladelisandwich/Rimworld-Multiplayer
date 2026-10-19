@@ -16,10 +16,8 @@ public class Page_ChooseIdeo_Multifaction : Page
     public Page_ChooseIdeoPreset pageChooseIdeo = new();
     private Choice choice;
 
-    // Filled in by Page_ConfigureIdeo_Multifaction when the player finishes a custom ideoligion: either the
-    // ideoligion itself (IdeoTransfer.Write) or the id of an existing one they picked from the list
+    // Filled in by Page_ConfigureIdeo_Multifaction when the player finishes a custom ideoligion (IdeoTransfer.Write)
     public List<string> customIdeo;
-    public int existingIdeoId = -1;
 
     public override void DoWindowContents(Rect inRect)
     {
@@ -114,7 +112,6 @@ public class Page_ChooseIdeo_Multifaction : Page
         if (choice == Choice.Preset)
         {
             customIdeo = null;
-            existingIdeoId = -1;
             next.prev = this;
             base.DoNext();
             return;
@@ -130,18 +127,16 @@ public class Page_ChooseIdeo_Multifaction : Page
     public IdeologyData GetIdeologyData()
     {
         if (choice != Choice.Preset)
-            return new IdeologyData(CustomIdeo: customIdeo, ExistingIdeoId: existingIdeoId);
+            return new IdeologyData(CustomIdeo: customIdeo);
 
         return new IdeologyData(pageChooseIdeo.selectedIdeo, pageChooseIdeo.selectedStructure, pageChooseIdeo.selectedStyles);
     }
 }
 
-// CustomIdeo: an ideoligion made in the editor, in pieces from IdeoTransfer.Write (null for none).
-// ExistingIdeoId: an ideoligion already in the game the player picked from the editor's list (-1 for none).
+// CustomIdeo: an ideoligion made in the editor, in pieces from IdeoTransfer.Write (null for none)
 public record IdeologyData(
     IdeoPresetDef SelectedIdeo = null,
     MemeDef SelectedStructure = null,
     List<StyleCategoryDef> SelectedStyles = null,
-    List<string> CustomIdeo = null,
-    int ExistingIdeoId = -1
+    List<string> CustomIdeo = null
 ) : ISyncSimple;
