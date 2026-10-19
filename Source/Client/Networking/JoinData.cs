@@ -289,7 +289,7 @@ namespace Multiplayer.Client
             obj is ModFile other && Equals(other);
 
         public override int GetHashCode() =>
-            Gen.HashCombineInt(relPath.GetHashCode(), hash);
+            Gen.HashCombineInt(GenText.StableStringHash(relPath), hash);
     }
 
     [HarmonyPatch(typeof(ModLister), nameof(ModLister.RebuildModList))]

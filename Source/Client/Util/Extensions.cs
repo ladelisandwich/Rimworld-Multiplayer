@@ -105,7 +105,7 @@ namespace Multiplayer.Client
                 traceToHash.Append(methodNameCleaner.Replace(method.ToString(), "") + "\n");
             }
 
-            return traceToHash.ToString().GetHashCode();
+            return GenText.StableStringHash(traceToHash.ToString());
         }
 
         public static bool IsCompilerGenerated(this Type type)

@@ -135,7 +135,8 @@ namespace Multiplayer.Client
             dict["ISyncSimple"] = GetDefInfo(ApiSerialization.syncSimples, TypeHash);
             dict["ISession"] = GetDefInfo(ApiSerialization.sessions, TypeHash);
 
-            dict["PawnBio"] = GetDefInfo(SolidBioDatabase.allBios, b => b.name.GetHashCode());
+            // NameTriple.GetHashCode combines string hashes, which differ per process on .NET
+            dict["PawnBio"] = GetDefInfo(SolidBioDatabase.allBios, b => GenText.StableStringHash(b.name.ToStringFull));
 
             foreach (var defType in GenTypes.AllLeafSubclasses(typeof(Def)))
             {

@@ -180,7 +180,17 @@ namespace Multiplayer.Client
         private static LocalConnection CreateLocalClient(ServerSettings settings)
         {
             if (settings.arbiter)
-                StartArbiter();
+            {
+                // StartArbiter launches a second game with Unity's -batchmode -nographics, which 1.7 doesn't have.
+                // The 1.7 arbiter is task 9; until then hosting runs without it.
+                if (Native.IsMono)
+                    StartArbiter();
+                else
+                {
+                    Log.Warning("Multiplayer: the arbiter isn't available on RimWorld 1.7 yet, hosting without it");
+                    Multiplayer.session.AddMsg("The Arbiter isn't available on RimWorld 1.7 yet. Hosting without it.", false);
+                }
+            }
 
             var (client, server) = LocalConnection.Paired(Multiplayer.username);
             client.ChangeState(ConnectionStateEnum.ClientPlaying);

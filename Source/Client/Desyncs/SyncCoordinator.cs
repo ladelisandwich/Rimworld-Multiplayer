@@ -200,7 +200,8 @@ namespace Multiplayer.Client
 
             OpinionInBuilding.TryMarkSimulating();
 
-            int hash = Gen.HashCombineInt(info1.GetHashCode(), info2.GetHashCode());
+            // Compared between clients, so no per-process string hashes
+            int hash = Gen.HashCombineInt(GenText.StableStringHash(info1), GenText.StableStringHash(info2));
 
             OpinionInBuilding.desyncStackTraces.Add(new StackTraceLogItemObj {
                 tick = TickPatch.Timer,

@@ -146,6 +146,14 @@ and "1.7") at the root; the build writes 1.7/Assemblies (MultiplayerLoader and
 third-party dlls, loaded by the game) and 1.7/AssembliesCustom (Multiplayer and 
 MultiplayerCommon with pdbs, loaded by MultiplayerLoader). Version is 
 0.11.5.17 (MpVersion.SimpleVersion).
+- Two instances on this PC: ./scripts/run_two.sh (host, then Enter, then a 
+client that auto-joins 127.0.0.1:30502 with -connect=). Each instance has 
+its own XDG_CONFIG_HOME and -savedatafolder under ~/.rw-mp-test/<host|client>; 
+the log is <that>/config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Logs/Player.log. 
+They run outside Steam, so Steam features are off.
+- Arbiter: the "Run arbiter" checkbox in the host window only exists in debug 
+builds (HostWindow, MpVersion.IsDebug); release builds host without it. On 
+1.7 HostUtil skips StartArbiter with a warning even when the setting is on.
 - Test launch: Steam launch options 
 "DOTNET_TieredCompilation=0 %command% -mod=brrainz.harmony,Multiplayer-1.7". 
 1.7 matches -mod entries by packageId, then by folder name; the folder name 
@@ -174,7 +182,7 @@ or IL.
 - [x] 4 Mono layer off
 - [x] 5 Packaged for 1.7 and installed; game loads it (main menu and hosting reached Oct 19)
 - [x] 6 First-launch log clean (hosted session on 1.7.4982, Oct 19: 0 errors, no Multiplayer warnings)
-- [ ] 7 Host and join on one PC
+- [ ] 7 Host and join on one PC (hash fixes, run_two.sh and arbiter guard done Oct 19; one-hour test pending)
 - [ ] 8 Determinism scan and fixes
 - [ ] 9 Arbiter, logs, Steam, UI
 - [ ] 10 Rituals verified, desync tools
@@ -235,3 +243,8 @@ with Multiplayer. Test with a new colony or a vanilla save.
 stay in as diagnostics: a "references Thing_... which isn't in the shared 
 cross refs" warning or a nonzero "spawned things missing" count means the 
 shared directory lost entries again.
+- Arbiter (task 9): not started on 1.7, HostUtil hosts without it.
+- Per-process hashes (task 7): PawnBio def info, desync log info hashes, 
+ModFile.GetHashCode and StackTrace.Hash now use GenText.StableStringHash. 
+The remaining GetHashCode calls in the client are local-only (window ids, 
+tooltip ids, dictionary keys, menu animation seed).
