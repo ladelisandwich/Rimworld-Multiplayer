@@ -214,7 +214,10 @@ or IL.
 ideoligions for new factions (Page_ConfigureIdeo_Multifaction), quest raids 
 no longer fire once per faction (StorytellerFactionTick), per-faction settle 
 tick so a new faction gets the early-game threat ramp and grace periods 
-(FactionWorldData.settleTick). Builds and tests pass; in-game check pending.
+(FactionWorldData.settleTick). First in-game check (Oct 19 15:20): the 
+custom-ideo command was rejected on every client ("String too long"), fixed 
+by sending the ideo gzipped in pieces; a preset-ideo faction was created 
+fine. Second check pending (fluid ideo end to end, a pawn with an addiction).
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -340,13 +343,28 @@ replays in ~/.rw-mp-test/host/MpReplays):
 - Custom ideoligions for new factions (Page_ConfigureIdeo_Multifaction): the 
 draft is kept out of IdeoManager and the player faction; it's added to the 
 manager's list only during WindowStack.WindowStackOnGUI (DraftIdeoVisibleToUi) 
-so the game's editor and its dialogs find it. The finished ideo travels as a 
-string in IdeologyData.CustomIdeoXml in the game's external-ideo format 
-(GameDataSaveLoader.isSavingOrLoadingExternalIdeo) and gets new ids inside 
-the CreateFaction command. Picking an existing ideo from the editor's list 
+so the game's editor and its dialogs find it. The finished ideo travels in 
+IdeologyData.CustomIdeo in the game's external-ideo format 
+(GameDataSaveLoader.isSavingOrLoadingExternalIdeo), gzipped and base64-encoded 
+in pieces of 30000 chars because synced strings are capped at 32767 chars 
+(ByteReader) and an ideo is ~35 KB of XML (found in the first in-game check: 
+"String too long (35285>32767)" on every client, no faction created, the 
+player dropped back to the world map). It gets new ids inside the 
+CreateFaction command. Picking an existing ideo from the editor's list 
 shares it (IdeologyData.ExistingIdeoId). Loading a saved ideo into a fluid 
 draft rejects one with too many or disallowed memes instead of offering to 
 strip them like the game does. If the editor misbehaves in game, check that 
 Page_ConfigureIdeo.PostOpen is still skipped (Window.PostOpen is called 
 through a non-virtual AccessTools.MethodDelegate) and that nothing else 
 reads IdeoManager during OnGUI expecting only real ideos.
+- Synced exposables load under ProgramState.MapInitializing 
+(ScribeUtil.ReadExposable swaps it in while the game is Playing). Found in 
+the Oct 19 multifaction check: starting pawn "Daz" (an addiction hediff) 
+logged "Error while determining if Daz should have Need Food", "SaveableFromNode 
+exception" and "Pawn Daz had some null needs after loading" on host and 
+client. Need_Food.MaxLevel reads the MaxNutrition stat only when Playing; 
+the stat walks the hediffs, and Hediff_Addiction.Need dereferences 
+hediff.pawn (set in ResolvingCrossRefs) and pawn.needs (set after the 
+tracker loads). A save load never hits it because the state is 
+MapInitializing. Same code on 1.6, so upstream has the bug for any synced 
+pawn with an addiction.

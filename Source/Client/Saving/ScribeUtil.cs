@@ -284,27 +284,42 @@ namespace Multiplayer.Client
 
         public static T ReadExposable<T>(byte[] data, Action<T> beforeFinish = null) where T : IExposable
         {
-            loading = true;
-            InitFromXmlDoc(LoadDocument(data));
-            SupplyCrossRefs();
+            // The game only deep-loads things while ProgramState is MapInitializing and some ExposeData paths
+            // count on it: in Playing, Need_Food.MaxLevel reads a stat, which walks the pawn's hediffs before
+            // their pawn field and the needs tracker exist (Hediff_Addiction.Need), so a pawn with an addiction
+            // lost its food need when loaded from a command. Load the way a save loads.
+            var prevProgramState = Current.programStateInt;
+            if (prevProgramState == ProgramState.Playing)
+                Current.programStateInt = ProgramState.MapInitializing;
 
-            T element = default;
-            Scribe_Deep.Look(ref element, RootNode);
-
-            beforeFinish?.Invoke(element);
-
-            if (removeMapRefs)
+            try
             {
-                sharedCrossRefs.Reregister(removedMapRefs);
-                removedMapRefs = null;
+                loading = true;
+                InitFromXmlDoc(LoadDocument(data));
+                SupplyCrossRefs();
+
+                T element = default;
+                Scribe_Deep.Look(ref element, RootNode);
+
+                beforeFinish?.Invoke(element);
+
+                if (removeMapRefs)
+                {
+                    sharedCrossRefs.Reregister(removedMapRefs);
+                    removedMapRefs = null;
+                }
+
+                SupplyMissingThingRefs();
+                FinalizeLoading();
+
+                // Default cross refs restored in LoadedObjectsClearPatch
+
+                return element;
             }
-
-            SupplyMissingThingRefs();
-            FinalizeLoading();
-
-            // Default cross refs restored in LoadedObjectsClearPatch
-
-            return element;
+            finally
+            {
+                Current.programStateInt = prevProgramState;
+            }
         }
     }
 }

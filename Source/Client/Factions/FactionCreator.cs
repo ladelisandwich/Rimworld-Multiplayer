@@ -45,9 +45,9 @@ public static class FactionCreator
         var executingOnlyOnIssuer = TickPatch.currentExecutingCmdIssuedBySelf;
 
         // Read here, in the command, so the ideoligion's new ids match on every client
-        Ideo customIdeo = creationData.chooseIdeoInfo.CustomIdeoXml.NullOrEmpty()
+        Ideo customIdeo = creationData.chooseIdeoInfo.CustomIdeo.NullOrEmpty()
             ? null
-            : IdeoTransfer.Read(creationData.chooseIdeoInfo.CustomIdeoXml);
+            : IdeoTransfer.Read(creationData.chooseIdeoInfo.CustomIdeo);
 
         LongEventHandler.QueueLongEvent(() =>
         {

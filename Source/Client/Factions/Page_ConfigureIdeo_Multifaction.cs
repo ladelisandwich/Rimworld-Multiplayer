@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using HarmonyLib;
 using Multiplayer.Client.Saving;
 using RimWorld;
@@ -129,13 +131,13 @@ public class Page_ConfigureIdeo_Multifaction : Page_ConfigureIdeo
 
         if (ideo == draft)
         {
-            presetPage.customIdeoXml = IdeoTransfer.Write(draft);
+            presetPage.customIdeo = IdeoTransfer.Write(draft);
             presetPage.existingIdeoId = -1;
         }
         else
         {
             // An ideoligion already in the game, picked from the list (the game allows this at game start too)
-            presetPage.customIdeoXml = null;
+            presetPage.customIdeo = null;
             presetPage.existingIdeoId = ideo.id;
         }
 
@@ -147,7 +149,7 @@ public class Page_ConfigureIdeo_Multifaction : Page_ConfigureIdeo
         draft = null;
         ideo = null;
         IdeoUIUtility.UnselectCurrent();
-        presetPage.customIdeoXml = null;
+        presetPage.customIdeo = null;
         presetPage.existingIdeoId = -1;
         base.DoBack();
     }
@@ -181,28 +183,49 @@ static class DraftIdeoVisibleToUi
 
 // Carries an ideoligion in a sync command, in the game's "external ideo" format (the ideo screen's Save/Load):
 // ids, relics, ritual obligations and role holders are left out and precepts get new ids on load.
+// An ideoligion is ~35 KB of XML and synced strings are capped at 32767 chars (ByteReader), so the XML goes
+// gzipped and base64-encoded, cut into pieces well under the cap.
 public static class IdeoTransfer
 {
-    public static string Write(Ideo ideo)
+    private const int PieceLength = 30000;
+
+    public static List<string> Write(Ideo ideo)
     {
         GameDataSaveLoader.isSavingOrLoadingExternalIdeo = true;
+        byte[] xml;
         try
         {
-            return Encoding.UTF8.GetString(ScribeUtil.WriteExposable(ideo));
+            xml = ScribeUtil.WriteExposable(ideo);
         }
         finally
         {
             GameDataSaveLoader.isSavingOrLoadingExternalIdeo = false;
         }
+
+        using var compressed = new MemoryStream();
+        using (var gzip = new GZipStream(compressed, CompressionLevel.Optimal, leaveOpen: true))
+            gzip.Write(xml, 0, xml.Length);
+
+        string encoded = Convert.ToBase64String(compressed.ToArray());
+        var pieces = new List<string>();
+        for (int i = 0; i < encoded.Length; i += PieceLength)
+            pieces.Add(encoded.Substring(i, Math.Min(PieceLength, encoded.Length - i)));
+
+        return pieces;
     }
 
     // Call while executing a command so the new ids are the same on every client
-    public static Ideo Read(string xml)
+    public static Ideo Read(List<string> pieces)
     {
+        using var compressed = new MemoryStream(Convert.FromBase64String(string.Concat(pieces)));
+        using var xml = new MemoryStream();
+        using (var gzip = new GZipStream(compressed, CompressionMode.Decompress))
+            gzip.CopyTo(xml);
+
         GameDataSaveLoader.isSavingOrLoadingExternalIdeo = true;
         try
         {
-            Ideo ideo = ScribeUtil.ReadExposable<Ideo>(Encoding.UTF8.GetBytes(xml));
+            Ideo ideo = ScribeUtil.ReadExposable<Ideo>(xml.ToArray());
             ideo.id = Find.UniqueIDsManager.GetNextIdeoID();
             return ideo;
         }
