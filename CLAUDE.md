@@ -94,7 +94,21 @@ referenced. Steamworks comes from com.rlabrecque.steamworks.net.dll.
 - The GitHub workflows are disabled on this branch (.github/workflows/*.yml 
 renamed to .yml.disabled): they build the old setup and have no game DLLs. 
 Source/TestsOnMono is out of the solution (Mono only).
-- Install into the game: ./scripts/install_local.sh (added in task 5)
+- Install into the game: ./scripts/install_local.sh (builds, then replaces 
+<Mods folder>/Multiplayer-1.7; warns about leftover Workshop Multiplayer and 
+Prepatcher; saves the game's Assembly-CSharp.dll to ~/rw-builds/<game version>/).
+- Release zip: ./scripts/build_release.sh -> Multiplayer-1.7-v<version>.zip in 
+the repo root, holding one Multiplayer-1.7 folder. Both scripts share 
+scripts/common.sh, which refuses to ship Harmony, game or .NET dlls.
+- Mod layout: About, Defs, Languages, Textures and LoadFolders.xml (v1.7 -> "/" 
+and "1.7") at the root; the build writes 1.7/Assemblies (MultiplayerLoader and 
+third-party dlls, loaded by the game) and 1.7/AssembliesCustom (Multiplayer and 
+MultiplayerCommon with pdbs, loaded by MultiplayerLoader). Version is 
+0.11.5.17 (MpVersion.SimpleVersion).
+- Test launch: Steam launch options "%command% -mod=brrainz.harmony,Multiplayer-1.7". 
+1.7 matches -mod entries by packageId, then by folder name; the folder name 
+picks this port even while the Workshop Multiplayer (same packageId) is 
+installed. The log then has "Running with command line mod list: ...".
 ## Rules
 - Work on branch port-1.7. Commit after each task with a message saying what 
 changed and why. Push only to origin (my fork). Never push to rwmt or open 
@@ -116,7 +130,7 @@ or IL.
 - [x] 2 Prepatcher removed, ritual sync on Harmony (in-game check is task 10)
 - [x] 3 Builds for net10.0 with Harmony 3 and 1.7 DLLs
 - [x] 4 Mono layer off
-- [ ] 5 Packaged for 1.7 and installed; game loads it
+- [ ] 5 Packaged for 1.7 and installed; game loads it (packaged and installed Oct 19, first launch pending)
 - [ ] 6 First-launch log clean
 - [ ] 7 Host and join on one PC
 - [ ] 8 Determinism scan and fixes
