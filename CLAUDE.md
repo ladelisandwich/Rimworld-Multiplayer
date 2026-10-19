@@ -182,7 +182,7 @@ or IL.
 - [x] 4 Mono layer off
 - [x] 5 Packaged for 1.7 and installed; game loads it (main menu and hosting reached Oct 19)
 - [x] 6 First-launch log clean (hosted session on 1.7.4982, Oct 19: 0 errors, no Multiplayer warnings)
-- [ ] 7 Host and join on one PC (hash fixes, run_two.sh and arbiter guard done Oct 19; one-hour test pending)
+- [x] 7 Host and join on one PC (Oct 19: client joined and created a faction, ~15 min of play, 0 errors, no desync; the long session is task 8's test)
 - [ ] 8 Determinism scan and fixes
 - [ ] 9 Arbiter, logs, Steam, UI
 - [ ] 10 Rituals verified, desync tools
@@ -255,3 +255,9 @@ keys (it replaced the CrossRefHandler.Clear path that
 CrossRefHandler_Clear_Patch hooked). Missed in the first version: pawns 
 with ids like -3 reached the simulation and WorkGiver_Fish crashed on 
 CardinalDirections[(i + thingIDNumber) % 4].
+- "X did not have an ideo set; assigning fallback ideo" appears once per pawn 
+when a client creates a faction: FactionCreator deep-loads the UI-generated 
+pawns before their ideo exists. Pre-existing upstream behaviour, harmless.
+- A client that is catching up (simulating many ticks per frame) shows downed 
+or resting pawns rolling fast: the PawnDownedWiggler runs per tick. Cosmetic, 
+same on 1.6.
