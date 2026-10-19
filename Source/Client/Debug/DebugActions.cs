@@ -217,14 +217,21 @@ namespace Multiplayer.Client
         [DebugAction(MultiplayerLocalCategory, name = "Trigger desync", allowedGameStates = AllowedGameStates.Playing)]
         public static void TriggerDesync()
         {
-            var logItem = StackTraceLogItemRaw.GetFromPool();
-            var trace = logItem.raw;
-            int hash = 0;
-            // The deferred stack tracer is Mono only, without it the desync log just has no trace for this item
-            int depth = Native.IsMono ? DeferredStackTracingImpl.TraceImpl(trace, ref hash) : 0;
-
             Multiplayer.game.asyncWorldTimeComp.randState++;
-            Multiplayer.game.sync.TryAddStackTraceForDesyncLogRaw(logItem, depth, hash);
+
+            if (Native.IsMono)
+            {
+                var logItem = StackTraceLogItemRaw.GetFromPool();
+                var trace = logItem.raw;
+                int hash = 0;
+                int depth = DeferredStackTracingImpl.TraceImpl(trace, ref hash);
+                Multiplayer.game.sync.TryAddStackTraceForDesyncLogRaw(logItem, depth, hash);
+            }
+            else
+            {
+                // Recorded whatever the tracing setting says, so the report always has this one trace
+                ManagedStackTracing.Record("Trigger desync", ignoreCap: true);
+            }
         }
 
         [DebugAction(MultiplayerLocalCategory, name = "Show desync window", allowedGameStates = AllowedGameStates.Playing)]

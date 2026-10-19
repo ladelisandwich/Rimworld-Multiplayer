@@ -31,8 +31,16 @@ namespace Multiplayer.Client.Desyncs
 
         public static void Postfix()
         {
-            if (!Native.IsMono || Native.LmfPtr == 0) return;
             if (!ShouldAddStackTraceForDesyncLog()) return;
+
+            if (!Native.IsMono)
+            {
+                if (ManagedStackTracing.Record())
+                    acc++;
+                return;
+            }
+
+            if (Native.LmfPtr == 0) return;
 
             var logItem = StackTraceLogItemRaw.GetFromPool();
             var trace = logItem.raw;
@@ -50,6 +58,8 @@ namespace Multiplayer.Client.Desyncs
             if (!SupportsDeferredStackTracing) return false;
             if (Multiplayer.Client == null) return false;
             if (Multiplayer.settings.desyncTracingMode == DesyncTracingMode.None) return false;
+            // Fast is the Mono stack walker; on .NET only the slow mode records anything
+            if (!Native.IsMono && Multiplayer.settings.desyncTracingMode != DesyncTracingMode.Slow) return false;
             if (Multiplayer.game == null) return false;
 
             if (!Multiplayer.game.gameComp.logDesyncTraces) return false;

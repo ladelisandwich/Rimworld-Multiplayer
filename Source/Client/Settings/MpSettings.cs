@@ -78,6 +78,7 @@ namespace Multiplayer.Client
             Scribe_Values.Look(ref resolutionForChat, "resolutionForChat");
             Scribe_Values.Look(ref showMainMenuAnim, "showMainMenuAnim", true);
             Scribe_Values.Look(ref appendNameToAutosave, "appendNameToAutosave");
+            Scribe_Values.Look(ref desyncTracingMode, "desyncTracingMode", DesyncTracingMode.Fast);
             Scribe_Values.Look(ref transparentPlayerCursors, "transparentPlayerCursors", true);
             Scribe_Values.Look(ref hideOtherPlayersInColonistBar, "hideOtherPlayersInColonistBar");
             Scribe_Values.Look(ref hideOtherPlayersQuests, "hideOtherPlayersQuests");

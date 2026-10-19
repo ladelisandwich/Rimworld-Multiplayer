@@ -213,7 +213,7 @@ namespace Multiplayer.Client
             OpinionInBuilding.desyncStackTraceHashes.Add(hash);
         }
 
-        public void TryAddStackTraceForDesyncLogRaw(StackTraceLogItemRaw item, int depth, int hashIn, string moreInfo = null)
+        public void TryAddStackTraceForDesyncLogRaw(StackTraceLogItemSim item, int depth, int hashIn, string moreInfo = null)
         {
             if (!ShouldCollect) return;
 

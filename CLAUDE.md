@@ -208,7 +208,9 @@ or IL.
 - [x] 7 Host and join on one PC (Oct 19: client joined and created a faction, ~15 min of play, 0 errors, no desync; the long session is task 8's test)
 - [ ] 8 Determinism scan and fixes (tools, assessment, hit counters, FastTileFinder.Closest done Oct 19). 65-min two-instance session Oct 19 13:52-14:57: 0 game errors from the mod, but the client desynced 4 times on its own map ("Wrong random state on map 1": 2 min after creating the faction, then at 14:44 and within a minute of each of the two rejoins). Reports hold no traces (desync tracing is Mono-only until task 10), so the cause is open; "Patch hit counts" wasn't run (dev mode off). Rerun with dev mode on and the hit counts dumped before quitting once task 10 brings traces back.
 - [ ] 9 Arbiter, logs, Steam, UI
-- [ ] 10 Rituals verified, desync tools
+- [ ] 10 Rituals verified, desync tools (Oct 19: .NET desync traces 
+(ManagedStackTracing) and the JIT list (EventListener) built; ritual test and 
+the forced-desync report check pending)
 - [ ] 11 Release zip
 - [ ] Extra (Oct 19, user request): multifaction fixes. Custom and fluid 
 ideoligions for new factions (Page_ConfigureIdeo_Multifaction), quest raids 
@@ -243,12 +245,29 @@ log.
   its Random from deviceName.
 - MpUtil.GetOriginalFromHarmonyReplacement returns null when not on Mono (it 
 maps native addresses from the Mono stack walker; Harmony's public API can't).
-- Mono-only features switched off on .NET (task 4, Native.IsMono is false). 
-Desync traces and the JIT list come back in task 10:
-  - Deferred stack tracing (DeferredStackTracingImpl): desync reports have no 
-  stack traces; "Trigger desync" still desyncs but records no trace.
-  - JittedMethods (Mono profiler JIT callback): the jitted methods list in 
-  desync reports is empty.
+- Mono-only features switched off on .NET (task 4, Native.IsMono is false):
+  - Deferred stack tracing (DeferredStackTracingImpl, the native stack walker) 
+  stays Mono only. On .NET, ManagedStackTracing (task 10) records a 
+  System.Diagnostics.StackTrace for the first 200 random calls of each tick 
+  while the "Desync tracing: slow (.NET)" setting is on (measured ~20 µs per 
+  capture at the game's stack depth, so ~4 ms per tick; off by default; the 
+  setting is now persisted). Frames are hashed by declaring type and method 
+  name with GenText.StableStringHash; frames from System.*, HarmonyLib, 
+  MonoMod and the tracer itself are dropped (their IL differs per OS and the 
+  frame count is part of the hash); Harmony's _PatchN suffix is stripped. 
+  Trace hash lists are only compared when both sides recorded some, so one 
+  player tracing alone can't cause a false "Trace hashes don't match", but 
+  two tracing players must run the same build. The host's "Log desync 
+  traces" server setting (on by default) must be on as well. "Trigger 
+  desync" records one trace regardless of the setting. Untested in game.
+  - JittedMethods: the Mono profiler callback is replaced on .NET by an 
+  EventListener on the runtime's Microsoft-Windows-DotNETRuntime 
+  MethodLoadVerbose events (JIT keyword 0x10), started only with slow tracing 
+  on (at startup or when the setting is switched on). Kept because with 
+  tiered compilation off a method is compiled on its first call, so the list 
+  names the code paths that ran for the first time before a desync. Events 
+  arrive on the listener's thread, so tick stamps can be a few frames late 
+  and the calling method is unknown. Untested in game.
   - DisableOmitFramePointer (Mono JIT option): not applied.
   - Native.MethodNameFromAddr / MethodNameNormalizedFromAddr return null, 
   GetMethodAggressiveInlining returns false, CctorRan throws 

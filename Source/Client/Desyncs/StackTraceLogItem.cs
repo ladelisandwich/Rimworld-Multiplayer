@@ -35,10 +35,11 @@ namespace Multiplayer.Client
         public override string StackTraceString => "";
     }
 
-    public class StackTraceLogItemRaw : StackTraceLogItem
+    // A trace taken in the simulation together with the state at that moment. The frames come from the
+    // runtime-specific subclasses: return addresses on Mono, method names on .NET.
+    public abstract class StackTraceLogItemSim : StackTraceLogItem
     {
         public const int MaxDepth = 32;
-        public long[] raw = new long[MaxDepth];
         public int depth;
 
         public int ticksGame;
@@ -49,6 +50,22 @@ namespace Multiplayer.Client
         public string moreInfo;
 
         public override string AdditionalInfo => $"{ticksGame} {thingDef}{thingId} {factionName} {depth} {rngState} {moreInfo}";
+
+        public override void Dispose()
+        {
+            depth = 0;
+            ticksGame = 0;
+            rngState = 0;
+            thingId = 0;
+            thingDef = null;
+            factionName = null;
+            moreInfo = null;
+        }
+    }
+
+    public class StackTraceLogItemRaw : StackTraceLogItemSim
+    {
+        public long[] raw = new long[MaxDepth];
 
         private static Dictionary<long, string> methodNameCache = new();
 
@@ -78,15 +95,25 @@ namespace Multiplayer.Client
 
         public override void Dispose()
         {
-            depth = 0;
-            ticksGame = 0;
-            rngState = 0;
-            thingId = 0;
-            thingDef = null;
-            factionName = null;
-            moreInfo = null;
-
+            base.Dispose();
             SimplePool<StackTraceLogItemRaw>.Return(this);
+        }
+    }
+
+    // Frames recorded by ManagedStackTracing on .NET, already resolved to names
+    public class StackTraceLogItemManaged : StackTraceLogItemSim
+    {
+        public string[] frames = new string[MaxDepth];
+
+        public override string StackTraceString
+        {
+            get
+            {
+                var builder = new StringBuilder();
+                for (int i = 0; i < depth; i++)
+                    builder.AppendLine("at " + frames[i]);
+                return builder.ToString();
+            }
         }
     }
 }

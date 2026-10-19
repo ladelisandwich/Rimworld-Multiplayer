@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Multiplayer.Client.Desyncs;
 using Multiplayer.Client.Util;
 using Multiplayer.Common;
 using UnityEngine;
@@ -79,6 +80,22 @@ public static class MpSettingsUI
         listing.CheckboxLabeled("MpEnableCrossPlanetLayerPings".Translate(), ref settings.enableCrossPlanetLayerPings,
             "MpEnableCrossPlanetLayerPingsDesc".Translate());
         listing.CheckboxLabeled("MpShowMainMenuAnimation".Translate(), ref settings.showMainMenuAnim);
+
+        if (!Native.IsMono)
+        {
+            // The Mono stack walker doesn't exist on .NET; ManagedStackTracing records System.Diagnostics traces instead
+            bool slowTracing = settings.desyncTracingMode == DesyncTracingMode.Slow;
+            listing.CheckboxLabeled("Desync tracing: slow (.NET)", ref slowTracing,
+                $"Records a stack trace for the first {ManagedStackTracing.MaxTracesPerTick} random calls of every tick " +
+                "(about 4 ms per tick) so a desync report shows where the simulations diverged, and lists the methods " +
+                "compiled before the desync. Every player whose traces should be compared needs it on. Off by default.");
+            if (slowTracing != (settings.desyncTracingMode == DesyncTracingMode.Slow))
+            {
+                settings.desyncTracingMode = slowTracing ? DesyncTracingMode.Slow : DesyncTracingMode.None;
+                if (slowTracing)
+                    JittedMethods.Init();
+            }
+        }
 
         const string buttonOff = "Off";
 

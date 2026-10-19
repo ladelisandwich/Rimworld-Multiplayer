@@ -62,6 +62,8 @@ public static class IngameDebug
                 text.AppendLine($"Stack Trace: {DeferredStackTracing.acc}{separator} Max Depth: {DeferredStackTracing.maxTraceDepth}");
                 if (Native.IsMono)
                     text.AppendLine($"Hash: {DeferredStackTracingImpl.hashTable.Entries}/{DeferredStackTracingImpl.hashTable.Size} ({DeferredStackTracingImpl.hashTable.Collisions} collisions)");
+                else
+                    text.AppendLine($"Slow tracing: {(ManagedStackTracing.Enabled ? "on" : "off")}{separator} This tick: {ManagedStackTracing.tracesThisTick}/{ManagedStackTracing.MaxTracesPerTick}");
 
                 text.AppendLine($"\nIdeology: {Find.IdeoManager.classicMode}{separator} Ideo ID: {Find.IdeoManager.IdeosInViewOrder.FirstOrDefault()?.id ?? 0}");
                 text.AppendLine($"Haul Dest: {Find.CurrentMap.haulDestinationManager.AllHaulDestinationsListForReading.Count}{separator} Designations: {Find.CurrentMap.designationManager.designationsByDef.Count}");
