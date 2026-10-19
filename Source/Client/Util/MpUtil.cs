@@ -18,6 +18,12 @@ namespace Multiplayer.Client
     {
         public static unsafe void MarkNoInlining(MethodBase method)
         {
+            // Writes into Mono's MonoMethod (iflags). On .NET the handle points at a MethodDesc and this write
+            // corrupts the method's token. Harmony 3 (MonoMod's Core100Runtime) already disables inlining of
+            // every method it patches, and sync methods are patched right after this.
+            if (!Native.IsMono)
+                return;
+
             ushort* iflags = (ushort*)(method.MethodHandle.Value) + 1;
             *iflags |= (ushort)MethodImplOptions.NoInlining;
         }

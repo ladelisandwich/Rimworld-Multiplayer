@@ -392,6 +392,13 @@ namespace Multiplayer.Client
         [DebugOutput]
         public static unsafe void PrintInlined()
         {
+            // Reads Mono's MonoMethod layout
+            if (!Native.IsMono)
+            {
+                Log.Message("PrintInlined only works on Mono");
+                return;
+            }
+
             foreach (var m in Harmony.GetAllPatchedMethods())
             {
                 // method->inline_info

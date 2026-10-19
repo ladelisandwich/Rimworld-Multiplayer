@@ -29,6 +29,11 @@ parameters don't match (__instance, __result, ___fields, ref on
 __originalMethod or __args) and patches that produce invalid IL.
 - The .NET JIT can inline small methods, so a prefix on a tiny method may 
 never run. Verify important patches actually fire.
+- Harmony 3's bundled MonoMod (Core100Runtime) disables inlining of every 
+method it patches, at the right MethodDesc offset (checked in 0Harmony 
+3.0.0-rc.3). It can't stop inlining into callers that were already JIT'ed. 
+Never write into MethodHandle/TypeHandle memory: Mono's layouts corrupt 
+CoreCLR's MethodDesc (found in task 6: MpUtil.MarkNoInlining).
 - Unity Jobs and Burst are replaced by Waylith.Jobs (WaylithJobRuntime). 
 Parallel game code is a desync suspect.
 - Prepatcher can't work on 1.7. Don't use it, Mono.Cecil assembly rewriting, 
