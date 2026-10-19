@@ -220,7 +220,8 @@ namespace Multiplayer.Client
             var logItem = StackTraceLogItemRaw.GetFromPool();
             var trace = logItem.raw;
             int hash = 0;
-            int depth = DeferredStackTracingImpl.TraceImpl(trace, ref hash);
+            // The deferred stack tracer is Mono only, without it the desync log just has no trace for this item
+            int depth = Native.IsMono ? DeferredStackTracingImpl.TraceImpl(trace, ref hash) : 0;
 
             Multiplayer.game.asyncWorldTimeComp.randState++;
             Multiplayer.game.sync.TryAddStackTraceForDesyncLogRaw(logItem, depth, hash);
@@ -362,6 +363,12 @@ namespace Multiplayer.Client
         [DebugAction(MultiplayerLocalCategory, "Dump addr info table", allowedGameStates = /* all */ AllowedGameStates.Invalid)]
         public static void DumpAddrInfoTable()
         {
+            if (!Native.IsMono)
+            {
+                Log.Message("The address info table is only filled on Mono");
+                return;
+            }
+
             Log.Message($"Dumping address info table {DeferredStackTracingImpl.hashTable.Entries}");
             foreach (var addrInfo in DeferredStackTracingImpl.hashTable)
             {

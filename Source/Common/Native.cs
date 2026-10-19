@@ -14,6 +14,9 @@ namespace Multiplayer.Client
             Windows, OSX, Linux, Dummy
         }
 
+        // RimWorld 1.7 runs on .NET (CoreCLR), where every mono_* call throws DllNotFoundException
+        public static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
+
         public static IntPtr DomainPtr { get; private set; }
 
         // LMF is Last Managed Frame
@@ -24,6 +27,9 @@ namespace Multiplayer.Client
 
         public static void EarlyInit(NativeOS os)
         {
+            if (!IsMono)
+                return;
+
             if (os == NativeOS.Linux)
                 TheLinuxWay();
             if (os == NativeOS.OSX)
@@ -49,6 +55,13 @@ namespace Multiplayer.Client
             // Don't bother on 32 bit runtimes
             if (IntPtr.Size == 4)
                 return;
+
+            // The offsets below are into Mono's thread info
+            if (!IsMono)
+            {
+                LmfPtr = 0;
+                return;
+            }
 
             const BindingFlags all = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public |
                                      BindingFlags.NonPublic;
@@ -94,6 +107,7 @@ namespace Multiplayer.Client
 
         public static string? MethodNameFromAddr(long addr, bool harmonyOriginals)
         {
+            if (!IsMono) return null;
             var ptr = MaybeFindHarmonyOriginalMethod(addr, harmonyOriginals);
             if (ptr == IntPtr.Zero) return null;
             var name = mono_debug_print_stack_frame(ptr, -1, DomainPtr);
@@ -102,6 +116,7 @@ namespace Multiplayer.Client
 
         public static string? MethodNameNormalizedFromAddr(long addr, bool harmonyOriginals)
         {
+            if (!IsMono) return null;
             var ptr = MaybeFindHarmonyOriginalMethod(addr, harmonyOriginals);
             return ptr == IntPtr.Zero ? null : mono_method_get_reflection_name(ptr);
         }
@@ -110,6 +125,7 @@ namespace Multiplayer.Client
 
         public static bool GetMethodAggressiveInlining(long addr)
         {
+            if (!IsMono) return false;
             var domain = DomainPtr;
             var ji = mono_jit_info_table_find(domain, (IntPtr)addr);
 
@@ -199,6 +215,10 @@ namespace Multiplayer.Client
 
         public static unsafe bool CctorRan(Type t)
         {
+            // Reads Mono's vtable layout, .NET has no equivalent
+            if (!IsMono)
+                throw new PlatformNotSupportedException("Native.CctorRan needs the Mono runtime");
+
             return *((byte*)mono_class_vtable(mono_domain_get(), mono_class_from_mono_type(t.TypeHandle.Value)) + 45) != 0;
         }
     }

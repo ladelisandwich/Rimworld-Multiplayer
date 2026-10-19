@@ -266,6 +266,11 @@ public static class DeferredStackTracingImpl
 
     static DeferredStackTracingImpl()
     {
+        // Everything below goes through Mono's JIT. Callers check Native.IsMono too, this is a backstop so the
+        // type never fails to initialize.
+        if (!Native.IsMono)
+            return;
+
         // All of this code assumes that the rbp pointer offset stays the same throughout the method invocations.
         // Mono is generally allowed to recompile code, which could cause issues for us, but GetRpb is annotated as
         // NoInline and NoOptimization to heavily discourage any changes and avoid breaking.

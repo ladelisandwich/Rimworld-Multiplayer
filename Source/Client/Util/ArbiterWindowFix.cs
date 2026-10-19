@@ -16,7 +16,8 @@ namespace Multiplayer.Client
 
         internal static void Run()
         {
-            if (!Environment.OSVersion.Platform.Equals(PlatformID.Win32NT)) {
+            // Reparents Unity's batch mode window, which only exists on the Mono/Unity builds
+            if (!Environment.OSVersion.Platform.Equals(PlatformID.Win32NT) || !Native.IsMono) {
                 return;
             }
 

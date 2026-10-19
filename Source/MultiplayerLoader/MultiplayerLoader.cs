@@ -41,23 +41,11 @@ namespace MultiplayerLoader
                 if (assembly == null)
                     try
                     {
-                        // This would work with Assembly.Load the same as ModAssemblyHandler does it, but then the .dll
-                        // files are locked and cannot be replaced when a game instance is already running. This way it's
-                        // possible to keep a game instance open and just rebuild and reopen another instance without any
-                        // issues with replacing the dll files.
-
-                        byte[] rawAssembly = File.ReadAllBytes(item.FullName);
-                        FileInfo fileInfo = new FileInfo(Path.ChangeExtension(item.FullName, "pdb"));
-
-                        if (fileInfo.Exists)
-                        {
-                            byte[] rawSymbolStore = File.ReadAllBytes(fileInfo.FullName);
-                            assembly = AppDomain.CurrentDomain.Load(rawAssembly, rawSymbolStore);
-                        }
-                        else
-                        {
-                            assembly = AppDomain.CurrentDomain.Load(rawAssembly);
-                        }
+                        // Same as 1.7's ModAssemblyHandler. On .NET, loading from a byte array (which kept the files
+                        // unlocked for rebuilding while a game instance runs) puts every assembly in its own load
+                        // context. LoadFrom keeps them in the default context with the game and the other mods, and
+                        // picks up the .pdb next to the .dll by itself.
+                        assembly = Assembly.LoadFrom(item.FullName);
                     }
                     catch (Exception ex)
                     {

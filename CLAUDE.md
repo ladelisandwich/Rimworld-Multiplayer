@@ -115,7 +115,7 @@ or IL.
 - [x] 1 Branch, tools, this file
 - [x] 2 Prepatcher removed, ritual sync on Harmony (in-game check is task 10)
 - [x] 3 Builds for net10.0 with Harmony 3 and 1.7 DLLs
-- [ ] 4 Mono layer off
+- [x] 4 Mono layer off
 - [ ] 5 Packaged for 1.7 and installed; game loads it
 - [ ] 6 First-launch log clean
 - [ ] 7 Host and join on one PC
@@ -142,3 +142,25 @@ log.
   its Random from deviceName.
 - MpUtil.GetOriginalFromHarmonyReplacement returns null when not on Mono (it 
 maps native addresses from the Mono stack walker; Harmony's public API can't).
+- Mono-only features switched off on .NET (task 4, Native.IsMono is false). 
+Desync traces and the JIT list come back in task 10:
+  - Deferred stack tracing (DeferredStackTracingImpl): desync reports have no 
+  stack traces; "Trigger desync" still desyncs but records no trace.
+  - JittedMethods (Mono profiler JIT callback): the jitted methods list in 
+  desync reports is empty.
+  - DisableOmitFramePointer (Mono JIT option): not applied.
+  - Native.MethodNameFromAddr / MethodNameNormalizedFromAddr return null, 
+  GetMethodAggressiveInlining returns false, CctorRan throws 
+  PlatformNotSupportedException (it has no callers).
+  - Debug UI: "Dump addr info table" only logs that it's Mono only; the sync 
+  debug panel and ingame debug text show no stack trace hash table stats.
+  - ArbiterWindowFix (reparents Unity's batch mode window on Windows) is skipped; 
+  the arbiter itself is task 9.
+  - SimpleProfiler is only available on Windows when simple_profiler.dll is 
+  loaded (GetModuleHandle is kernel32).
+  - The MpUI password field can't set TextEditor.m_RevealCursor (UnityStubs has 
+  no such field).
+- MultiplayerLoader now loads AssembliesCustom with Assembly.LoadFrom, like 
+1.7's ModAssemblyHandler, so a running game keeps the dlls mapped. Installing 
+over a running game must replace files (delete, then copy), not overwrite them 
+in place.

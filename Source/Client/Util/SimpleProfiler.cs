@@ -39,7 +39,8 @@ namespace Multiplayer.Client
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void CheckAvailable()
         {
-            available = GetModuleHandle("simple_profiler.dll").ToInt32() != 0;
+            // GetModuleHandle is in kernel32, which only exists on Windows
+            available = OperatingSystem.IsWindows() && GetModuleHandle("simple_profiler.dll").ToInt32() != 0;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

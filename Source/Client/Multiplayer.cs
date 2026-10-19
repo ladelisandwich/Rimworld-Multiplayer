@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using HarmonyLib;
 using Multiplayer.Client.AsyncTime;
@@ -105,8 +106,15 @@ namespace Multiplayer.Client
                     _ => Native.NativeOS.Windows
                 });
 
-            DisableOmitFramePointer();
-            JittedMethods.Init();
+            if (Native.IsMono)
+            {
+                DisableOmitFramePointer();
+                JittedMethods.Init();
+            }
+            else
+            {
+                Log.Message($"Multiplayer: running on {RuntimeInformation.FrameworkDescription}, Mono-only features off");
+            }
 
             MultiplayerLoader.Multiplayer.settingsWindowDrawer =
                 rect => MpSettingsUI.DoSettingsWindowContents(settings, rect);
