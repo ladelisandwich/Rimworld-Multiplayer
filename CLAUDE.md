@@ -85,7 +85,15 @@ list is version-stamped). The 1.6 list was lost on Oct 19; restore it from
 ModLists/*.rml or a save's mod list when going back to 1.6.
 - Saved 1.6 Assembly-CSharp.dll for diffing: ~/rw-builds/1.6.4871/Assembly-CSharp.dll
 ## Build and install
-- Build: dotnet build Source/Multiplayer.sln -c Release
+- Build: dotnet build Source/Multiplayer.sln -c Release (RimWorldDir defaults 
+to the game folder above; set RIMWORLD_DIR to override). Tests: dotnet test 
+Source/Tests -c Release.
+- Source/Directory.Build.props drops the Krafs.Rimworld.Ref 1.6 package that 
+RimWorld.MultiplayerAPI 0.6.0 pulls in, so only the 1.7 game DLLs are 
+referenced. Steamworks comes from com.rlabrecque.steamworks.net.dll.
+- The GitHub workflows are disabled on this branch (.github/workflows/*.yml 
+renamed to .yml.disabled): they build the old setup and have no game DLLs. 
+Source/TestsOnMono is out of the solution (Mono only).
 - Install into the game: ./scripts/install_local.sh (added in task 5)
 ## Rules
 - Work on branch port-1.7. Commit after each task with a message saying what 
@@ -106,7 +114,7 @@ or IL.
 ## Progress
 - [x] 1 Branch, tools, this file
 - [x] 2 Prepatcher removed, ritual sync on Harmony (in-game check is task 10)
-- [ ] 3 Builds for net10.0 with Harmony 3 and 1.7 DLLs
+- [x] 3 Builds for net10.0 with Harmony 3 and 1.7 DLLs
 - [ ] 4 Mono layer off
 - [ ] 5 Packaged for 1.7 and installed; game loads it
 - [ ] 6 First-launch log clean
@@ -122,3 +130,15 @@ mods load. Prepatcher's version ran before game startup.
 - Ritual role sync (SyncRituals, 8 hooks) only has build-time checks. Confirm 
 in game in task 10 by looking for "MP ritual sync hook hit" lines in a dev-mode 
 log.
+- UnityStubs gaps found at compile time (task 3), each worked around in place:
+  - Font.fontNames is missing: the debug tools font tweak in VanillaTweaks 
+  (UIRootPatch) skips the OS font fallback list and logs that once.
+  - TextEditor.UpdateScrollOffsetIfNeeded is missing: the MpUI password field 
+  no longer refreshes its scroll offset after masking (long passwords may not 
+  scroll with the cursor).
+  - SystemInfo.graphicsDeviceVendor is missing: desync reports show the PCI 
+  vendor id (graphicsDeviceVendorID) as "GPU Family".
+  - SystemInfo.deviceUniqueIdentifier is missing: the main menu animation seeds 
+  its Random from deviceName.
+- MpUtil.GetOriginalFromHarmonyReplacement returns null when not on Mono (it 
+maps native addresses from the Mono stack walker; Harmony's public API can't).

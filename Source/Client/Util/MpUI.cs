@@ -264,7 +264,7 @@ namespace Multiplayer.Client.Util
                 te.scrollOffset = scrollOffset;
                 te.text = new string(PassChar, password.Length);
                 AccessTools.Field(typeof(TextEditor), "m_RevealCursor").SetValue(te, true);
-                te.UpdateScrollOffsetIfNeeded(new Event());
+                // 1.7: UnityStubs' TextEditor has no UpdateScrollOffsetIfNeeded
             }
         }
     }

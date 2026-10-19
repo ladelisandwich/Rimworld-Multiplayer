@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using MethodInvoker = HarmonyLib.MethodInvoker;
 using Multiplayer.API;
 using Multiplayer.Client.Util;
 using Multiplayer.Common;

@@ -19,7 +19,8 @@ namespace Multiplayer.Client
         {
             if (done) return;
             GUI.skin.font = Text.fontStyles[1].font;
-            Text.fontStyles[1].font.fontNames = new[] { "arial", "arialbd", "ariali", "arialbi" };
+            // 1.7: UnityStubs' Font has no fontNames, so the OS font fallback list can't be set
+            Log.Message("Multiplayer: Font.fontNames doesn't exist on RimWorld 1.7, skipping the debug tools font tweak");
             done = true;
         }
     }

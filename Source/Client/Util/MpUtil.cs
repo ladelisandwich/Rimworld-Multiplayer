@@ -88,6 +88,11 @@ namespace Multiplayer.Client
         {
             // Todo: this is using a non-public API of Harmony, we should refactor to use https://harmony.pardeike.net/api/HarmonyLib.Harmony.html#HarmonyLib_Harmony_GetOriginalMethod_System_Reflection_MethodInfo_
             // as pardeike suggested in https://github.com/rwmt/Multiplayer/pull/270#issuecomment-1003298289
+            // Harmony's public API maps replacement methods, not native addresses. The addresses come from the
+            // Mono stack walker, so there's nothing to look up on .NET.
+            if (Type.GetType("Mono.Runtime") == null)
+                return null;
+
             return HarmonySharedState.originals
                 .FirstOrDefault(kv => kv.Key.MethodHandle.GetFunctionPointer().ToInt64() == replacementAddr).Value;
         }

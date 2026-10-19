@@ -1,7 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <!-- net48 copied package dlls to bin, CopyToRimworld relies on that -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>12</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -23,11 +26,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Krafs.Publicizer" Version="2.3.0" />
-    <PackageReference Include="Lib.Harmony" Version="2.4.2" ExcludeAssets="runtime" />
-    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4850" />
+    <PackageReference Include="Krafs.Publicizer" Version="2.3.2" />
+    <PackageReference Include="Lib.Harmony" Version="3.0.0-rc.3" ExcludeAssets="runtime" />
     <PackageReference Include="RestSharp" Version="106.15.0" />
     <PackageReference Include="RimWorld.MultiplayerAPI" Version="0.6.0" />
+    <Reference Include="Assembly-CSharp" HintPath="$(RimWorldDir)/Assembly-CSharp.dll" Private="false" />
+    <Reference Include="UnityStubs" HintPath="$(RimWorldDir)/UnityStubs.dll" Private="false" />
+    <Reference Include="Waylith" HintPath="$(RimWorldDir)/Waylith.dll" Private="false" />
+    <Reference Include="com.rlabrecque.steamworks.net" HintPath="$(RimWorldDir)/com.rlabrecque.steamworks.net.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Publicize Include="Assembly-CSharp;0Harmony;UnityEngine.IMGUIModule" />
+    <Publicize Include="Assembly-CSharp;0Harmony;UnityStubs" />
     <DoNotPublicize Include="0Harmony:System.Runtime.CompilerServices.DefaultInterpolatedStringHandler" />
   </ItemGroup>
 
@@ -50,13 +56,6 @@
 <!--      <HintPath>bin\Multiplayer.dll_orig</HintPath>-->
 <!--    </Reference>-->
   </ItemGroup>
-
-  <!-- Ignore any system frameworks and get the system assemblies from Krafs.Rimworld.Ref -->
-  <Target Name="RemoveFramework" BeforeTargets="PrepareForBuild" DependsOnTargets="GetReferenceAssemblyPaths">
-    <PropertyGroup>
-      <TargetFrameworkDirectory></TargetFrameworkDirectory>
-    </PropertyGroup>
-  </Target>
 
   <PropertyGroup>
     <ModOutputPath>..\..\</ModOutputPath>

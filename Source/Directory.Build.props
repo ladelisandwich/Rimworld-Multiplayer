@@ -1,0 +1,25 @@
+<Project>
+
+  <!-- RimWorld 1.7 folder holding Assembly-CSharp.dll, UnityStubs.dll and Waylith.dll.
+       Set the RIMWORLD_DIR environment variable to build against another install. -->
+  <PropertyGroup>
+    <RimWorldDir Condition="'$(RIMWORLD_DIR)' != ''">$(RIMWORLD_DIR)</RimWorldDir>
+    <RimWorldDir Condition="'$(RimWorldDir)' == ''">/run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/common/RimWorld</RimWorldDir>
+  </PropertyGroup>
+
+  <Target Name="CheckRimWorldDir" BeforeTargets="ResolveAssemblyReferences"
+          Condition="'@(Reference->WithMetadataValue('Identity', 'Assembly-CSharp'))' != ''">
+    <Error Condition="!Exists('$(RimWorldDir)/Assembly-CSharp.dll')"
+           Text="Assembly-CSharp.dll not found in RimWorldDir '$(RimWorldDir)'. Set the RIMWORLD_DIR environment variable to the RimWorld 1.7 folder." />
+  </Target>
+
+  <!-- RimWorld.MultiplayerAPI depends on Krafs.Rimworld.Ref, which would add RimWorld 1.6's game and Unity
+       reference assemblies next to the 1.7 ones. Drop everything that package provides. -->
+  <Target Name="RemoveRimWorld16References" AfterTargets="ResolvePackageAssets">
+    <ItemGroup>
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)"
+                                      Condition="'%(ResolvedCompileFileDefinitions.NuGetPackageId)' == 'Krafs.Rimworld.Ref'" />
+    </ItemGroup>
+  </Target>
+
+</Project>
