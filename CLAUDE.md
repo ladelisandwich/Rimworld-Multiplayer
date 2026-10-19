@@ -48,19 +48,34 @@ as GitHub user ladelisandwich.
 - .NET: SDK 10.0.402 in ~/.dotnet (DOTNET_ROOT and PATH set in ~/.bashrc); 
 ilspycmd 11.1.0.9782 is a global dotnet tool in ~/.dotnet/tools.
 - RimWorld 1.7 folder: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/common/RimWorld 
-(Steam library on the "Big and Slow guy" drive). As of Oct 19 2026 Steam has 
-it on the public branch (1.6.4871 rev598, Unity/Mono). 1.7.4976 rev1043 was 
-run here on Oct 12; switch the beta to unstable and refill the PENDING items.
-- Game binary: PENDING (needs the 1.7 install). The Oct 12 1.7 log shows the 
-game started as "<RimWorld folder>/RimWorld.dll".
-- Game DLL folder (Assembly-CSharp, UnityStubs, Waylith): PENDING (needs the 
-1.7 install; probably the RimWorld folder root, next to RimWorld.dll). On 1.6 
-Assembly-CSharp.dll is in RimWorldLinux_Data/Managed.
-- RimWorld.runtimeconfig.json: PENDING (not present on 1.6).
+(Steam library on the "Big and Slow guy" drive, unstable beta branch). 
+Game version 1.7.4982 rev1280 (Steam build 26031547, Oct 19 2026), runtime 
+.NET 10.0.13-waylithclr.dev.
+- Game binary: <RimWorld folder>/RimWorld (native apphost that runs 
+RimWorld.dll)
+- Game DLL folder (Assembly-CSharp, UnityStubs, Waylith): the RimWorld folder 
+root (RimWorld.dll is there too). Application.dataPath is 
+<RimWorld folder>/RimWorld_Data.
+- RimWorld.runtimeconfig.json: tfm net10.0, framework Microsoft.NETCore.App 
+10.0.13-waylithclr.dev, plus WaylithClr compatibility switches. The ones that 
+matter for this port: MonoStringHashCode=true (string.GetHashCode may use 
+Mono's algorithm and be stable across processes; verify before relying on it, 
+and keep using StableStringHash for anything networked), 
+JitPatchableAssemblies=Assembly-CSharp with 
+JitNoInlinePatchableIntoDynamicMethods=true (affects the JIT-inlining 
+concern; BCL methods like HashCode.Combine are not covered), 
+SkipAccessChecks=true, IsolatedLoadsResolveByName=true, 
+LaxAssemblyBinding=true, AssemblyNameRedirects 
+UnityEngine*/Unity.*/Assembly-CSharp-firstpass -> UnityStubs, 
+EnableUnsafeBinaryFormatterSerialization=true.
 - Mods folder: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/common/RimWorld/Mods 
-(empty). Workshop mods: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/workshop/content/294100
+(GenFilePaths: parent of dataPath; the game creates it at startup, and the 
+1.7 update removed the empty one). Workshop mods: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/workshop/content/294100
 - Player.log: ~/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Logs/Player.log 
-(confirmed by the 1.7 log header; 1.6 still writes ../Player.log)
+(RimWorld.dll Bootstrap.ResolveLogDataRoot: honors XDG_CONFIG_HOME, but NOT 
+-savedatafolder, which only moves the cache root. Two instances started 
+with different -savedatafolder still share this log folder. The older 
+../Player.log is from 1.6.)
 - Harmony mod 1.7 folder and 0Harmony version: <Workshop folder>/2009463077/1.7/Assemblies, 
 mod 3.0.1.0, 0Harmony 3.0.0-rc.3 (AssemblyVersion 3.0.0.0)
 - Saved 1.6 Assembly-CSharp.dll for diffing: ~/rw-builds/1.6.4871/Assembly-CSharp.dll
@@ -84,7 +99,7 @@ and add it to Known gaps.
 or IL.
 - End every task by updating Progress and Known gaps below.
 ## Progress
-- [ ] 1 Branch, tools, this file (done except the PENDING 1.7 game paths)
+- [x] 1 Branch, tools, this file
 - [ ] 2 Prepatcher removed, ritual sync on Harmony
 - [ ] 3 Builds for net10.0 with Harmony 3 and 1.7 DLLs
 - [ ] 4 Mono layer off
