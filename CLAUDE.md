@@ -218,7 +218,10 @@ tick so a new faction gets the early-game threat ramp and grace periods
 custom-ideo command was rejected on every client ("String too long"), fixed 
 by sending the ideo gzipped in pieces; a preset-ideo faction was created 
 fine. Second check (Oct 19 15:41): a client faction with a fluid ideo 
-created end to end, 0 errors, no desync. Not yet seen in game: a starting 
+created end to end, 0 errors, no desync, but the editor was read-only 
+(draft injected outside the window draw; fixed in e9d2d34). Third check 
+(Oct 19 16:03): precepts editable, custom-ideo faction created, both logs 
+with 0 errors and 0 exceptions, no desync. Not yet seen in game: a starting 
 pawn with an addiction (the ReadExposable fix), a doubled quest raid, the 
 settle clock.
 ## Known gaps
