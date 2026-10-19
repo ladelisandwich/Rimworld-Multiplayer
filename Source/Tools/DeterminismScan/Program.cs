@@ -8,13 +8,16 @@ using System.Text;
 // (string/tuple/enum hash codes, System.HashCode) or that runs work in parallel (Waylith jobs, Parallel,
 // Task.Run, ThreadPool). Output: a Markdown file grouped by the calling type.
 
+bool realtime = args.Length > 0 && args[0] == "--realtime";
+if (realtime) args = args[1..];
+
 if (args.Length < 2)
 {
-    Console.Error.WriteLine("usage: DeterminismScan <Assembly-CSharp.dll> <output.md>");
+    Console.Error.WriteLine("usage: DeterminismScan [--realtime] <Assembly-CSharp.dll> <output.md>");
     return 1;
 }
 
-var scanner = new Scanner(args[0]);
+var scanner = new Scanner(args[0], realtime);
 var hits = scanner.Scan();
 
 // The assessment at the end of the report is written by hand; keep it when regenerating
@@ -27,7 +30,7 @@ if (File.Exists(args[1]))
     if (idx >= 0) assessment = existing[idx..];
 }
 
-File.WriteAllText(args[1], Report.Build(args[0], hits) + assessment);
+File.WriteAllText(args[1], Report.Build(args[0], hits, realtime) + assessment);
 Console.WriteLine($"{hits.Count} call sites in {hits.Select(h => h.CallerType).Distinct().Count()} types -> {args[1]}");
 return 0;
 
@@ -38,14 +41,40 @@ sealed class Scanner
     private readonly PEReader pe;
     private readonly MetadataReader md;
 
-    public Scanner(string path)
+    private readonly (string category, string type, string? method)[] targets;
+
+    public Scanner(string path, bool realtime)
     {
         pe = new PEReader(File.OpenRead(path));
         md = pe.GetMetadataReader();
+        targets = realtime ? RealtimeTargets : HashTargets;
     }
 
+    // Frame and wall-clock time and unseeded randomness: harmless in UI, a desync when it reaches the simulation
+    private static readonly (string category, string type, string? method)[] RealtimeTargets =
+    [
+        ("Time.deltaTime", "UnityEngine.Time", "get_deltaTime"),
+        ("Time.deltaTime", "UnityEngine.Time", "get_unscaledDeltaTime"),
+        ("Time.deltaTime", "UnityEngine.Time", "get_smoothDeltaTime"),
+        ("Time.time", "UnityEngine.Time", "get_time"),
+        ("Time.time", "UnityEngine.Time", "get_realtimeSinceStartup"),
+        ("Time.time", "UnityEngine.Time", "get_unscaledTime"),
+        ("Time.frameCount", "UnityEngine.Time", "get_frameCount"),
+        ("RealTime", "Verse.RealTime", "get_deltaTime"),
+        ("RealTime", "Verse.RealTime", "get_frameCount"),
+        ("RealTime", "Verse.RealTime", "get_realTime"),
+        ("RealTime", "Verse.RealTime", "get_LastRealTime"),
+        ("Wall clock", "System.DateTime", "get_Now"),
+        ("Wall clock", "System.DateTime", "get_UtcNow"),
+        ("Wall clock", "System.Environment", "get_TickCount"),
+        ("Wall clock", "System.Environment", "get_TickCount64"),
+        ("Wall clock", "System.Diagnostics.Stopwatch", null),
+        ("System.Random", "System.Random", null),
+        ("Guid.NewGuid", "System.Guid", "NewGuid"),
+    ];
+
     // Category name, declaring type full name, method name (null = any method of the type)
-    private static readonly (string category, string type, string? method)[] Targets =
+    private static readonly (string category, string type, string? method)[] HashTargets =
     [
         ("string.GetHashCode", "System.String", "GetHashCode"),
         ("HashCode", "System.HashCode", "Combine"),
@@ -129,7 +158,7 @@ sealed class Scanner
         // ValueTuple`2.. all count as ValueTuple
         var typeNoArity = type.Contains('`') ? type[..type.IndexOf('`')] : type;
 
-        foreach (var (category, tType, tMethod) in Targets)
+        foreach (var (category, tType, tMethod) in targets)
             if (typeNoArity == tType && (tMethod == null || tMethod == method))
                 return (category, $"{type}.{method}");
 
@@ -248,16 +277,17 @@ sealed class Scanner
 
 static class Report
 {
-    public static string Build(string dll, List<Hit> hits)
+    public static string Build(string dll, List<Hit> hits, bool realtime = false)
     {
         var sb = new StringBuilder();
         var version = System.Diagnostics.FileVersionInfo.GetVersionInfo(dll).FileVersion;
 
-        sb.AppendLine("# Determinism scan of Assembly-CSharp");
+        sb.AppendLine(realtime ? "# Real-time and randomness scan of Assembly-CSharp" : "# Determinism scan of Assembly-CSharp");
         sb.AppendLine();
         sb.AppendLine($"Assembly-CSharp.dll {version}, scanned {DateTime.Now:yyyy-MM-dd}. ");
-        sb.AppendLine("Every method that calls string.GetHashCode, System.HashCode, a ValueTuple or Enum GetHashCode ");
-        sb.AppendLine("(all differ per process on .NET), WaylithJobRuntime, Parallel, Task.Run or ThreadPool (run in parallel).");
+        sb.AppendLine(realtime
+            ? "Every method that reads frame or wall-clock time (Time, RealTime, DateTime, Environment.TickCount, Stopwatch) or uses unseeded randomness (System.Random, Guid.NewGuid)."
+            : "Every method that calls string.GetHashCode, System.HashCode, a ValueTuple or Enum GetHashCode (all differ per process on .NET), WaylithJobRuntime, Parallel, Task.Run or ThreadPool (run in parallel).");
         sb.AppendLine();
         sb.AppendLine("| Category | Call sites | Types |");
         sb.AppendLine("|---|---|---|");

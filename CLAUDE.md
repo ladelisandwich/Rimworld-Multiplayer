@@ -52,8 +52,11 @@ GenSpawn.Spawn, ThingWithComps.InitializeComps. MonoMod has a re-apply path
 MonoMod expects) but it doesn't take effect on WaylithClr; cause unknown. 
 Workaround: launch with DOTNET_TieredCompilation=0 (Steam launch options 
 "DOTNET_TieredCompilation=0 %command%"). HarmonyPatchWatchdog logs an error at 
-startup when tiering is on, and in game when the TickManagerUpdate patch 
-stops firing. To dig into MonoMod, set MONOMOD_LogToFile=<path> (and 
+startup when tiering is on, offers a restart with it off at the main menu 
+(GenCommandLine.Restart -> Waylith RestartManager relaunches the same exe 
+with the same args and inherits the environment; marker env var 
+MultiplayerRestartedForTiering stops a loop), and logs an error in game 
+when the TickManagerUpdate patch stops firing. To dig into MonoMod, set MONOMOD_LogToFile=<path> (and 
 MONOMOD_LogSpam=1) in the environment and look for "Updating detour" lines.
 - With tiered compilation off, every method is JIT'ed fully optimized on 
 its first call, so a tiny method gets inlined into any caller compiled 
@@ -151,7 +154,9 @@ the repo root, holding one Multiplayer-1.7 folder. Both scripts share
 scripts/common.sh, which refuses to ship Harmony, game or .NET dlls.
 - Tools (not part of the mod): dotnet run -c Release --project 
 Source/Tools/DeterminismScan -- <Assembly-CSharp.dll> docs/determinism-scan.md 
-(keeps the hand-written "## Multiplayer assessment" section); 
+(keeps the hand-written "## Multiplayer assessment" section; add --realtime 
+before the dll for the frame/wall-clock/System.Random scan, 
+docs/realtime-scan.md); 
 python3 scripts/mp_targets.py . > targets.txt && dotnet run -c Release 
 --project Source/Tools/RwDiff -- ~/rw-builds/<old>/Assembly-CSharp.dll 
 <new Assembly-CSharp.dll> targets.txt docs/rwdiff-<old>-<new>.md (keeps 
@@ -279,3 +284,5 @@ pawns before their ideo exists. Pre-existing upstream behaviour, harmless.
 - A client that is catching up (simulating many ticks per frame) shows downed 
 or resting pawns rolling fast: the PawnDownedWiggler runs per tick. Cosmetic, 
 same on 1.6.
+- Stability notes for the port: docs/desync-risks-1.7.md (checked facts, 
+watch items, untested cross-OS float math).
