@@ -149,6 +149,7 @@ namespace Multiplayer.Client
             finally
             {
                 PostContext();
+                Desyncs.PawnStateTrace.RecordMapTick(map, mapTicks);
                 Multiplayer.game.sync.TryAddMapRandomState(map.uniqueID, randState);
                 eventCount++;
                 tickingMap = null;

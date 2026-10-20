@@ -29,13 +29,24 @@ public static class SyncRituals
     // the other, and the prefix can even run twice for one call. Dispatching on the instance's type means a
     // call is only ever synced by its own widget's SyncMethod, and __runOriginal stops a second run of the
     // prefix from syncing a call that an earlier run already synced.
+    // Diagnostics for the dev-mode "Patch hit counts": runs of the prefix that matched no target (wrong instance
+    // type or token), kept apart from runs that never happened at all
+    public static int unmatchedRuns;
+    private static HashSet<(int, Type)> loggedUnmatched = new();
+
     public static bool HookPrefix(object __instance, object[] __args, MethodBase __originalMethod, bool __runOriginal)
     {
         if (!__runOriginal)
             return false;
 
-        if (!hookTargets.TryGetValue((__originalMethod.MetadataToken, __instance.GetType()), out var target))
+        var key = (__originalMethod.MetadataToken, __instance.GetType());
+        if (!hookTargets.TryGetValue(key, out var target))
+        {
+            unmatchedRuns++;
+            if (Prefs.DevMode && loggedUnmatched.Add(key))
+                Log.Message($"MP ritual sync hook ran for {__originalMethod.DeclaringType}.{__originalMethod.Name} on {__instance.GetType()} but matched no target");
             return true;
+        }
 
         target.hits++;
         if (Prefs.DevMode && !target.loggedHit)
@@ -48,7 +59,8 @@ public static class SyncRituals
     }
 
     public static IEnumerable<(string name, int hits)> GetHitCounts() =>
-        hookTargets.Select(kv => ($"{kv.Value.name} ({kv.Key.Item2.Name})", kv.Value.hits));
+        hookTargets.Select(kv => ($"{kv.Value.name} ({kv.Key.Item2.Name})", kv.Value.hits))
+            .Append(("prefix runs that matched no target", unmatchedRuns));
 
     private static MethodInfo syncMethod = AccessTools.Method("Multiplayer.Client.Sync:Method");
 

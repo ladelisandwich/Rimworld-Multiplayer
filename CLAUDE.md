@@ -213,10 +213,20 @@ or IL.
 game at 16:30: both sides' reports carry readable traces and ~1500 jitted 
 methods; a false "Trace hashes don't match" from InvokeStub_* frames fixed 
 afterwards. Ritual test still pending (no "MP ritual sync hook hit" lines in 
-any log yet). The recurring genuine desync was traced at 16:45 (Desync-10): 
-the client's copy of a host colonist entered a cell a tick apart from the 
-host's, everything before identical; cause pinned on the variable tick rate 
-(Known gaps, "Variable tick rate"), fix in, verification pending.)
+any log yet; the Oct 19 18:04 hit counts show all ten hooks at 0 after a 
+ritual test, so either the test didn't change roles or the hooks don't run 
+on .NET; SyncRituals now also counts prefix runs that matched no target). 
+The recurring genuine desync was traced at 16:45 (Desync-10): the client's 
+copy of a host colonist entered a cell a tick apart from the host's, cause 
+the variable tick rate (Known gaps). Confirmed by the 18:04 hit counts: 
+GenTicks.GetCameraUpdateRate 0 on both sides, the getter patches at 11.5M 
+and 39M. That session ran 18 minutes instead of 5 and then desynced on map 
+0 at tick 63012 (Desync-11): the client's copy of host colonist Human127 
+had a hediff with hediffGivers (ToxicBuildup, DrugOverdose, 
+HeartArteryBlockage, NuclearStomach or a stage of one) that the host's 
+didn't, with every earlier random call identical. A per-tick pawn state 
+digest (PawnStateTrace) now rides the trace hash list so the next report 
+names the pawn and field that first differ.)
 - [ ] 11 Release zip
 - [ ] Extra (Oct 19, user request): multifaction fixes. Custom and fluid 
 ideoligions for new factions (Page_ConfigureIdeo_Multifaction), quest raids 
@@ -378,8 +388,17 @@ virtual getters Thing.UpdateRateTicks and Pawn.UpdateRateTicks (DoTick
 reaches them through callvirt, which the JIT can't inline; Pawn's override 
 calls base non-virtually, hence its own patch). Hit counters 
 "GenTicks.GetCameraUpdateRate synced", "Thing.UpdateRateTicks synced" and 
-"Pawn.UpdateRateTicks synced" show which fire: GetCameraUpdateRate at 0 while 
-the getters climb confirms the inlining. Unverified in game.
+"Pawn.UpdateRateTicks synced" show which fire. Confirmed Oct 19 18:04: 
+GetCameraUpdateRate 0 on host and client, the getters in the millions. 
+Upstream's patch is dead on .NET; this will be the first thing to tell them.
+- PawnStateTrace (slow tracing only): each map tick adds a desync log item 
+whose text is a digest of every spawned pawn (position, tickDelta, pather 
+cell and cost, job and toil, stance, age ticks, food/rest/joy/mood, each 
+hediff with stage and severity) and whose hash joins the trace hash list. A 
+state-only divergence then shows as "Trace hashes don't match" with the two 
+digests as the first differing trace in local_traces.txt and 
+host_traces.txt; diff them for the pawn and field. Costs a ~7 KB string per 
+map tick while on. Both players need slow tracing on, as for the traces.
 - Multifaction storyteller (Oct 19 fixes, in-game check pending):
   - Quest raids (QuestPart_ThreatsGenerator, "raids for N days" quests) fired 
   once per player faction because every faction's storyteller ticks every map 

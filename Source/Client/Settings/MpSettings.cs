@@ -79,6 +79,10 @@ namespace Multiplayer.Client
             Scribe_Values.Look(ref showMainMenuAnim, "showMainMenuAnim", true);
             Scribe_Values.Look(ref appendNameToAutosave, "appendNameToAutosave");
             Scribe_Values.Look(ref desyncTracingMode, "desyncTracingMode", DesyncTracingMode.Fast);
+            // The JIT list listener has to run from startup to be worth anything (Oct 19: empty when it only
+            // started on toggling the setting, since the setting was already on)
+            if (Scribe.mode == LoadSaveMode.LoadingVars && desyncTracingMode == DesyncTracingMode.Slow && !Native.IsMono)
+                Desyncs.JittedMethods.Init();
             Scribe_Values.Look(ref transparentPlayerCursors, "transparentPlayerCursors", true);
             Scribe_Values.Look(ref hideOtherPlayersInColonistBar, "hideOtherPlayersInColonistBar");
             Scribe_Values.Look(ref hideOtherPlayersQuests, "hideOtherPlayersQuests");
