@@ -26,6 +26,7 @@ public static class PatchHitCounter
         "TargetInfo.GetHashCode map combine", "WindManager.BaseWindSpeedAt map hash", "Tradeable.GetHashCode",
         "GlowGrid litGlowers comparer", "FishShadowComponent water body hash",
         "FastTileFinder single batch", "MapBrightnessTracker fixed deltaTime", "UndercaveMapComponent collapse",
+        "GenTicks.GetCameraUpdateRate synced", "Thing.UpdateRateTicks synced", "Pawn.UpdateRateTicks synced",
     ];
 
     static PatchHitCounter()

@@ -213,9 +213,10 @@ or IL.
 game at 16:30: both sides' reports carry readable traces and ~1500 jitted 
 methods; a false "Trace hashes don't match" from InvokeStub_* frames fixed 
 afterwards. Ritual test still pending (no "MP ritual sync hook hit" lines in 
-any log yet). The recurring genuine desync, client's own map a few minutes 
-after creating its faction, happened again at 16:27 (Desync-05) with tracing 
-off; the next tracing run should catch it.)
+any log yet). The recurring genuine desync was traced at 16:45 (Desync-10): 
+the client's copy of a host colonist entered a cell a tick apart from the 
+host's, everything before identical; cause pinned on the variable tick rate 
+(Known gaps, "Variable tick rate"), fix in, verification pending.)
 - [ ] 11 Release zip
 - [ ] Extra (Oct 19, user request): multifaction fixes. Custom and fluid 
 ideoligions for new factions (Page_ConfigureIdeo_Multifaction), quest raids 
@@ -360,6 +361,25 @@ replays in ~/.rw-mp-test/host/MpReplays):
   client's own map, which the host doesn't view. Map.MapUpdate is identical 
   in 1.6 and 1.7 and the map held nothing unusual (3 colonists, dormant 
   mechs, corpses, wild animals), so no 1.7-specific lead; needs traces.
+- Variable tick rate (game feature since 1.6): Thing.DoTick runs TickInterval 
+(needs, health, job tracker interval, mind state) every UpdateRateTicks ticks, 
+and vanilla takes that rate from the camera (1 to 5 in view, 15 off screen 
+or on another map). Upstream's VTRSyncPatch prefixes 
+GenTicks.GetCameraUpdateRate to return a synced per-map rate instead. Its 
+only caller is the 6-byte Thing.UpdateRateTicks getter, which on .NET can 
+inline the callee and skip the prefix, so each client ticked pawns at its 
+own camera's rate. Oct 19 Desync-10 traces: on map 0 the client's copy of 
+the host colonist Human253 entered a cell at tick 11126 (three Rand calls in 
+Pawn_FilthTracker.Notify_EnteredNewCell) and the host's didn't, with every 
+earlier trace identical; every genuine desync that day was on the map the 
+other player wasn't viewing, minutes after the second map appeared, which is 
+exactly when one player's pawns leave the other's view. Fix: prefixes on the 
+virtual getters Thing.UpdateRateTicks and Pawn.UpdateRateTicks (DoTick 
+reaches them through callvirt, which the JIT can't inline; Pawn's override 
+calls base non-virtually, hence its own patch). Hit counters 
+"GenTicks.GetCameraUpdateRate synced", "Thing.UpdateRateTicks synced" and 
+"Pawn.UpdateRateTicks synced" show which fire: GetCameraUpdateRate at 0 while 
+the getters climb confirms the inlining. Unverified in game.
 - Multifaction storyteller (Oct 19 fixes, in-game check pending):
   - Quest raids (QuestPart_ThreatsGenerator, "raids for N days" quests) fired 
   once per player faction because every faction's storyteller ticks every map 

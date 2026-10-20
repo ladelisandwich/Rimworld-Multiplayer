@@ -7,6 +7,9 @@ using Verse;
 
 namespace Multiplayer.Client.Patches
 {
+    // The game's variable tick rate: a thing's TickInterval runs every UpdateRateTicks ticks, and the vanilla
+    // value comes from the camera (1 to 5 in view, 15 off screen or on another map). In multiplayer every client
+    // must use the same rate, so it's derived from which maps have players on them (AsyncTimeComp.VTR).
     [HarmonyPatch(typeof(GenTicks), nameof(GenTicks.GetCameraUpdateRate))]
     public static class VTRSyncPatch
     {
@@ -15,9 +18,45 @@ namespace Multiplayer.Client.Patches
             if (Multiplayer.Client == null)
                 return true;
 
+            PatchHitCounter.Hit("GenTicks.GetCameraUpdateRate synced");
             // Keep the synchronized update rate until animation timing can be
             // brought back in line with the vanilla value.
             __result = VTRSync.GetSynchronizedUpdateRate(thing);
+            return false;
+        }
+    }
+
+    // GetCameraUpdateRate is only ever called from the tiny Thing.UpdateRateTicks getter, which the .NET JIT can
+    // inline it into, and then the patch above never runs: each client ticks a pawn at its own camera's rate.
+    // Seen Oct 19 as the recurring desync on whichever map the other player wasn't looking at (a colonist in the
+    // host's view entered a cell a tick apart from the client's copy). Thing.DoTick reads UpdateRateTicks through
+    // a virtual call, which can't be inlined, so the getters themselves carry the synced rate.
+    [HarmonyPatch(typeof(Thing), nameof(Thing.UpdateRateTicks), MethodType.Getter)]
+    public static class VtrSyncThingPatch
+    {
+        static bool Prefix(ref int __result, Thing __instance)
+        {
+            if (Multiplayer.Client == null)
+                return true;
+
+            PatchHitCounter.Hit("Thing.UpdateRateTicks synced");
+            __result = VTRSync.GetSynchronizedUpdateRate(__instance);
+            return false;
+        }
+    }
+
+    // Pawn's override calls base.UpdateRateTicks non-virtually (inlineable), so it gets its own copy of the rule:
+    // animals always 15 (vanilla), everything else the synced rate
+    [HarmonyPatch(typeof(Pawn), nameof(Pawn.UpdateRateTicks), MethodType.Getter)]
+    public static class VtrSyncPawnPatch
+    {
+        static bool Prefix(ref int __result, Pawn __instance)
+        {
+            if (Multiplayer.Client == null)
+                return true;
+
+            PatchHitCounter.Hit("Pawn.UpdateRateTicks synced");
+            __result = __instance.RaceProps.Animal ? VTRSync.MaximumVtr : VTRSync.GetSynchronizedUpdateRate(__instance);
             return false;
         }
     }
