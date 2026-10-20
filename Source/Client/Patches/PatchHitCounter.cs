@@ -21,8 +21,8 @@ public static class PatchHitCounter
     // Every counter name, so the report also lists the ones that never fired
     public static readonly string[] Known =
     [
-        "HashCode.Combine<int x2>", "HashCode.Combine<int x3>", "HashCode.Combine<int x4>", "HashCode.Combine<int x5>",
-        "HashCode.Combine<int x6>", "HashCode.Combine<int x7>", "HashCode.Combine<int x8>",
+        "HashCode.Combine seed in Map.get_NextGenSeed", "HashCode.Combine seed in Gravship.get_ConstantRandSeed",
+        "HashCode.Combine seed in Building_Trap.KnowsOfTrap", "HashCode.Combine seed in LayoutWorker.FillAllRooms",
         "TargetInfo.GetHashCode map combine", "WindManager.BaseWindSpeedAt map hash", "Tradeable.GetHashCode",
         "GlowGrid litGlowers comparer", "FishShadowComponent water body hash",
         "FastTileFinder single batch", "MapBrightnessTracker fixed deltaTime", "UndercaveMapComponent collapse",

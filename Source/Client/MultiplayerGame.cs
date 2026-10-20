@@ -49,8 +49,6 @@ namespace Multiplayer.Client
         public MultiplayerGame()
         {
             DeferredStackTracing.acc = 0;
-            // Oct 19 diagnostics for the SyncActions table losing its entries between startup and play
-            Log.Message($"Multiplayer: SyncActions table holds {SyncActions.syncActions.Count} entries at game start");
 
             Toils_Ingest.cardinals = GenAdj.CardinalDirections.ToList();
             Toils_Ingest.diagonals = GenAdj.DiagonalDirections.ToList();

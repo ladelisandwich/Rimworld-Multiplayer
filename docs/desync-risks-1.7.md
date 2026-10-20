@@ -10,8 +10,8 @@ Written Oct 2026 for 1.7.4982 with Multiplayer 0.11.5.17. Facts below were check
   sequences. `HashSet<Thing>` iteration therefore matches between clients that run the same simulation, which is
   the property upstream relied on with Mono. UI code that hashes new objects can still perturb the sequence,
   which is why the existing GlowGrid and Tradeable hash patches stay.
-- **`Enum.GetHashCode` and `ValueTuple.GetHashCode`** are stable across processes on .NET 10 (checked); only
-  `System.HashCode` is per process. Assembly-CSharp 1.7 makes no direct `string.GetHashCode` call, and the
+- **`Enum.GetHashCode`** is stable across processes on .NET 10; `System.HashCode` is per process, and
+  `ValueTuple.GetHashCode` and `MethodInfo.GetHashCode` go through it (corrected Oct 20). Assembly-CSharp 1.7 makes no direct `string.GetHashCode` call, and the
   game's runtimeconfig turns on `WaylithClr.MonoStringHashCode`, so string-keyed dictionaries iterate the same
   way everywhere.
 - **Real time in the simulation.** A scan of every `Time`, `RealTime`, `DateTime`, `Stopwatch`, `System.Random`
@@ -34,10 +34,12 @@ Written Oct 2026 for 1.7.4982 with Multiplayer 0.11.5.17. Facts below were check
   remember a launch option.
 - **Tiny patched methods inlined into early-compiled callers** (tiering off makes the JIT optimize everything
   on first call). Found once (`LoadedObjectDirectory.Clear`); the "Patch hit counts" debug action exists to
-  catch the next one. Any `HashCode.Combine<int xN>` counter at 0 after a long session means the game-side
-  `GetHashCode` methods need patching instead.
+  catch the next one. A "HashCode.Combine seed in ..." counter at 0 after a session that hit that code means
+  the seed patch didn't run there.
 - **`System.HashCode` in simulation code**: `Map.NextGenSeed`, `Gravship.ConstantRandSeed`, trap avoidance
-  rolls, layout `RandBlock`s. All int overloads, covered by `Combine2..8` when they fire (see above).
+  rolls, layout `RandBlock`s. All int overloads, replaced at those call sites by `SeedHashCombinePatch`.
+  Upstream patched `HashCode.Combine` itself while a session was active; that changed every hash in the
+  process at session start and broke every table filled before it (caravan menus, ritual hooks, Oct 20).
 
 ## Not handled
 

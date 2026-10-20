@@ -34,11 +34,18 @@ method it patches, at the right MethodDesc offset (checked in 0Harmony
 3.0.0-rc.3). It can't stop inlining into callers that were already JIT'ed. 
 Never write into MethodHandle/TypeHandle memory: Mono's layouts corrupt 
 CoreCLR's MethodDesc (found in task 6: MpUtil.MarkNoInlining).
-- On .NET 10, Enum.GetHashCode and ValueTuple.GetHashCode are stable across 
-processes (checked); System.HashCode is not. Assembly-CSharp 1.7 makes no 
-direct string.GetHashCode call. Its simulation-relevant HashCode.Combine 
-uses are int overloads (Map.NextGenSeed, Gravship.ConstantRandSeed, trap 
-avoidance, LayoutWorker RandBlocks), covered by Combine2..8 when they fire.
+- On .NET 10, Enum.GetHashCode is stable across processes; System.HashCode 
+is not (random seed per process, GenerateGlobalSeed), and the game runtime's 
+ValueTuple.GetHashCode and RuntimeMethodInfo.GetHashCode both go through 
+HashCode.Combine, so they differ per process too (the Oct 19 "ValueTuple is 
+stable" check was wrong: it ran while Multiplayer's old HashCode.Combine 
+patch was active). Assembly-CSharp 1.7 makes no direct string.GetHashCode 
+call. Its simulation-relevant HashCode.Combine uses are int overloads used 
+as seeds (Map.NextGenSeed, Gravship.ConstantRandSeed, trap avoidance, 
+LayoutWorker RandBlocks), replaced at those call sites by 
+SeedHashCombinePatch. Never patch a BCL hash function process-wide or make 
+it depend on session state: every hash table filled before the switch loses 
+its keys (found Oct 20, see Known gaps, caravans).
 - 1.6 -> 1.7: all 315 lambda lookups resolve to the same members with the 
 same IL; the nine transpiled methods with changed IL are benign (see 
 docs/rwdiff-1.6-1.7.md, Review).
@@ -101,8 +108,10 @@ as GitHub user ladelisandwich.
 ilspycmd 11.1.0.9782 is a global dotnet tool in ~/.dotnet/tools.
 - RimWorld 1.7 folder: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/common/RimWorld 
 (Steam library on the "Big and Slow guy" drive, unstable beta branch). 
-Game version 1.7.4982 rev1280 (Steam build 26031547, Oct 19 2026), runtime 
-.NET 10.0.13-waylithclr.dev.
+Game version 1.7.4984 rev1242 (Steam update Oct 20 2026, 13:07; was 
+1.7.4982 rev1280, Steam build 26031547, Oct 19), runtime 
+.NET 10.0.13-waylithclr.dev. The mod builds against 1.7.4984 with no errors; 
+RwDiff and DeterminismScan haven't been rerun for 1.7.4984 yet.
 - Game binary: <RimWorld folder>/RimWorld (native apphost that runs 
 RimWorld.dll)
 - Game DLL folder (Assembly-CSharp, UnityStubs, Waylith): the RimWorld folder 
@@ -215,7 +224,11 @@ methods; a false "Trace hashes don't match" from InvokeStub_* frames fixed
 afterwards. Ritual test still pending (no "MP ritual sync hook hit" lines in 
 any log yet; the Oct 19 18:04 hit counts show all ten hooks at 0 after a 
 ritual test, so either the test didn't change roles or the hooks don't run 
-on .NET; SyncRituals now also counts prefix runs that matched no target). 
+on .NET; SyncRituals now also counts prefix runs that matched no target. 
+Likely cause found Oct 20: SyncRituals keys its hooks by a (token, Type) 
+tuple, and the old HashCode.Combine patch changed tuple hashes once a 
+session started, so no lookup could match; fixed with the caravan bug, 
+ritual test still to be redone). 
 The recurring genuine desync was traced at 16:45 (Desync-10): the client's 
 copy of a host colonist entered a cell a tick apart from the host's, cause 
 the variable tick rate (Known gaps). Confirmed by the 18:04 hit counts: 
@@ -371,31 +384,34 @@ replays in ~/.rw-mp-test/host/MpReplays):
   client's own map, which the host doesn't view. Map.MapUpdate is identical 
   in 1.6 and 1.7 and the map held nothing unusual (3 colonists, dormant 
   mechs, corpses, wild animals), so no 1.7-specific lead; needs traces.
-- Caravans couldn't enter any settlement (right-click on the tile did 
-nothing, Oct 19 Steam session with a friend): SyncActions.SyncAction2_Postfix 
-looked up __originalMethod in a Dictionary<MethodBase, ISyncAction> and threw 
-KeyNotFoundException for Settlement.GetFloatMenuOptions, taking the whole 
-OnGUI pass down. First fix (c41586d): MethodIdentityComparer (metadata 
-token, module, declaring type, generic arguments) keys that table and 
-Sync.methodBaseToInternalId, and a miss logs once instead of throwing. The 
-next session still missed all three overrides (Settlement, MapParent, 
-WorldObject), and the unsynced menu was worse: the client's "enter colony" 
-ran on the client alone, desynced it and the rejoin put the caravan back, 
-in a loop. The table is right at startup (headless runs with -mod=, with 
-the saved mod list, and with Prepare Carefully and Replace Stuff active all 
-log "SyncActions patched 5 methods" and find the Settlement entry), so the 
-entries are lost or the statics are swapped somewhere between startup and 
-play; nothing in the mod clears or reassigns the table, and Harmony 3 
-re-resolves patch methods by module id from serialized patch state 
-(AccessTools.GetMethodByModuleAndToken), which would only matter with two 
-copies of Multiplayer.dll loaded. Now: a miss falls back to a signature 
-match, then to SyncWorldObjCaravanMenus directly (every entry maps to that 
-one handler), each logged once with token, module and assembly identity of 
-both sides and the table size; MultiplayerGame's constructor logs the table 
-size at game start. Read those lines from the next host log to pin the cause. 
+- Caravans couldn't enter any settlement (Oct 19 Steam sessions with a 
+friend). First the right-click on the tile did nothing: 
+SyncActions.SyncAction2_Postfix looked up __originalMethod in a 
+Dictionary<MethodBase, ISyncAction> and threw KeyNotFoundException for 
+Settlement.GetFloatMenuOptions, taking the whole OnGUI pass down (c41586d 
+made a miss log once instead). Then the menu opened unsynced, so a 
+client's "enter colony" ran on that client alone, desynced it, and the 
+rejoin put the caravan back, in a loop. Cause, reproduced Oct 20 with a 
+headless -quicktest run that hosted programmatically and called the menu: 
+upstream's HashCode.Combine<int x2..8> prefixes returned a deterministic 
+hash only while Multiplayer.Client was set. RuntimeMethodInfo.GetHashCode 
+and ValueTuple.GetHashCode go through HashCode.Combine on this runtime, so 
+the SyncActions table (filled at startup) still held all 5 keys after 
+hosting but no lookup could find them. The same flip broke the ritual hook 
+table (tuple keys) and any other MethodInfo- or tuple-keyed table spanning 
+a session start or end, Harmony's own patch state included. Fix: the global 
+prefixes are gone; SeedHashCombinePatch transpiles the four seed call sites 
+(Map.NextGenSeed, Gravship.ConstantRandSeed, Building_Trap.KnowsOfTrap, 
+LayoutWorker.FillAllRooms) to the same deterministic functions, logging an 
+error if a call site no longer has the call. MethodIdentityComparer stays 
+(hash from metadata tokens only). Verified headless after the fix: tuple and 
+MethodInfo hashes unchanged across hosting, the lookup hits, and the menus 
+of the player's colony and a foreign settlement go through 
+SyncAction.DoSync. Not yet checked with a real caravan in a two-player game. 
 Note the Steam launch no longer passes -mod= (no "Running with command line 
 mod list" line), so the saved mod list applies: Prepare Carefully (1.6) and 
-Replace Stuff (1.5) are active in those sessions.
+Replace Stuff Continued (1.7) are active in those sessions, and the friend 
+joined with "Mod list diff: WrongOrder" and "Configs match: False".
 - Variable tick rate (game feature since 1.6): Thing.DoTick runs TickInterval 
 (needs, health, job tracker interval, mind state) every UpdateRateTicks ticks, 
 and vanilla takes that rate from the camera (1 to 5 in view, 15 off screen 

@@ -6,12 +6,12 @@ using System.Reflection.Emit;
 
 namespace Multiplayer.Client.Util;
 
-// Keys dictionaries by what a method is, not by which MethodBase object describes it. On .NET, MethodBase.Equals
-// for a non-generic method is reference equality, and in the game the object Harmony hands a patch as
-// __originalMethod didn't match the one the dictionary had been keyed with (Oct 19: KeyNotFoundException in
-// SyncActions for Settlement.GetFloatMenuOptions, which killed the world right-click menu on every settlement).
-// Mono compared method handles. Metadata token plus module identifies the definition; the declaring type's full
-// name and the method's generic arguments tell instantiations apart.
+// Keys dictionaries by what a method is, not by which MethodBase object describes it: metadata token plus module
+// identify the definition, the declaring type's full name and the method's generic arguments tell instantiations
+// apart, and the reflected type doesn't matter. The hash is plain arithmetic on metadata tokens. On this runtime
+// RuntimeMethodInfo.GetHashCode goes through System.HashCode.Combine, and until Oct 20 Multiplayer replaced that
+// function's result while a session was active, so a table filled at startup lost its keys once a game was hosted
+// or joined (SyncActions and Settlement.GetFloatMenuOptions: the caravan menu ran unsynced and desynced the client).
 public sealed class MethodIdentityComparer : IEqualityComparer<MethodBase>
 {
     public static readonly MethodIdentityComparer Instance = new();
@@ -30,7 +30,7 @@ public sealed class MethodIdentityComparer : IEqualityComparer<MethodBase>
     public int GetHashCode(MethodBase m)
     {
         if (m is DynamicMethod) return m.GetHashCode();
-        return HashCode.Combine(m.MetadataToken, StringComparer.Ordinal.GetHashCode(m.DeclaringType?.FullName ?? ""));
+        return unchecked(m.MetadataToken * 397) ^ (m.DeclaringType?.MetadataToken ?? 0);
     }
 
     private static string GenericArgs(MethodBase m) =>

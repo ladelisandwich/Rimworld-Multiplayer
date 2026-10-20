@@ -215,21 +215,23 @@ Every method that calls string.GetHashCode, System.HashCode, a ValueTuple or Enu
 
 ## Multiplayer assessment
 
-Checked against RimWorld 1.7.4982 and this fork (task 8, Oct 2026). Verified on .NET 10: `Enum.GetHashCode`
-and `ValueTuple.GetHashCode` give the same value in every process, `System.HashCode` does not. The game
-makes no direct `string.GetHashCode` call; its runtimeconfig also turns on `WaylithClr.MonoStringHashCode`.
-"Handled" means an existing patch covers the call site, provided the patch fires (see the "MP: patch hit
-counts" debug action; a `HashCode.Combine<int xN>` counter at 0 after a long session means the JIT inlined
-that overload into its callers and the game-side `GetHashCode` methods need patching instead).
+Checked against RimWorld 1.7.4982 and this fork (task 8, Oct 2026). On .NET 10 `Enum.GetHashCode` gives the
+same value in every process; `System.HashCode` does not (random seed per process), and `ValueTuple.GetHashCode`
+goes through it, so tuples differ per process as well (corrected Oct 20: the earlier "stable" check ran while
+the old process-wide `HashCode.Combine` patch was active). The game makes no direct `string.GetHashCode` call;
+its runtimeconfig also turns on `WaylithClr.MonoStringHashCode`. "Handled" means an existing patch covers the
+call site, provided the patch fires (see the "MP: patch hit counts" debug action; a "HashCode.Combine seed in
+..." counter at 0 after a session that generated maps, gravships, trap checks or layouts means the patch didn't
+run there). Hash values that are only lookup keys inside one process need no patch.
 
 ### System.HashCode
 
 | Call site | Runs in | Assessment |
 |---|---|---|
-| `Verse.Map.get_NextGenSeed` (int x3) | simulation: seed for every map generation | handled by `Combine3Patch` |
-| `RimWorld.Planet.Gravship.get_ConstantRandSeed` (int x2) | simulation: gravship rand seed | handled by `Combine2Patch` |
-| `RimWorld.Building_Trap.KnowsOfTrap` (int x2, into `Rand.ValueAsync`) | simulation: trap avoidance roll | handled by `Combine2Patch` |
-| `LayoutWorker.FillAllRooms` (int x2, into `RandBlock`) x3 | simulation: structure generation | handled by `Combine2Patch` |
+| `Verse.Map.get_NextGenSeed` (int x3) | simulation: seed for every map generation | handled by `SeedHashCombinePatch` |
+| `RimWorld.Planet.Gravship.get_ConstantRandSeed` (int x2) | simulation: gravship rand seed | handled by `SeedHashCombinePatch` |
+| `RimWorld.Building_Trap.KnowsOfTrap` (int x2, into `Rand.ValueAsync`) | simulation: trap avoidance roll | handled by `SeedHashCombinePatch` |
+| `LayoutWorker.FillAllRooms` (int x2, into `RandBlock`) x3 | simulation: structure generation | handled by `SeedHashCombinePatch` |
 | `RimWorld.Planet.FastTileFinder+CachedTileData.GetHashCode`, `+TileQueryParams.GetHashCode` | simulation: query cache keys | safe: dictionary lookups only, never iterated |
 | `Verse.PathFinder.FinalizeRecyclePathJobData`, `+MapGridRequest`, `+UnmanagedGridTraverseParams`, `Verse.PathFinderCostTuning.GetHashCode` | simulation: pathfinder cache keys and a `Log.WarningOnce` key | safe: lookups only |
 | `Verse.SimplifiedPastureNutritionSimulator+CacheKey.GetHashCode` | simulation: cache key | safe: lookups only |
