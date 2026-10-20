@@ -31,7 +31,7 @@ public static class ManagedStackTracing
         public bool skip;
     }
 
-    private static readonly Dictionary<MethodBase, FrameInfo> frameInfos = new();
+    private static readonly Dictionary<MethodBase, FrameInfo> frameInfos = new(Util.MethodIdentityComparer.Instance);
     private static readonly Regex harmonySuffix = new(@"_Patch\d+$", RegexOptions.Compiled);
 
     public static bool Enabled => !Native.IsMono && Multiplayer.settings.desyncTracingMode == DesyncTracingMode.Slow;

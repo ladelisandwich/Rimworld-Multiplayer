@@ -15,7 +15,7 @@ namespace Multiplayer.Client
         public static List<SyncHandler> handlers = new();
 
         // Internal maps for Harmony patches
-        public static Dictionary<MethodBase, int> methodBaseToInternalId = new();
+        public static Dictionary<MethodBase, int> methodBaseToInternalId = new(Util.MethodIdentityComparer.Instance);
         public static List<ISyncCall> internalIdToSyncMethod = new();
 
         static Dictionary<string, SyncField> registeredSyncFields = new();

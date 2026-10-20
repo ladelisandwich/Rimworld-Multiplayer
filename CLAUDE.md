@@ -371,6 +371,18 @@ replays in ~/.rw-mp-test/host/MpReplays):
   client's own map, which the host doesn't view. Map.MapUpdate is identical 
   in 1.6 and 1.7 and the map held nothing unusual (3 colonists, dormant 
   mechs, corpses, wild animals), so no 1.7-specific lead; needs traces.
+- Caravans couldn't enter any settlement (right-click on the tile did 
+nothing, Oct 19 Steam session with a friend): SyncActions.SyncAction2_Postfix 
+looked up __originalMethod in a Dictionary<MethodBase, ISyncAction> and threw 
+KeyNotFoundException for Settlement.GetFloatMenuOptions, taking the whole 
+OnGUI pass down. On .NET MethodBase.Equals is reference equality for 
+non-generic methods; in a standalone Harmony 3 test the instances are 
+identical, in the game they weren't (cause not pinned: the error log now 
+prints the reflected type, object type and module of the miss). 
+MethodIdentityComparer (metadata token, module, declaring type, generic 
+arguments) keys that dictionary and Sync.methodBaseToInternalId, and a miss 
+logs once and leaves the menu unsynced instead of throwing. SyncRituals 
+already keyed by token. Unverified in game.
 - Variable tick rate (game feature since 1.6): Thing.DoTick runs TickInterval 
 (needs, health, job tracker interval, mind state) every UpdateRateTicks ticks, 
 and vanilla takes that rate from the camera (1 to 5 in view, 15 off screen 

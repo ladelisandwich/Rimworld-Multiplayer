@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Multiplayer.Client.Util;
 using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
@@ -73,9 +74,10 @@ namespace Multiplayer.Client
             return sync;
         }
 
-        public static Dictionary<MethodBase, ISyncAction> syncActions = new();
+        public static Dictionary<MethodBase, ISyncAction> syncActions = new(MethodIdentityComparer.Instance);
         public static bool wantOriginal;
         private static bool syncingActions; // Prevents from running on base methods
+        private static HashSet<string> loggedMisses = new();
 
         public static void SyncAction_Prefix(ref bool __state)
         {
@@ -94,7 +96,15 @@ namespace Multiplayer.Client
             {
                 syncingActions = false;
                 if (Multiplayer.ShouldSync && !wantOriginal && !syncingActions)
-                    __result = syncActions[__originalMethod].DoSync(__instance, __0, __1);
+                {
+                    if (syncActions.TryGetValue(__originalMethod, out var action))
+                        __result = action.DoSync(__instance, __0, __1);
+                    else if (loggedMisses.Add(__originalMethod.FullDescription()))
+                        // The menu still opens, unsynced, instead of the exception taking the whole OnGUI down
+                        Log.Error($"Multiplayer: no SyncAction for {__originalMethod.FullDescription()} " +
+                                  $"(reflected {__originalMethod.ReflectedType}, {__originalMethod.GetType().Name}, " +
+                                  $"module {__originalMethod.Module.ModuleVersionId}); its options aren't synced");
+                }
             }
         }
     }
