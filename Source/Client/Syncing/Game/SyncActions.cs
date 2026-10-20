@@ -3,6 +3,7 @@ using Multiplayer.Client.Util;
 using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Verse;
 
@@ -31,6 +32,14 @@ namespace Multiplayer.Client
             {
                 SyncWorldObjCaravanMenus = RegisterActions((WorldObject obj, Caravan c) => obj.GetFloatMenuOptions(c), ActionGetter, WorldObjectCaravanMenuWrapper);
                 SyncWorldObjCaravanMenus.PatchAll(nameof(WorldObject.GetFloatMenuOptions));
+
+                // Oct 19: the postfix missed Settlement/MapParent/WorldObject.GetFloatMenuOptions in game although all
+                // three were patched; this says whether the table was ever right
+                var probe = AccessTools.DeclaredMethod(typeof(Settlement), nameof(WorldObject.GetFloatMenuOptions));
+                if (probe == null || !syncActions.ContainsKey(probe))
+                    Log.Error($"Multiplayer: SyncActions table has {syncActions.Count} entries and none for Settlement.GetFloatMenuOptions right after patching");
+                else
+                    Log.Message($"Multiplayer: SyncActions patched {syncActions.Count} methods");
             });
         }
 
@@ -97,15 +106,58 @@ namespace Multiplayer.Client
                 syncingActions = false;
                 if (Multiplayer.ShouldSync && !wantOriginal && !syncingActions)
                 {
-                    if (syncActions.TryGetValue(__originalMethod, out var action))
+                    if (!syncActions.TryGetValue(__originalMethod, out var action))
+                        action = FindBySignature(__originalMethod) ?? FallbackHandler(__instance, __0, __originalMethod);
+
+                    if (action != null)
                         __result = action.DoSync(__instance, __0, __1);
                     else if (loggedMisses.Add(__originalMethod.FullDescription()))
                         // The menu still opens, unsynced, instead of the exception taking the whole OnGUI down
-                        Log.Error($"Multiplayer: no SyncAction for {__originalMethod.FullDescription()} " +
-                                  $"(reflected {__originalMethod.ReflectedType}, {__originalMethod.GetType().Name}, " +
-                                  $"module {__originalMethod.Module.ModuleVersionId}); its options aren't synced");
+                        Log.Error($"Multiplayer: no SyncAction for {Describe(__originalMethod)}; its options aren't synced. " +
+                                  $"Table: {syncActions.Count} entries, same name: {SameName(__originalMethod)}");
                 }
             }
         }
+
+        // Oct 19: in game the table lookup missed Settlement/MapParent/WorldObject.GetFloatMenuOptions (first a
+        // KeyNotFoundException, then a miss with MethodIdentityComparer) although PatchAll had stored all three; a
+        // headless start showed the table right after patching. Until the cause is known, a miss falls back to the
+        // method's signature and remembers the match, and logs what differed so the next log can explain it.
+        private static ISyncAction FindBySignature(MethodBase method)
+        {
+            var signature = method.FullDescription();
+            foreach (var (key, value) in syncActions)
+            {
+                if (key.FullDescription() != signature) continue;
+                if (loggedMisses.Add(signature))
+                    Log.Warning($"Multiplayer: SyncAction for {Describe(method)} found by signature only; " +
+                                $"the stored key is {Describe(key)}, table {syncActions.Count} entries");
+                syncActions[method] = value;
+                return value;
+            }
+            return null;
+        }
+
+        // Every entry of the table maps a WorldObject.GetFloatMenuOptions(Caravan) override to this one handler, so
+        // when the table has lost it the handler itself still syncs the menu (unsynced options ran the caravan
+        // arrival on the client alone and desynced it, Oct 19)
+        private static ISyncAction FallbackHandler(object instance, object arg0, MethodBase method)
+        {
+            if (instance is not WorldObject || arg0 is not Caravan || SyncWorldObjCaravanMenus == null)
+                return null;
+            if (loggedMisses.Add(method.FullDescription()))
+                Log.Warning($"Multiplayer: SyncAction table has no entry for {Describe(method)}, using the world object " +
+                            $"caravan menu handler directly. Table: {syncActions.Count} entries, same name: {SameName(method)}");
+            syncActions[method] = SyncWorldObjCaravanMenus;
+            return SyncWorldObjCaravanMenus;
+        }
+
+        private static string Describe(MethodBase m) =>
+            $"{m.FullDescription()} (reflected {m.ReflectedType}, {m.GetType().Name}, token {m.MetadataToken:X}, " +
+            $"module {m.Module.ModuleVersionId}, assembly {m.Module.Assembly.GetName().Name}#{System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(m.Module.Assembly)})";
+
+        private static string SameName(MethodBase m) =>
+            string.Join("; ", syncActions.Keys.Where(k => k.Name == m.Name).Select(k =>
+                $"{Describe(k)} equal {MethodIdentityComparer.Instance.Equals(k, m)}"));
     }
 }

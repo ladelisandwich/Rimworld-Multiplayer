@@ -375,14 +375,27 @@ replays in ~/.rw-mp-test/host/MpReplays):
 nothing, Oct 19 Steam session with a friend): SyncActions.SyncAction2_Postfix 
 looked up __originalMethod in a Dictionary<MethodBase, ISyncAction> and threw 
 KeyNotFoundException for Settlement.GetFloatMenuOptions, taking the whole 
-OnGUI pass down. On .NET MethodBase.Equals is reference equality for 
-non-generic methods; in a standalone Harmony 3 test the instances are 
-identical, in the game they weren't (cause not pinned: the error log now 
-prints the reflected type, object type and module of the miss). 
-MethodIdentityComparer (metadata token, module, declaring type, generic 
-arguments) keys that dictionary and Sync.methodBaseToInternalId, and a miss 
-logs once and leaves the menu unsynced instead of throwing. SyncRituals 
-already keyed by token. Unverified in game.
+OnGUI pass down. First fix (c41586d): MethodIdentityComparer (metadata 
+token, module, declaring type, generic arguments) keys that table and 
+Sync.methodBaseToInternalId, and a miss logs once instead of throwing. The 
+next session still missed all three overrides (Settlement, MapParent, 
+WorldObject), and the unsynced menu was worse: the client's "enter colony" 
+ran on the client alone, desynced it and the rejoin put the caravan back, 
+in a loop. The table is right at startup (headless runs with -mod=, with 
+the saved mod list, and with Prepare Carefully and Replace Stuff active all 
+log "SyncActions patched 5 methods" and find the Settlement entry), so the 
+entries are lost or the statics are swapped somewhere between startup and 
+play; nothing in the mod clears or reassigns the table, and Harmony 3 
+re-resolves patch methods by module id from serialized patch state 
+(AccessTools.GetMethodByModuleAndToken), which would only matter with two 
+copies of Multiplayer.dll loaded. Now: a miss falls back to a signature 
+match, then to SyncWorldObjCaravanMenus directly (every entry maps to that 
+one handler), each logged once with token, module and assembly identity of 
+both sides and the table size; MultiplayerGame's constructor logs the table 
+size at game start. Read those lines from the next host log to pin the cause. 
+Note the Steam launch no longer passes -mod= (no "Running with command line 
+mod list" line), so the saved mod list applies: Prepare Carefully (1.6) and 
+Replace Stuff (1.5) are active in those sessions.
 - Variable tick rate (game feature since 1.6): Thing.DoTick runs TickInterval 
 (needs, health, job tracker interval, mind state) every UpdateRateTicks ticks, 
 and vanilla takes that rate from the camera (1 to 5 in view, 15 off screen 
