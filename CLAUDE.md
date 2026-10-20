@@ -96,7 +96,9 @@ is in ~/.dotnet.
 shares $HOME with the host. Installing packages in the container with sudo 
 apt is fine (git, gh, git-lfs were installed that way). Git pushes over SSH 
 as GitHub user ladelisandwich.
-- Repo clone: ~/Documents/Rimworld-Multiplayer (not ~/src).
+- Repo clone: ~/Documents/Rimworld-Multiplayer (not ~/src). The bot player 
+work has its own clone, ~/Documents/Rimworld-Multiplayer-Bot (branch 
+bot-player, made from port-1.7 on Oct 20 2026; same remotes).
 - .NET: SDK 10.0.402 in ~/.dotnet (DOTNET_ROOT and PATH set in ~/.bashrc); 
 ilspycmd 11.1.0.9782 is a global dotnet tool in ~/.dotnet/tools.
 - RimWorld 1.7 folder: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/common/RimWorld 
@@ -183,7 +185,8 @@ builds (HostWindow, MpVersion.IsDebug); release builds host without it. On
 picks this port even while the Workshop Multiplayer (same packageId) is 
 installed. The log then has "Running with command line mod list: ...".
 ## Rules
-- Work on branch port-1.7. Commit after each task with a message saying what 
+- Work on branch port-1.7 (in the bot clone: bot-player; see Bot player 
+below). Commit after each task with a message saying what 
 changed and why. Push only to origin (my fork). Never push to rwmt or open 
 pull requests there unless I ask.
 - Never upload to the Steam Workshop. About/PublishedFileId.txt stays deleted 
@@ -493,3 +496,14 @@ hediff.pawn (set in ResolvingCrossRefs) and pawn.needs (set after the
 tracker loads). A save load never hits it because the state is 
 MapInitializing. Same code on 1.6, so upstream has the bug for any synced 
 pawn with an addiction.
+## Bot player (branch bot-player)
+- Goal (Oct 20 2026): a host-only "Add bot" that creates an AI-run neighbour 
+colony doing simple tasks, with small visible cheats so it doesn't die. 
+Several bots possible. For fun, not for upstream.
+- The design study and milestone plan is docs/bot-player-plan.md. Read it 
+before starting bot work; its M0 is the first coding task.
+- Port fixes land on port-1.7 first and are merged into bot-player, not the 
+other way round.
+- Progress:
+  - [x] Research and plan (Oct 20): docs/bot-player-plan.md
+  - [ ] M0 spike: a second in-process player whose orders run on both instances
