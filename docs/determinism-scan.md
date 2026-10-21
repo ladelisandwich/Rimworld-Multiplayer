@@ -1,8 +1,7 @@
 # Determinism scan of Assembly-CSharp
 
-Assembly-CSharp.dll 1.7.9787.38423, scanned 2026-10-19. 
-Every method that calls string.GetHashCode, System.HashCode, a ValueTuple or Enum GetHashCode 
-(all differ per process on .NET), WaylithJobRuntime, Parallel, Task.Run or ThreadPool (run in parallel).
+Assembly-CSharp.dll 1.7.9789.37269, scanned 2026-10-20. 
+Every method that calls string.GetHashCode, System.HashCode, a ValueTuple or Enum GetHashCode (all differ per process on .NET), WaylithJobRuntime, Parallel, Task.Run or ThreadPool (run in parallel).
 
 | Category | Call sites | Types |
 |---|---|---|
@@ -215,8 +214,10 @@ Every method that calls string.GetHashCode, System.HashCode, a ValueTuple or Enu
 
 ## Multiplayer assessment
 
-Checked against RimWorld 1.7.4982 and this fork (task 8, Oct 2026). On .NET 10 `Enum.GetHashCode` gives the
-same value in every process; `System.HashCode` does not (random seed per process), and `ValueTuple.GetHashCode`
+Checked against RimWorld 1.7.4982 and this fork (task 8, Oct 2026), rechecked for 1.7.4984 (Oct 20): the same
+79 call sites in the same methods, and none of the six methods 1.7.4984 changed hashes, schedules jobs or
+draws random numbers (docs/rwdiff-1.7.4982-1.7.4984.md), so the tables below still hold. On .NET 10
+`Enum.GetHashCode` gives the same value in every process; `System.HashCode` does not (random seed per process), and `ValueTuple.GetHashCode`
 goes through it, so tuples differ per process as well (corrected Oct 20: the earlier "stable" check ran while
 the old process-wide `HashCode.Combine` patch was active). The game makes no direct `string.GetHashCode` call;
 its runtimeconfig also turns on `WaylithClr.MonoStringHashCode`. "Handled" means an existing patch covers the

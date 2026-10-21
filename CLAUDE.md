@@ -110,8 +110,16 @@ ilspycmd 11.1.0.9782 is a global dotnet tool in ~/.dotnet/tools.
 (Steam library on the "Big and Slow guy" drive, unstable beta branch). 
 Game version 1.7.4984 rev1242 (Steam update Oct 20 2026, 13:07; was 
 1.7.4982 rev1280, Steam build 26031547, Oct 19), runtime 
-.NET 10.0.13-waylithclr.dev. The mod builds against 1.7.4984 with no errors; 
-RwDiff and DeterminismScan haven't been rerun for 1.7.4984 yet.
+.NET 10.0.13-waylithclr.dev. The mod builds against 1.7.4984 with no errors. 
+RwDiff and DeterminismScan rerun for 1.7.4984 (Oct 20, 
+docs/rwdiff-1.7.4982-1.7.4984.md): every lambda lookup and transpiled 
+method unchanged, and a whole-assembly IL compare found only six changed 
+methods (ResolutionUtility.Update, CultureInfoUtility.EnsureEnglish, 
+SteamUtility.OpenUrl/OpenSteamWorkshopPage, WorldFeatures.CreateOrDestroyTexts, 
+ProfilerVramTable.Export), none of them patched or simulation-relevant; the 
+determinism and realtime scans list the same call sites. No patch changes 
+needed. The update also replaced UnityStubs, Waylith, RimWorld.dll and the 
+Steamworks dll (not diffed, no old copies), not the native runtime.
 - Game binary: <RimWorld folder>/RimWorld (native apphost that runs 
 RimWorld.dll)
 - Game DLL folder (Assembly-CSharp, UnityStubs, Waylith): the RimWorld folder 
@@ -215,7 +223,7 @@ or IL.
 - [x] 5 Packaged for 1.7 and installed; game loads it (main menu and hosting reached Oct 19)
 - [x] 6 First-launch log clean (hosted session on 1.7.4982, Oct 19: 0 errors, no Multiplayer warnings)
 - [x] 7 Host and join on one PC (Oct 19: client joined and created a faction, ~15 min of play, 0 errors, no desync; the long session is task 8's test)
-- [ ] 8 Determinism scan and fixes (tools, assessment, hit counters, FastTileFinder.Closest done Oct 19). 65-min two-instance session Oct 19 13:52-14:57: 0 game errors from the mod, but the client desynced 4 times on its own map ("Wrong random state on map 1": 2 min after creating the faction, then at 14:44 and within a minute of each of the two rejoins). Reports hold no traces (desync tracing is Mono-only until task 10), so the cause is open; "Patch hit counts" wasn't run (dev mode off). Rerun with dev mode on and the hit counts dumped before quitting once task 10 brings traces back.
+- [ ] 8 Determinism scan and fixes (tools, assessment, hit counters, FastTileFinder.Closest done Oct 19). 65-min two-instance session Oct 19 13:52-14:57: 0 game errors from the mod, but the client desynced 4 times on its own map ("Wrong random state on map 1": 2 min after creating the faction, then at 14:44 and within a minute of each of the two rejoins). Reports hold no traces (desync tracing is Mono-only until task 10), so the cause is open; "Patch hit counts" wasn't run (dev mode off). Rerun with dev mode on and the hit counts dumped before quitting once task 10 brings traces back. Tools rerun for 1.7.4984 on Oct 20: no new call sites, no patch changes (see This machine).
 - [ ] 9 Arbiter, logs, Steam, UI
 - [ ] 10 Rituals verified, desync tools (Oct 19: .NET desync traces 
 (ManagedStackTracing) and the JIT list (EventListener) built and checked in 
@@ -262,7 +270,8 @@ mods load. Prepatcher's version ran before game startup.
 - Ritual role sync (SyncRituals, 8 hooks) only has build-time checks. Confirm 
 in game in task 10 by looking for "MP ritual sync hook hit" lines in a dev-mode 
 log.
-- UnityStubs gaps found at compile time (task 3), each worked around in place:
+- UnityStubs gaps found at compile time (task 3), each worked around in place 
+(all still missing, along with TextEditor.m_RevealCursor, in the 1.7.4984 UnityStubs):
   - Font.fontNames is missing: the debug tools font tweak in VanillaTweaks 
   (UIRootPatch) skips the OS font fallback list and logs that once.
   - TextEditor.UpdateScrollOffsetIfNeeded is missing: the MpUI password field 
