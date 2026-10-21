@@ -236,7 +236,8 @@ on .NET; SyncRituals now also counts prefix runs that matched no target.
 Likely cause found Oct 20: SyncRituals keys its hooks by a (token, Type) 
 tuple, and the old HashCode.Combine patch changed tuple hashes once a 
 session started, so no lookup could match; fixed with the caravan bug, 
-ritual test still to be redone). 
+ritual test still to be redone in dev mode: the Oct 20 session that 
+changed a ritual role ran with dev mode off, so no hook lines were logged). 
 The recurring genuine desync was traced at 16:45 (Desync-10): the client's 
 copy of a host colonist entered a cell a tick apart from the host's, cause 
 the variable tick rate (Known gaps). Confirmed by the 18:04 hit counts: 
@@ -416,7 +417,20 @@ error if a call site no longer has the call. MethodIdentityComparer stays
 (hash from metadata tokens only). Verified headless after the fix: tuple and 
 MethodInfo hashes unchanged across hosting, the lookup hits, and the menus 
 of the player's colony and a foreign settlement go through 
-SyncAction.DoSync. Not yet checked with a real caravan in a two-player game. 
+SyncAction.DoSync. Checked in game Oct 20 16:41-18:42 (Steam, host and 
+Windows friend, both on 1659f15 and 1.7.4984): caravans entered colonies 
+and a quest site, no SyncActions miss on either side, and the desync 
+reports list the active Harmony patches again (they said "No patches have 
+been reported" before: Harmony's patch state is a MethodBase-keyed table 
+too). One desync in 1h50 (18:31, "Wrong random state on map 1", the 
+friend's side, no traces because slow tracing was off), cause unknown. 
+The site entry showed a second asymmetry: MapGenFactionPatch looked the 
+arriving caravan up with PlayerControlledCaravanAt, which compares with 
+Faction.OfPlayer, and caravan map gen runs in a long event outside the 
+tick, so only the owner's game found the caravan and the host generated 
+the site under its own faction ("Couldn't set the faction context for map 
+gen" on the host only). It now takes any player-faction caravan on the 
+tile. 
 Note the Steam launch no longer passes -mod= (no "Running with command line 
 mod list" line), so the saved mod list applies: Prepare Carefully (1.6) and 
 Replace Stuff Continued (1.7) are active in those sessions, and the friend 

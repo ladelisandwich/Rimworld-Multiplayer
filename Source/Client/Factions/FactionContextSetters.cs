@@ -42,7 +42,11 @@ static class MapGenFactionPatch
         if (mapParent != null && mapParent.Faction is { IsPlayer: true })
             return mapParent.Faction;
 
-        var caravan = worldObjectsHolder.PlayerControlledCaravanAt(tile);
+        // Not PlayerControlledCaravanAt: it compares with Faction.OfPlayer, which outside a tick is each player's own
+        // faction, and map gen for a caravan arrival runs in a long event outside the tick. Only the caravan owner's
+        // game found the caravan; the others generated the map under their own faction (Oct 20: a client's caravan
+        // entering a quest site logged the warning below on the host only).
+        var caravan = worldObjectsHolder.Caravans.Find(c => c.Tile == tile && c.Faction is { IsPlayer: true });
         if (caravan != null)
             return caravan.Faction;
 
