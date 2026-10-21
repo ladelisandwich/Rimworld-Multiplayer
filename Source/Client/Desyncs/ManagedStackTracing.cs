@@ -34,7 +34,19 @@ public static class ManagedStackTracing
     private static readonly Dictionary<MethodBase, FrameInfo> frameInfos = new(Util.MethodIdentityComparer.Instance);
     private static readonly Regex harmonySuffix = new(@"_Patch\d+$", RegexOptions.Compiled);
 
-    public static bool Enabled => !Native.IsMono && Multiplayer.settings.desyncTracingMode == DesyncTracingMode.Slow;
+    public static bool Enabled => !failed && !Native.IsMono && Multiplayer.settings.desyncTracingMode == DesyncTracingMode.Slow;
+
+    // The tracer runs inside simulation code (Rand calls, the end of every map tick). An exception from it would cut
+    // that code short on this player's side only and desync them, so a failure logs once and switches tracing off
+    // until restart.
+    public static bool failed;
+
+    public static void Disable(string where, Exception e)
+    {
+        if (failed) return;
+        failed = true;
+        Log.Error($"Multiplayer: desync tracing failed in {where} and is off until restart: {e}");
+    }
 
     // Records the calling stack as a desync trace. False when this tick's cap is reached.
     public static bool Record(string moreInfo = null, bool ignoreCap = false)

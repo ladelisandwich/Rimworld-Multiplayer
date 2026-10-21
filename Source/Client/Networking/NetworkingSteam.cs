@@ -136,6 +136,17 @@ namespace Multiplayer.Client.Networking
                 var player = playerManager.Players
                     .FirstOrDefault(p => p.conn is SteamBaseConn conn && conn.remoteId == packet.remote);
 
+                // A client sends one join packet per connection, on a new random channel. A join on another channel
+                // from a Steam user the server still lists means that user's game started a new connection while the
+                // old one never said goodbye (Oct 21: after two desync rejoins the friend's next join was refused
+                // until the old connection timed out). The old connection is dropped and the join goes ahead.
+                if (packet.joinPacket && player?.conn is SteamServerConn stale && stale.sendChannel != packet.channel)
+                {
+                    ServerLog.Log($"Steam user {packet.remote} connected again; dropping the old connection {stale}");
+                    playerManager.SetDisconnected(stale, MpDisconnectReason.ClientLeft);
+                    player = null;
+                }
+
                 if (packet.joinPacket && player == null)
                 {
                     ConnectionBase conn = new SteamServerConn(packet.remote, packet.channel);

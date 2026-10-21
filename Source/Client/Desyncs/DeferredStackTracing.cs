@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -35,8 +36,15 @@ namespace Multiplayer.Client.Desyncs
 
             if (!Native.IsMono)
             {
-                if (ManagedStackTracing.Record())
-                    acc++;
+                try
+                {
+                    if (ManagedStackTracing.Record())
+                        acc++;
+                }
+                catch (Exception e)
+                {
+                    ManagedStackTracing.Disable("a Rand call trace", e);
+                }
                 return;
             }
 
@@ -59,7 +67,7 @@ namespace Multiplayer.Client.Desyncs
             if (Multiplayer.Client == null) return false;
             if (Multiplayer.settings.desyncTracingMode == DesyncTracingMode.None) return false;
             // Fast is the Mono stack walker; on .NET only the slow mode records anything
-            if (!Native.IsMono && Multiplayer.settings.desyncTracingMode != DesyncTracingMode.Slow) return false;
+            if (!Native.IsMono && (Multiplayer.settings.desyncTracingMode != DesyncTracingMode.Slow || ManagedStackTracing.failed)) return false;
             if (Multiplayer.game == null) return false;
 
             if (!Multiplayer.game.gameComp.logDesyncTraces) return false;

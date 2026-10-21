@@ -108,9 +108,10 @@ as GitHub user ladelisandwich.
 ilspycmd 11.1.0.9782 is a global dotnet tool in ~/.dotnet/tools.
 - RimWorld 1.7 folder: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/common/RimWorld 
 (Steam library on the "Big and Slow guy" drive, unstable beta branch). 
-Game version 1.7.4984 rev1242 (Steam update Oct 20 2026, 13:07; was 
-1.7.4982 rev1280, Steam build 26031547, Oct 19), runtime 
-.NET 10.0.13-waylithclr.dev. The mod builds against 1.7.4984 with no errors. 
+Game version 1.7.4985 rev1269 (Steam update Oct 21 2026, before 14:55; 
+1.7.4984 rev1242 on Oct 20; 1.7.4982 rev1280, Steam build 26031547, Oct 19), 
+runtime .NET 10.0.13-waylithclr.dev. The mod builds against 1.7.4985 with 
+no errors; RwDiff 1.7.4984 -> 1.7.4985 not run yet. 
 RwDiff and DeterminismScan rerun for 1.7.4984 (Oct 20, 
 docs/rwdiff-1.7.4982-1.7.4984.md): every lambda lookup and transpiled 
 method unchanged, and a whole-assembly IL compare found only six changed 
@@ -237,7 +238,9 @@ Likely cause found Oct 20: SyncRituals keys its hooks by a (token, Type)
 tuple, and the old HashCode.Combine patch changed tuple hashes once a 
 session started, so no lookup could match; fixed with the caravan bug, 
 ritual test still to be redone in dev mode: the Oct 20 session that 
-changed a ritual role ran with dev mode off, so no hook lines were logged). 
+changed a ritual role ran with dev mode off, so no hook lines were logged. 
+Oct 21: the hooks now fire, and dragging a pawn onto a role threw 
+InvalidCastException; see Known gaps, ritual role sync). 
 The recurring genuine desync was traced at 16:45 (Desync-10): the client's 
 copy of a host colonist entered a cell a tick apart from the host's, cause 
 the variable tick rate (Known gaps). Confirmed by the 18:04 hit counts: 
@@ -268,9 +271,24 @@ settle clock.
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
 mods load. Prepatcher's version ran before game startup.
-- Ritual role sync (SyncRituals, 8 hooks) only has build-time checks. Confirm 
-in game in task 10 by looking for "MP ritual sync hook hit" lines in a dev-mode 
-log.
+- Ritual role sync (SyncRituals): the targets (TryAssign, TryAssignReplace, 
+TryAssignAnyRole, two DrawPawnListInternal lambdas) are private methods of 
+the generic PawnRoleSelectionWidgetBase<T>, and its RitualRole and 
+PsychicRitualRoleDef instantiations share one compiled body. Harmony's 
+replacement is built for one instantiation with concrete types, and the 
+second patch wins, so with both patched an ordinary ritual ran the psychic 
+replacement: "Unable to cast Grouping<String, RitualRole> to 
+IEnumerable<PsychicRitualRoleDef>" in OnGUI and again as "Map cmd exception 
+(Sync)" on every client (Oct 21 host log, a drag and drop onto a role). Now 
+only the ritual widget is patched when Anomaly is off (psychic rituals need 
+Anomaly; checked headless: one prefix on the RitualRole instantiation, 
+none on the psychic one, and a call with RitualRole arguments reaches the 
+original body). With Anomaly active SyncRituals logs an error and patches 
+nothing, so ritual role changes aren't synced for Anomaly owners until the 
+hooks dispatch per instantiation (for example a prefix on one instantiation 
+that calls a Harmony reverse patch of the other for the other widget 
+type). Still to confirm in game: "MP ritual sync hook hit" lines in a 
+dev-mode log and the role change applied on both sides.
 - UnityStubs gaps found at compile time (task 3), each worked around in place 
 (all still missing, along with TextEditor.m_RevealCursor, in the 1.7.4984 UnityStubs):
   - Font.fontNames is missing: the debug tools font tweak in VanillaTweaks 
@@ -350,6 +368,12 @@ stay in as diagnostics: a "references Thing_... which isn't in the shared
 cross refs" warning or a nonzero "spawned things missing" count means the 
 shared directory lost entries again.
 - Arbiter (task 9): not started on 1.7, HostUtil hosts without it.
+- Steam rejoin (Oct 21): after a desync the client's next connection sent a 
+join packet while the server still listed its old connection, and 
+SteamP2PNetManager logged "Received a join packet: True for player ..." 
+and dropped it, every retry, until the old connection timed out. A join 
+on a different channel from a listed Steam user (each client connection 
+picks a random channel) now disconnects the old connection and joins.
 - Per-process hashes (task 7): PawnBio def info, desync log info hashes, 
 ModFile.GetHashCode and StackTrace.Hash now use GenText.StableStringHash. 
 The remaining GetHashCode calls in the client are local-only (window ids, 
@@ -462,7 +486,15 @@ hediff with stage and severity) and whose hash joins the trace hash list. A
 state-only divergence then shows as "Trace hashes don't match" with the two 
 digests as the first differing trace in local_traces.txt and 
 host_traces.txt; diff them for the pawn and field. Costs a ~7 KB string per 
-map tick while on. Both players need slow tracing on, as for the traces.
+map tick while on. Both players need slow tracing on, as for the traces. 
+The digest runs in the map tick's finally block and the trace recorder runs 
+inside Rand calls, so an exception from either cut simulation code short on 
+the tracing player's side only (a skipped map random state entry reads as 
+"Wrong random state on map N"). Both now catch, log "desync tracing failed 
+in ... and is off until restart" once, and stop tracing. Found Oct 21: the 
+Windows friend desynced twice within 30 s of each join as soon as he 
+turned slow tracing on, while the host had it off (so no trace comparison 
+ran); his log, which would name the exception, hasn't been read yet.
 - Multifaction storyteller (Oct 19 fixes, in-game check pending):
   - Quest raids (QuestPart_ThreatsGenerator, "raids for N days" quests) fired 
   once per player faction because every faction's storyteller ticks every map 

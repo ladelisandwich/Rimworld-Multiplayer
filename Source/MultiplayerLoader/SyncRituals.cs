@@ -70,8 +70,25 @@ public static class SyncRituals
         // Same as MpPriority.MpFirst, the prepatched prefix used to run before all Harmony prefixes
         var prefix = new HarmonyMethod(typeof(SyncRituals), nameof(HookPrefix)) { priority = Priority.First + 1 };
 
+        // PawnRoleSelectionWidgetBase<RitualRole> and <PsychicRitualRoleDef> share one compiled body for these methods
+        // (reference type instantiations), and Harmony's replacement for that body is built for one instantiation
+        // with its concrete types. Patching both left the psychic one in place, so dragging a pawn onto a role in an
+        // ordinary ritual threw InvalidCastException (Grouping<string, RitualRole> to IEnumerable<PsychicRitualRoleDef>)
+        // in the UI and again when the synced command ran (Oct 21). Psychic rituals need Anomaly, so without it only
+        // the ritual widget is patched. With Anomaly both widgets can appear and neither patch is correct for the
+        // other, so role changes are left unsynced there until the hooks dispatch per instantiation.
+        if (ModsConfig.AnomalyActive)
+        {
+            Log.Error("Multiplayer: ritual role sync is off with Anomaly active (ritual and psychic ritual role widgets " +
+                      "share code that can't be patched for both); role changes in ritual dialogs aren't synced");
+            return;
+        }
+
         void Register(Type baseType, string method, Type derivedType, Action<ISyncMethodWithTargetType> postProcess = null, string name = null)
         {
+            if (derivedType == typeof(PawnPsychicRitualRoleSelectionWidget))
+                return;
+
             // Sync.Method doesn't apply a Harmony patch and doesn't require the DeclaringType to be the target type
             var newSyncMethod = (ISyncMethodWithTargetType)syncMethod.Invoke(null, [derivedType, method, null]);
             postProcess?.Invoke(newSyncMethod);

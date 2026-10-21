@@ -17,16 +17,25 @@ public static class PawnStateTrace
         if (!ManagedStackTracing.Enabled || !DeferredStackTracing.ShouldAddStackTraceForDesyncLog())
             return;
 
-        builder.Clear();
-        var pawns = map.mapPawns.AllPawnsSpawned;
-        for (int i = 0; i < pawns.Count; i++)
+        // Runs in the map tick's finally block: an exception here would skip the map's random state entry and leave
+        // the map marked as ticking on this player's side only
+        try
         {
-            Describe(pawns[i], builder);
-            builder.Append('\n');
-        }
+            builder.Clear();
+            var pawns = map.mapPawns.AllPawnsSpawned;
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                Describe(pawns[i], builder);
+                builder.Append('\n');
+            }
 
-        Multiplayer.game.sync.TryAddInfoForDesyncLog(
-            $"pawn state map {map.uniqueID} tick {mapTicks} pawns {pawns.Count}", builder.ToString());
+            Multiplayer.game.sync.TryAddInfoForDesyncLog(
+                $"pawn state map {map.uniqueID} tick {mapTicks} pawns {pawns.Count}", builder.ToString());
+        }
+        catch (System.Exception e)
+        {
+            ManagedStackTracing.Disable($"the pawn state digest of map {map.uniqueID}", e);
+        }
     }
 
     private static void Describe(Pawn pawn, StringBuilder b)
