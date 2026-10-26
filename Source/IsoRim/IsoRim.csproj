@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Builds IsoRim Waylith (the subtree at IsoRim/, upstream https://github.com/peren717/IsoRim-1.7) as its own
+       IsoRim.dll for the Multiplayer mod. Upstream's own Source/IsoRim.csproj stays untouched so subtree pulls merge
+       cleanly; after a pull, compare it with this file for new properties or references.
+       Must stay a separate assembly loaded by the game from the IsoRim load folder: IsoRimMod is only constructed for
+       assemblies the game loads itself, and MultiplayerLoader's AssembliesCustom is loaded too late (CLAUDE.md). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>IsoRim</AssemblyName>
+    <RootNamespace>IsoRim</RootNamespace>
+    <OutputPath>bin</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <Optimize>true</Optimize>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);RW16;RW17</DefineConstants>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsoRimSourceDir>$(MSBuildThisFileDirectory)../../IsoRim/Source/</IsoRimSourceDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(IsoRimSourceDir)**/*.cs" Exclude="$(IsoRimSourceDir)obj/**;$(IsoRimSourceDir)bin/**" />
+    <Compile Include="MpBridge.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lib.Harmony" Version="3.0.0-rc.3" ExcludeAssets="runtime" />
+    <!-- 0MultiplayerAPI ships in the Multiplayer mod's 1.7/Assemblies; never copy it here -->
+    <PackageReference Include="RimWorld.MultiplayerAPI" Version="0.6.0" ExcludeAssets="runtime" />
+    <Reference Include="Assembly-CSharp" HintPath="$(RimWorldDir)/Assembly-CSharp.dll" Private="false" />
+    <Reference Include="UnityStubs" HintPath="$(RimWorldDir)/UnityStubs.dll" Private="false" />
+    <Reference Include="Waylith" HintPath="$(RimWorldDir)/Waylith.dll" Private="false" />
+    <Reference Include="Brutal.Vulkan" HintPath="$(RimWorldDir)/Brutal.Vulkan.dll" Private="false" />
+  </ItemGroup>
+
+  <PropertyGroup Label="Normalise stack trace file locations">
+    <PathMap>$([System.IO.Path]::GetFullPath('$(IsoRimSourceDir)'))=IsoRim/,$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=IsoRimMp/</PathMap>
+  </PropertyGroup>
+
+</Project>

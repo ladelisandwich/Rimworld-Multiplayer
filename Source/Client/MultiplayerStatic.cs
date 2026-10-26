@@ -78,6 +78,14 @@ namespace Multiplayer.Client
             Log.Message($"Arch: {RuntimeInformation.ProcessArchitecture}/OS: {RuntimeInformation.OSArchitecture}");
             Log.Message($"Player's username: {Multiplayer.username}");
 
+            // IsoRim is built in (the IsoRim load folder, LoadFolders.xml), and that folder is skipped while a standalone
+            // IsoRim is active. The standalone one isn't made safe for multiplayer and its settings join config sync.
+            // The same test as the load folder's IfModNotActive (LoadFolder.ShouldLoad), which also counts a Workshop
+            // copy renamed with the _steam suffix next to a local one
+            if (ModLister.AnyModActiveNoSuffix(new[] { "Peren.IsoRim17", "connor.isorim" }))
+                Log.Error("Multiplayer: a standalone IsoRim mod is active, so the IsoRim built into Multiplayer isn't loaded. " +
+                          "Turn the standalone IsoRim off in the mod list: it isn't made safe for multiplayer games.");
+
             var persistentObj = new GameObject();
             persistentObj.AddComponent<OnMainThread>();
             Object.DontDestroyOnLoad(persistentObj);
@@ -348,7 +356,10 @@ namespace Multiplayer.Client
                         .Where(m => m.ReturnType == typeof(void)))
                     .Concat(typeof(LavaFXComponent).DeclaredMethod(nameof(LavaFXComponent.ThrowLavaSmoke)))
                     .Concat(typeof(FishShadowComponent).DeclaredMethod(nameof(FishShadowComponent.SpawnFishFleck)))
-                    .Concat(typeof(CompFleckEmitterLongTerm).DeclaredMethod(nameof(CompFleckEmitterLongTerm.EmissionTick)));
+                    .Concat(typeof(CompFleckEmitterLongTerm).DeclaredMethod(nameof(CompFleckEmitterLongTerm.EmissionTick)))
+                    // Smoke and toxic spewers (CompTick). The built-in IsoRim replaces this emit with its own placement
+                    // and more Rand draws while that player's 3D view is on, so isolate it for everyone.
+                    .Concat(typeof(CompThrownFleckEmitter).DeclaredMethod(nameof(CompThrownFleckEmitter.Emit)));
                 var ritualMethods = new[] { canEverSpectate };
 
                 foreach (MethodBase m in effectMethods.Concat(moteMethods).Concat(fleckMethods).Concat(ritualMethods))

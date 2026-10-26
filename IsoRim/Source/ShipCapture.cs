@@ -444,7 +444,17 @@ namespace IsoRim
                         }
                         if (any)
                         {
-                            sec.RegenerateAllLayers();
+                            // MP: freezing runs during the landing tick for players with the 3D view only, and
+                            // regenerating layers can draw from Verse.Rand; keep that out of the shared random state.
+                            Rand.PushState();
+                            try
+                            {
+                                sec.RegenerateAllLayers();
+                            }
+                            finally
+                            {
+                                Rand.PopState();
+                            }
                             n++;
                         }
                     }

@@ -271,8 +271,9 @@ namespace Multiplayer.Client
     {
         static void Prefix(DebugActionNode __instance)
         {
+            // The built-in IsoRim's dev tools (category "IsoRim") only open windows for the local player
             if (Multiplayer.Client != null && __instance.action is { Target: not MpDebugAction } &&
-                __instance.category != MpDebugActions.MultiplayerLocalCategory)
+                __instance.category != MpDebugActions.MultiplayerLocalCategory && __instance.category != "IsoRim")
                 __instance.action = new MpDebugAction { node = __instance, original = __instance.action }.Action;
         }
 

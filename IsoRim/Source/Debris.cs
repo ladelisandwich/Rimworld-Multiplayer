@@ -202,6 +202,9 @@ namespace IsoRim
                 return;
             }
             Stopwatch watch = Stopwatch.StartNew();
+            // MP: this runs inside the tick that drops the roof, and reprinting things can draw from Verse.Rand; only
+            // players with the 3D view take the snapshot, so keep any draw out of the shared random state.
+            Rand.PushState();
             try
             {
                 int tick = Find.TickManager.TicksGame;
@@ -252,6 +255,10 @@ namespace IsoRim
             catch (Exception e)
             {
                 Log.ErrorOnce("[IsoRim] Taking the collapse debris failed: " + e, 93611701);
+            }
+            finally
+            {
+                Rand.PopState();
             }
             double ms = watch.Elapsed.TotalMilliseconds;
             snapMs += ms;

@@ -452,7 +452,9 @@ namespace IsoRim
         // the drawn position (labels, brackets, aim, motes) follows it. y (the game's altitude) is kept.
         public static void DrawPos_Postfix(Pawn ___pawn, ref Vector3 __result)
         {
-            if (!Any || ___pawn == null || !View3D.Ready || !UnityData.IsInMainThread)
+            // MP: the simulation reads DrawPos too (a projectile's origin, so its flight time), so in a multiplayer
+            // session the attached position is only applied to drawing and UI.
+            if (!Any || ___pawn == null || !View3D.Ready || !UnityData.IsInMainThread || MpBridge.Simulating)
             {
                 return;
             }

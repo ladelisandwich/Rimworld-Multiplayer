@@ -296,6 +296,12 @@ namespace IsoRim
         // Turns the thing itself a quarter turn clockwise (rotatable buildings), to check each facing.
         public bool TurnThing()
         {
+            // MP: respawning the thing from this dev window would change this player's game only
+            if (MpBridge.InSession)
+            {
+                Messages.Message("Not available in a multiplayer game.", MessageTypeDefOf.RejectInput, false);
+                return false;
+            }
             if (!def.rotatable || def.category != ThingCategory.Building || !thing.Spawned)
             {
                 return false;

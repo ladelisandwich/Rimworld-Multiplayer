@@ -51,6 +51,9 @@ artifacts/
 *.ilk
 *.meta
 *.obj
+# IsoRim's 3D models are source content, not build output
+!/IsoRim/Models/**/*.obj
+!/IsoRim/Models/*.obj
 *.pch
 *.pdb
 *.pgc

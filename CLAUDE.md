@@ -3,7 +3,9 @@
 Make this fork of rwmt/Multiplayer run on RimWorld 1.7 with no dependency on 
 the Prepatcher mod. Target 1.7 only; 1.6 players keep the official Workshop 
 mod. Keep packageId rwmt.Multiplayer so Multiplayer Compatibility and 
-MultiplayerAPI users still recognize it.
+MultiplayerAPI users still recognize it. Since Oct 26 the mod also ships 
+IsoRim Waylith (isometric 3D view, MIT) built in, as one mod (see Build and 
+install, IsoRim, and Known gaps, IsoRim).
 ## Facts about 1.7 (verified Oct 2026)
 - Engine: Ludeon's Waylith (Vulkan) replaced Unity. Unity's API comes from 
 UnityStubs.dll, a reimplementation that forwards to Waylith. Its coverage is 
@@ -122,7 +124,19 @@ determinism and realtime scans list the same call sites. No patch changes
 needed. The update also replaced UnityStubs, Waylith, RimWorld.dll and the 
 Steamworks dll (not diffed, no old copies), not the native runtime.
 - Game binary: <RimWorld folder>/RimWorld (native apphost that runs 
-RimWorld.dll)
+RimWorld.dll). Since Oct 22 Steam forces Proton (config.vdf CompatToolMapping 
+294100 = proton-stable), so the folder holds the Windows build (RimWorld.exe, 
+coreclr.dll) and no native apphost: run_two.sh and native headless runs 
+can't start until the user unticks "Force the use of a specific Steam Play 
+compatibility tool" in RimWorld's Properties, Compatibility. Under Proton the 
+save data folder (saves, MpReplays, Config, Logs/Player.log) is 
+<library>/steamapps/compatdata/294100/pfx/drive_c/users/steamuser/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios 
+(library = "Big and Slow guy"); Steam Cloud syncs only Saves/*.rws between it 
+and the native folder, never MpReplays. A headless Windows-build run for 
+tests: on the host, STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.local/share/Steam 
+STEAM_COMPAT_DATA_PATH=<a folder under $HOME> python3 "<Fast_AF_Guy library>/steamapps/common/Proton 11.0/proton" 
+run ./RimWorld.exe -Headless ... (the prefix must be under $HOME: the 
+container's /tmp isn't the host's).
 - Game DLL folder (Assembly-CSharp, UnityStubs, Waylith): the RimWorld folder 
 root (RimWorld.dll is there too). Application.dataPath is 
 <RimWorld folder>/RimWorld_Data.
@@ -146,6 +160,13 @@ Recreated by the first 1.7.4982 launch on Oct 19, currently empty). Workshop mod
 -savedatafolder, which only moves the cache root. Two instances started 
 with different -savedatafolder still share this log folder. The older 
 ../Player.log is from 1.6.)
+- The distrobox can see /run/media/ahearn/Big and Slow guy read-only (seen 
+after a suspend and resume on Oct 26) while the host mounts it read-write 
+with no disk errors. Then build in the container and install from the host, 
+from the repo root: distrobox-host-exec env SKIP_BUILD=1 
+./scripts/install_local.sh (the variable must be set on the host side). 
+Don't build on the host: NuGet's restore data clashes (/var/home there, 
+/home here).
 - Harmony mod 1.7 folder and 0Harmony version: <Workshop folder>/2009463077/1.7/Assemblies, 
 mod 3.0.1.0, 0Harmony 3.0.0-rc.3 (AssemblyVersion 3.0.0.0)
 - DLCs: Royalty, Ideology, Biotech, Odyssey. No Anomaly, so the psychic 
@@ -187,6 +208,28 @@ and "1.7") at the root; the build writes 1.7/Assemblies (MultiplayerLoader and
 third-party dlls, loaded by the game) and 1.7/AssembliesCustom (Multiplayer and 
 MultiplayerCommon with pdbs, loaded by MultiplayerLoader). Version is 
 0.11.5.17 (MpVersion.SimpleVersion).
+- IsoRim: IsoRim Waylith (https://github.com/peren717/IsoRim-1.7, a 1.7 port 
+by Lin/peren717 of Connor/kndzio's IsoRim, MIT) is a squashed git subtree at 
+IsoRim/ (remote "isorim"). Update it with git subtree pull --prefix=IsoRim 
+isorim master --squash, then diff IsoRim/Source/IsoRim.csproj against 
+Source/IsoRim/IsoRim.csproj (the port's wrapper, which compiles 
+IsoRim/Source/**/*.cs plus Source/IsoRim/MpBridge.cs into its own IsoRim.dll 
+with the port's RimWorldDir and Lib.Harmony; upstream's csproj and its 
+tracked 1.7/Assemblies/IsoRim.dll are never built or shipped). Multiplayer 
+fixes inside the subtree are one-line guards marked "MP:" calling MpBridge 
+(port-owned, uses only 0MultiplayerAPI). After every pull, re-check each new 
+IsoRim hook that can run in a tick, command or load: no branch on the 3D 
+view or IsoRim settings, no game-state writes, no Rand outside 
+PushState/PopState. scripts/common.sh stage_isorim lays it out: 
+Models/, LUTs/ and Tools/PackGate at the mod root (IsoRim reads them 
+relative to the mod folder), and Defs (nested as IsoRim/Defs/IsoRim/), 
+Languages, Shaders, Textures and Assemblies/IsoRim.dll in the IsoRim load 
+folder, listed last in LoadFolders.xml with IfModNotActive 
+"Peren.IsoRim17,connor.isorim". Never put IsoRim.dll in 1.7/Assemblies (a 
+load failure there stops MultiplayerLoader) or AssembliesCustom (IsoRimMod 
+would never be constructed). check_staged refuses duplicate paths across 
+load folders, Brutal.*.dll and PublishedFileId.txt. The modVersion shows the 
+IsoRim commit: "0.11.5.17 (<port commit>, IsoRim 3fff2ec)".
 - Two instances on this PC: ./scripts/run_two.sh (host, then Enter, then a 
 client that auto-joins 127.0.0.1:30502 with -connect=). Each instance has 
 its own XDG_CONFIG_HOME and -savedatafolder under ~/.rw-mp-test/<host|client>; 
@@ -267,6 +310,10 @@ created end to end, 0 errors, no desync, but the editor was read-only
 with 0 errors and 0 exceptions, no desync. Not yet seen in game: a starting 
 pawn with an addiction (the ReadExposable fix), a doubled quest raid, the 
 settle clock.
+- [ ] Extra (Oct 26, user request): IsoRim Waylith built into the mod as one 
+mod, made safe for multiplayer, Multiplayer's overlays made to work in 3D 
+(see Known gaps, IsoRim). Builds, tests pass, staged layout checked; in-game 
+check pending. Next: user-chosen IsoRim improvements.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -564,3 +611,58 @@ hediff.pawn (set in ResolvingCrossRefs) and pawn.needs (set after the
 tracker loads). A save load never hits it because the state is 
 MapInitializing. Same code on 1.6, so upstream has the bug for any synced 
 pawn with an addiction.
+- IsoRim built in (Oct 26, IsoRim Waylith 3fff2ec). Mapped by a five-agent 
+read of both codebases before merging. What changed and why:
+  - Loading: its own IsoRim.dll from the IsoRim load folder (see Build and 
+  install, IsoRim). Two Mod classes now share the rwmt.Multiplayer pack 
+  (MultiplayerLoader.Multiplayer and IsoRimMod, both under Options, Mod 
+  settings); their constructor and static-constructor order is undefined 
+  (PLINQ), so nothing may depend on it. IsoRim's settings file is now 
+  Mod_Multiplayer-1.7_IsoRimMod.xml; install_local.sh copies the newest 
+  Mod_*_IsoRimMod.xml over once, natively and in the Proton prefix. 
+  Multiplayer's config sync ignores rwmt.multiplayer, so IsoRim settings are 
+  per player and never synced, and the join check (Assemblies/ and Defs/ of 
+  every load folder) makes both players run the same IsoRim build.
+  - A standalone IsoRim (Peren.IsoRim17, connor.isorim) is incompatible 
+  (About.xml). While one is active the IsoRim load folder is skipped, so the 
+  unfixed standalone one runs instead: MultiplayerStatic logs an error and 
+  install_local.sh warns. On Oct 26 peren.isorim17 was removed from both the 
+  native and the Proton ModsConfig (backups in 
+  ~/Documents/RimWorld-save-backup-2026-10-26/*/ModsConfig.before-isorim-merge.xml).
+  - Desync fixes (the 3D view is a per-player toggle, so IsoRim may not 
+  change the simulation): CompThrownFleckEmitter.Emit is now in 
+  Multiplayer's Rand push/pop list (IsoRim replaces it with more Rand draws 
+  on smoke and toxic spewers while the view is on; MP's prefix at 801 runs 
+  before IsoRim's, its finalizer pops after). MP: guards in IsoRim: 
+  DraftedSouth keeps the game's south turn in a session (so idle drafted 
+  pawns don't keep their facing in 3D in multiplayer); Attach.DrawPos_Postfix 
+  and Api20's skip prefix do nothing while simulating; Projectiles.Rear, 
+  CollapseDebris.Snapshot and ShipFreeze's section rebuild run inside 
+  Rand.PushState/PopState; the binder's turn button refuses in a session; 
+  IsoRim's dev actions (category "IsoRim") are local in DebugSync.
+  - UX: the 3D view now survives Multiplayer's reloads (hosting, joins, 
+  resyncs; View3D.NewGame keeps Active while a session goes on, and 
+  RootUpdate_Postfix resets it at the main menu when no session exists, so 
+  a new game, join or replay starts as before). Other 
+  factions' blueprints get no 3D ghost (MpBridge.HidesBlueprint, the rule of 
+  Factions/Blueprints.cs). Other players' selection brackets keep their 
+  colour in 3D (IsoRim's bracket prefix takes the material colour). Remote 
+  cursors, drag boxes and pings use MapScreen (skips points behind a 
+  perspective camera, drag box as a projected ground rectangle, ping size 
+  per location); the top-down view still draws the drag box with 
+  Widgets.DrawBox. Widgets.DrawLine tints with its colour argument on top of 
+  GUI.color under UnityStubs (found in review: the box came out at alpha 
+  0.04), so MapScreen draws lines with a white GUI.color.
+  - Not handled: the slowest player's frame time paces the whole session 
+  (MultiplayerServer, clamped to 4x), so a slow 3D player slows everyone. 
+  Add-ons that gate on ModsConfig.IsActive("Peren.IsoRim17") (IsoRimZ, packs 
+  from IsoRim's model binder) see IsoRim as missing. The Workshop build's 
+  pre-compressed Assets.zip isn't in the git source, so textures load from 
+  loose PNGs. MP's patches and IsoRim's 2174-model startup run in the same 
+  unordered static-constructor phase: rerun "Patch hit counts" and the 
+  small-target inlining audit with IsoRim present.
+  - To check in game (two players, one with 3D on and one off, both on the 
+  same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
+  idle drafted pawns, a roof collapse, a gravship landing, a join with 3D on 
+  (stays on), the other player's cursor, drag box, ping and selection in 3D, 
+  and the "Avg Frame" of the 3D player in the sync debug panel.

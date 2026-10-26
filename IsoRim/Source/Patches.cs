@@ -1038,6 +1038,12 @@ namespace IsoRim
                 FullWalls.Reset();
                 FirstPerson.Reset();
             }
+            // MP: View3D.NewGame keeps the switch through Multiplayer's reloads within a session; with no game and no
+            // session (the main menu) it goes back to its start value, so a new game, join or replay starts as before.
+            if (Current.Game == null && !MpBridge.InSession)
+            {
+                View3D.Active = View3D.LockedOn || View3D.HarnessStartsOn;
+            }
         }
 
         public static void RegenerateEverythingNow_Prefix(MapDrawer __instance)
@@ -1584,6 +1590,11 @@ namespace IsoRim
                 // the game's sprite of the work under way beneath it.
                 if (Ghosts.Target(__0) != null)
                 {
+                    // MP: another faction's blueprint goes to the game's own print, where Multiplayer hides it
+                    if (MpBridge.HidesBlueprint(__0))
+                    {
+                        return true;
+                    }
                     if (Ghosts.Print(__instance, __0))
                     {
                         return __0 is Frame;
@@ -2209,7 +2220,8 @@ namespace IsoRim
             return !(inDraggerGUI && View3D.Ready);
         }
 
-        public static bool DrawSelectionBracketFor_Prefix(object __0)
+        // MP: __1 is the game's optional bracket material; Multiplayer passes each player's colour for their selection.
+        public static bool DrawSelectionBracketFor_Prefix(object __0, Material __1)
         {
             Thing t = __0 as Thing;
             if (!View3D.Ready || t == null || !t.Spawned || t.Map != Find.CurrentMap)
@@ -2218,7 +2230,7 @@ namespace IsoRim
             }
             try
             {
-                Interaction.Bracket(t);
+                Interaction.Bracket(t, __1 != null ? __1.color : (Color?)null);
                 return false;
             }
             catch (Exception e)
@@ -3489,7 +3501,9 @@ namespace IsoRim
         // The game's drafted-south step (pawn.Rotation = Rot4.South), skipped in the 3D view.
         public static void DraftedSouth(Thing pawn, Rot4 rot)
         {
-            if (View3D.Active)
+            // MP: a pawn's rotation is game state and this runs in the tick, while the 3D view is each player's own
+            // choice, so a multiplayer session keeps the game's south turn for everyone.
+            if (View3D.Active && !MpBridge.InSession)
             {
                 if (Probe.On)
                 {
@@ -4217,6 +4231,11 @@ namespace IsoRim
         {
             try
             {
+                // MP: another faction's blueprint is drawn as the game draws it (no 3D ghost)
+                if (MpBridge.HidesBlueprint(__instance))
+                {
+                    return true;
+                }
                 return !Ghosts.DrawPlanned(__instance);
             }
             catch (Exception e)

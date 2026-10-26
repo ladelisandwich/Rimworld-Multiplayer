@@ -237,7 +237,8 @@ namespace IsoRim
         // false = skip the original (its thing's model stands in).
         public static bool Prefix(object __instance, object[] __args)
         {
-            if (!View3D.Ready)
+            // MP: skipping depends on the player's own 3D view, so in a multiplayer session simulation code always runs.
+            if (!View3D.Ready || MpBridge.Simulating)
             {
                 return true;
             }

@@ -2,5 +2,8 @@
   <v1.7>
     <li>/</li>
     <li>1.7</li>
+    <!-- Built-in IsoRim Waylith (scripts/common.sh stage_isorim). Skipped while a standalone IsoRim is active, which
+         About.xml marks incompatible and Multiplayer reports at startup. -->
+    <li IfModNotActive="Peren.IsoRim17,connor.isorim">IsoRim</li>
   </v1.7>
 </loadFolders>

@@ -641,7 +641,19 @@ namespace IsoRim
             rear = 0f;
             try
             {
-                Material mat = p.def.graphicData.Graphic != null ? p.def.graphicData.Graphic.MatSingle : null;
+                // MP: a Graphic_Random's MatSingle draws from Verse.Rand, and this can first run inside a tick (a shield
+                // stopping the shot) on one player only, since the result is cached per def; keep the draw out of the
+                // shared random state.
+                Material mat;
+                Rand.PushState();
+                try
+                {
+                    mat = p.def.graphicData.Graphic != null ? p.def.graphicData.Graphic.MatSingle : null;
+                }
+                finally
+                {
+                    Rand.PopState();
+                }
                 if (mat != null && mat.mainTexture != null)
                 {
                     const int n = 64;

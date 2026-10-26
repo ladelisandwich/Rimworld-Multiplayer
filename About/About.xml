@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
   <packageId>rwmt.Multiplayer</packageId>
-  <name>Multiplayer (1.7 port)</name>
+  <name>Multiplayer (1.7 port) + IsoRim</name>
   <supportedVersions>
     <li>1.7</li>
   </supportedVersions>
-  <author>RimWorld Multiplayer Team</author>
+  <authors>
+    <li>RimWorld Multiplayer Team</li>
+    <li>Lin (peren717), IsoRim Waylith</li>
+    <li>Connor (kndzio), IsoRim</li>
+  </authors>
   <url>https://github.com/rwmt/Multiplayer</url>
   <modVersion></modVersion> <!-- filled out by scripts/build_release.sh and scripts/install_local.sh -->
   <description>&lt;b&gt;Unofficial port of Multiplayer to RimWorld 1.7. Requires RimWorld 1.7 and Harmony. Doesn't need Prepatcher.
@@ -14,6 +18,8 @@ Multiplayer mod for RimWorld, ported to RimWorld 1.7 (.NET 10). This isn't an of
 
 Fork: https://github.com/ladelisandwich/Rimworld-Multiplayer (branch port-1.7)
 Official mod (RimWorld 1.6): https://github.com/rwmt/Multiplayer
+
+&lt;b&gt;Includes IsoRim Waylith&lt;/b&gt;, an isometric 3D view (https://github.com/peren717/IsoRim-1.7), a RimWorld 1.7 port by Lin (peren717) of IsoRim by Connor (kndzio, https://github.com/kndzio/IsoRim). MIT licence, full text in IsoRim/LICENSE. Turn the 3D view on and off with 0; settings are under Options, Mod settings, IsoRim. The 3D view is per player: each player chooses their own view and settings. Turn off the standalone IsoRim mod, it is built in here. A slow 3D frame rate on one player's PC slows the game for everyone in a session.
   </description>
   <modDependencies>
     <li>
@@ -31,6 +37,10 @@ Official mod (RimWorld 1.6): https://github.com/rwmt/Multiplayer
     <li>Ludeon.RimWorld.Odyssey</li>
     <li>brrainz.harmony</li>
   </loadAfter>
+  <incompatibleWith>
+    <li>Peren.IsoRim17</li>
+    <li>connor.isorim</li>
+  </incompatibleWith>
   <loadBefore>
     <li>UnlimitedHugs.HugsLib</li>
     <li>OskarPotocki.VanillaFactionsExpanded.Core</li>

@@ -12,14 +12,15 @@ namespace Multiplayer.Client
         {
             if (Multiplayer.Client == null || TickPatch.Simulating) return;
 
-            var size = Math.Min(UI.CurUICellSize() * 4, 32f);
-
             foreach (var ping in Multiplayer.session.locationPings.pings)
             {
                 if (ping.mapId != Find.CurrentMap.uniqueID) continue;
                 if (ping.PlayerInfo is not { } player) continue;
+                // Sized at its own spot and skipped behind the camera, for the built-in IsoRim's 3D views
+                if (!MapScreen.TryMapToUI(ping.mapLoc, out var at)) continue;
 
-                ping.DrawAt(ping.mapLoc.MapToUIPosition(), player.color, size);
+                var size = Math.Min(MapScreen.CellSizeAt(ping.mapLoc) * 4, 32f);
+                ping.DrawAt(at, player.color, size);
             }
         }
     }

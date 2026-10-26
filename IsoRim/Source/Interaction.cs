@@ -157,7 +157,8 @@ namespace IsoRim
         // ---- selection brackets
 
         // Corner brackets on the ground round what is selected.
-        public static void Bracket(Thing t)
+        // MP: color, when given, tints the bracket (another player's selection in a multiplayer game)
+        public static void Bracket(Thing t, Color? color = null)
         {
             float x0;
             float z0;
@@ -186,7 +187,7 @@ namespace IsoRim
             z1 += pad;
             float w = LineWidth * 1.3f;
             float len = Mathf.Min(0.32f, Mathf.Min(x1 - x0, z1 - z0) * 0.3f);
-            Color col = new Color(1f, 1f, 1f, 0.95f);
+            Color col = color.HasValue ? new Color(color.Value.r, color.Value.g, color.Value.b, 0.95f) : new Color(1f, 1f, 1f, 0.95f);
             // each corner: one stroke along x, one along z
             Rect(x0, z0, x0 + len, z0 + w, col);
             Rect(x0, z0 + w, x0 + w, z0 + len, col);

@@ -23,16 +23,18 @@ namespace Multiplayer.Client
                 if (player.map != curMap) continue;
                 if (player.factionId != Multiplayer.RealPlayerFaction.loadID) continue;
 
+                var cursorMap = Vector3.Lerp(
+                    player.lastCursor,
+                    player.cursor,
+                    (float)(Multiplayer.clock.ElapsedMillisDouble() - player.updatedAt) / 50f
+                );
+                // Behind the built-in IsoRim's perspective camera there's nothing to draw
+                if (!MapScreen.TryMapToUI(cursorMap, out var pos)) continue;
+
                 if (Multiplayer.settings.transparentPlayerCursors)
                     GUI.color = player.color * new Color(1, 1, 1, 0.5f);
                 else
                     GUI.color = player.color * new Color(1, 1, 1, 1);
-
-                var pos = Vector3.Lerp(
-                    player.lastCursor,
-                    player.cursor,
-                    (float)(Multiplayer.clock.ElapsedMillisDouble() - player.updatedAt) / 50f
-                ).MapToUIPosition();
 
                 var icon = MultiplayerData.icons.ElementAtOrDefault(player.cursorIcon);
                 var drawIcon = icon ?? CustomCursor.CursorTex;
@@ -52,7 +54,8 @@ namespace Multiplayer.Client
                 if (player.dragStart != PlayerInfo.Invalid)
                 {
                     GUI.color = player.color * new Color(1, 1, 1, 0.2f);
-                    Widgets.DrawBox(new Rect() { min = player.dragStart.MapToUIPosition(), max = pos }, 2);
+                    // A rectangle on the ground, so it keeps its shape under a turned or tilted 3D camera
+                    MapScreen.DrawGroundBox(player.dragStart, cursorMap, 2f);
                 }
 
                 GUI.color = Color.white;

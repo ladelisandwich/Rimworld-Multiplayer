@@ -896,7 +896,9 @@ namespace IsoRim
             FullWalls.Reset();
             FirstPerson.Reset();
             ModelLibrary.ClearOverrides();   // the dev-mode model binder's changes last one game only
-            Active = LockedOn || HarnessStartsOn;
+            // MP: Multiplayer reloads the game while a session goes on (hosting, a player joining, a resync), so the
+            // player's 3D view is kept through those reloads instead of switching off each time.
+            Active = LockedOn || HarnessStartsOn || Active && MpBridge.InSession;
             lastActive = false;
             appliedSig = 0;
             pendingSig = 0;
