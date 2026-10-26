@@ -223,7 +223,7 @@ namespace IsoRim
         // True while the camera is still swinging toward YawTarget.
         public static bool Turning
         {
-            get { return lookDragging || FirstPerson.On || yawSet && Mathf.Abs(Mathf.DeltaAngle(yawNow, YawTarget)) > 0.05f; }
+            get { return lookDragging || heldTurning || FirstPerson.On || yawSet && Mathf.Abs(Mathf.DeltaAngle(yawNow, YawTarget)) > 0.05f; }   // Port: heldTurning
         }
 
         private static float yawNow;
@@ -437,6 +437,7 @@ namespace IsoRim
             if (ControlsLocked)
             {
                 lookDragging = false;   // a gravship cutscene: no turn, tilt, look, first person, 3D or isometric switch
+                heldTurning = false;   // Port
                 return;
             }
 
@@ -468,13 +469,21 @@ namespace IsoRim
                 FirstPerson.Toggle();
             }
 
-            if (!Active || typing)
+            if (!Active)
             {
                 lookDragging = false;
+                heldTurning = false;   // Port
                 return;
             }
 
+            // Port: the mouse look reads no text keys, so it keeps working while a text box has focus (Multiplayer's chat
+            // keeps its input focused while open); only the keys below wait for typing to end.
             HandleLook();
+            if (typing)
+            {
+                heldTurning = false;
+                return;
+            }
             if (R3DKeyDefOf.R3D_ResetCamera != null && R3DKeyDefOf.R3D_ResetCamera.JustPressed)
             {
                 if (FirstPerson.On)
@@ -490,17 +499,51 @@ namespace IsoRim
             // Q and E turn the view an eighth or a quarter turn (see the options). The game uses the
             // same keys to turn a building that is being placed, so they are left alone while
             // something is selected to build.
-            if (!FirstPerson.On && (Find.DesignatorManager == null || Find.DesignatorManager.SelectedDesignator == null))
+            // Port: also not on the world map or under a window that holds the camera (CameraBlocked), nor while a targeter
+            // takes Q and E (a shuttle's landing spot turns with them, as a building being placed does).
+            heldTurning = false;
+            if (!FirstPerson.On && !CameraBlocked && (Find.DesignatorManager == null || Find.DesignatorManager.SelectedDesignator == null)
+                && (Find.Targeter == null || !Find.Targeter.IsTargeting))
             {
                 IsoRimSettings turnSettings = IsoRimMod.Settings;
-                if (R3DKeyDefOf.R3D_TurnLeft != null && R3DKeyDefOf.R3D_TurnLeft.JustPressed)
+                if (turnSettings.smoothTurn)
                 {
-                    SnapTurn(turnSettings, -1);
+                    // Port: held, Q and E turn the view smoothly (as in 3D strategy games); the steps are the option off. Only a
+                    // press that starts here turns it, so a key still held when a building or a shuttle lets go of it doesn't.
+                    bool left = R3DKeyDefOf.R3D_TurnLeft != null && R3DKeyDefOf.R3D_TurnLeft.IsDown;
+                    bool right = R3DKeyDefOf.R3D_TurnRight != null && R3DKeyDefOf.R3D_TurnRight.IsDown;
+                    if (R3DKeyDefOf.R3D_TurnLeft != null && R3DKeyDefOf.R3D_TurnLeft.JustPressed
+                        || R3DKeyDefOf.R3D_TurnRight != null && R3DKeyDefOf.R3D_TurnRight.JustPressed)
+                    {
+                        heldTurnArmed = true;
+                    }
+                    if (!left && !right)
+                    {
+                        heldTurnArmed = false;
+                    }
+                    float spin = heldTurnArmed ? (right ? 1f : 0f) - (left ? 1f : 0f) : 0f;
+                    if (spin != 0f)
+                    {
+                        // (a hitch can't jump the view: at most a tenth of a second counts, as the game's CameraDriver.MaxDeltaTime)
+                        turnSettings.freeYaw = Mathf.Repeat(turnSettings.freeYaw + spin * HeldTurnSpeed * Mathf.Min(Time.unscaledDeltaTime, 0.1f), 360f);
+                        heldTurning = true;
+                    }
                 }
-                if (R3DKeyDefOf.R3D_TurnRight != null && R3DKeyDefOf.R3D_TurnRight.JustPressed)
+                else
                 {
-                    SnapTurn(turnSettings, 1);
+                    if (R3DKeyDefOf.R3D_TurnLeft != null && R3DKeyDefOf.R3D_TurnLeft.JustPressed)
+                    {
+                        SnapTurn(turnSettings, -1);
+                    }
+                    if (R3DKeyDefOf.R3D_TurnRight != null && R3DKeyDefOf.R3D_TurnRight.JustPressed)
+                    {
+                        SnapTurn(turnSettings, 1);
+                    }
                 }
+            }
+            else
+            {
+                heldTurnArmed = false;   // Port
             }
             if (R3DKeyDefOf.R3D_ToggleRoofs != null && R3DKeyDefOf.R3D_ToggleRoofs.JustPressed)
             {
@@ -516,10 +559,10 @@ namespace IsoRim
             {
                 dir -= 1f;
             }
-            if (dir != 0f && !FirstPerson.On)
+            if (dir != 0f && !FirstPerson.On && !CameraBlocked)   // Port: CameraBlocked
             {
                 IsoRimSettings s = IsoRimMod.Settings;
-                float change = dir * 40f * Time.unscaledDeltaTime;
+                float change = dir * 40f * Mathf.Min(Time.unscaledDeltaTime, 0.1f);   // Port: a hitch can't jump the tilt
                 if (s.isometric)
                 {
                     s.isoPitch = Mathf.Clamp(s.isoPitch + change, MinPitch, MaxPitch);
@@ -535,6 +578,16 @@ namespace IsoRim
 
         private static bool lookDragging;
         private static Vector3 lookLastMouse;
+        private static bool middleWasDown, middleMovesMap;   // Port: middleLooks, see LookHeld
+        private const float HeldTurnSpeed = 90f;   // Port: degrees a second while Q or E is held (smoothTurn)
+        private static bool heldTurning, heldTurnArmed;   // Port: Q or E is turning the view this frame; that press began unguarded
+
+        // Port: as the game's CameraDriver.AnythingPreventsCameraMotion: the world map is shown, or a window holds the
+        // camera (most dialogs; not the main tabs or Multiplayer's chat). The 3D camera's own controls wait then too.
+        public static bool CameraBlocked
+        {
+            get { return RimWorld.Planet.WorldRendererUtility.WorldSelected || Find.WindowStack != null && Find.WindowStack.WindowsPreventCameraMotion; }
+        }
 
         // True while the view is being dragged round with the mouse (read by the map drag in
         // Patches, which then stays out of the way).
@@ -545,11 +598,25 @@ namespace IsoRim
 
         // Whether the mouse buttons and keys for free look are held now (see IsoRimSettings.lookMode):
         // 0 = the middle button with the look modifier (Ctrl by default, a key binding in the game's keyboard options; none
-        // if unbound); 1 = right button while nothing is selected and no building is being placed. The drag button is a
+        // if unbound), or Port: alone with middleLooks, the modifier then dragging the map; 1 = right button while nothing
+        // is selected and no building is being placed. The drag button is a
         // mod setting, not a key binding: the game's keyboard options can't take a mouse button.
         public static bool LookHeld()
         {
             IsoRimSettings st = IsoRimMod.Settings;
+            // Port (middleLooks): whether this middle press drags the map, decided as the button goes down with the modifier
+            // held, so letting go of the modifier half way through a drag doesn't switch. Kept up to date on every call,
+            // before any early return, so a release in first person or with the view off can't leave it stale.
+            bool middle = Input.GetMouseButton(2);
+            if (middle && !middleWasDown)
+            {
+                middleMovesMap = BindingHeld(R3DKeyDefOf.R3D_LookModifier, false);
+            }
+            middleWasDown = middle;
+            if (CameraBlocked)
+            {
+                return false;   // Port: the world map or a window holding the camera (a middle drag there spins the globe)
+            }
             if (FirstPerson.On && Active)
             {
                 // Nothing to drag the map for in first person: the drag button alone looks round.
@@ -566,6 +633,12 @@ namespace IsoRim
                     && (Find.Selector == null || Find.Selector.NumSelected == 0);
             }
             // The modifier is a key binding of its own (Ctrl by default: Alt is the game's cell inspector).
+            if (st.middleLooks)
+            {
+                // Port: the middle button alone turns the view, the base camera control as in 3D strategy games; with
+                // the modifier held as it went down it drags the map instead (Patches.CameraUpdate_Prefix).
+                return middle && !middleMovesMap;
+            }
             return Input.GetMouseButton(2) && BindingHeld(R3DKeyDefOf.R3D_LookModifier, true);
         }
 

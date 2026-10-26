@@ -32,12 +32,20 @@
   <R3D_Settings_CameraNote>3D 视图开启时如何观看地图。</R3D_Settings_CameraNote>
   <R3D_Settings_Isometric>等距视角</R3D_Settings_Isometric>
   <R3D_Settings_IsometricTip>镜头转 45 度并压低，类似等距视角游戏。关闭：北方朝上。</R3D_Settings_IsometricTip>
+  <!-- Port: smoothTurn and middleLooks (the Multiplayer port's camera defaults) -->
+  <R3D_Settings_SmoothTurn>按住 Q 或 E 时平滑转动</R3D_Settings_SmoothTurn>
+  <R3D_Settings_SmoothTurnTip>按住 Q 和 E 时镜头持续转动，就像 3D 策略游戏一样。关闭：按档转动（见下方）。</R3D_Settings_SmoothTurnTip>
+  <R3D_Settings_TurnSmoothly>镜头平滑转动</R3D_Settings_TurnSmoothly>
+  <R3D_Settings_MiddleLooks>鼠标中键转动视角（{0} + 中键拖动地图）</R3D_Settings_MiddleLooks>
+  <R3D_Settings_MiddleLooksTip>用鼠标中键拖动即可转动和俯仰镜头，无需按住任何键，就像 3D 策略游戏一样。按下中键时按住 {0} 则改为拖动地图。关闭：中键拖动地图，{0} + 中键转动视角。</R3D_Settings_MiddleLooksTip>
+  <R3D_Settings_LookMiddleFreeTip>拖动以转动和俯仰镜头。按下中键时按住 {0} 则改为拖动地图。</R3D_Settings_LookMiddleFreeTip>
+  <R3D_Settings_LookKeysDragMapHold>用{0}拖动（按住 {1} 拖动地图）</R3D_Settings_LookKeysDragMapHold>
   <R3D_Settings_Snap45>每次转 45°</R3D_Settings_Snap45>
   <R3D_Settings_Snap45Tip>Q 和 E 每次将镜头转八分之一圈。关闭：每次四分之一圈。</R3D_Settings_Snap45Tip>
   <R3D_Settings_InstantTurn>视角秒切</R3D_Settings_InstantTurn>
-  <R3D_Settings_InstantTurnTip>按 Q 和 E 时直接切到新角度，没有旋转过渡。转动视角会头晕时可以打开。</R3D_Settings_InstantTurnTip>
+  <R3D_Settings_InstantTurnTip>镜头立即跟随 Q 和 E，没有缓动过渡。转动视角会头晕时可以打开。</R3D_Settings_InstantTurnTip>
   <R3D_Settings_FreeLook>自由视角</R3D_Settings_FreeLook>
-  <R3D_Settings_FreeLookTip>用鼠标拖动可将镜头任意旋转和俯仰（5° 至 89°）。Q 和 E 转到下一档。重置键（默认未设置）在游戏的按键设置中。</R3D_Settings_FreeLookTip>
+  <R3D_Settings_FreeLookTip>用鼠标拖动可将镜头任意旋转和俯仰（5° 至 89°）。关闭平滑转动时，Q 和 E 转到下一档。重置键（默认未设置）在游戏的按键设置中。</R3D_Settings_FreeLookTip>
   <R3D_Settings_LookMiddle>自由视角：鼠标中键</R3D_Settings_LookMiddle>
   <R3D_Settings_LookMiddleTip>按住 {0} 并拖动。按住键可在游戏的按键设置中修改。</R3D_Settings_LookMiddleTip>
   <R3D_Settings_LookMiddleTipNoKey>按住键可在游戏的按键设置中修改。</R3D_Settings_LookMiddleTipNoKey>

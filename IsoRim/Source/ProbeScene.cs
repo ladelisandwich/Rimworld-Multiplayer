@@ -1589,7 +1589,8 @@ namespace IsoRim
                         Log.Message("[IsoRim probe] lookcheck " + (kd == null ? "missing" : kd.defName + " '" + kd.LabelCap + "' A=" + KeyPrefs.KeyPrefsData.GetBoundKeyCode(kd, KeyPrefs.BindingSlot.A)
                             + " B=" + KeyPrefs.KeyPrefsData.GetBoundKeyCode(kd, KeyPrefs.BindingSlot.B) + " held " + View3D.BindingHeld(kd, false)));
                     }
-                    Log.Message("[IsoRim probe] lookcheck LookHeld " + View3D.LookHeld() + " lookMode " + IsoRimMod.Settings.lookMode);
+                    Log.Message("[IsoRim probe] lookcheck LookHeld " + View3D.LookHeld() + " lookMode " + IsoRimMod.Settings.lookMode
+                        + " middleLooks " + IsoRimMod.Settings.middleLooks);   // Port
                     break;
                 }
                 case "social":

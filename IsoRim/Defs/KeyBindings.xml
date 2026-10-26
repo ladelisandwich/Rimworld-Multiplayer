@@ -63,7 +63,7 @@
 
   <KeyBindingDef>
     <defName>R3D_LookModifier</defName>
-    <label>free look: hold key</label>
+    <label>hold key for the middle button (drag the map, or free look)</label>   <!-- Port: middleLooks swaps the two -->
     <category>IsoRim</category>
     <defaultKeyCodeA>LeftControl</defaultKeyCodeA>
     <defaultKeyCodeB>RightControl</defaultKeyCodeB>

@@ -354,7 +354,10 @@ of IsoRim and the Multiplayer dlls JIT-compiles, 0 errors. Confirmed in game
 by the user (Oct 26 12:46, hosted alone on 4990 with bbed3215): walls fold 
 again, Player.log 0 errors; idle drafted pawns keep their facing in 3D in 
 that hosted session (MpFacing, no "replaced N rotation writes" error). The 
-two-player check of the IsoRim features is still pending.
+two-player check of the IsoRim features is still pending. Oct 26 (user 
+request): IsoRim's free look is the base camera control now (middle button 
+turns and tilts, Q/E turn smoothly; Known gaps, IsoRim, camera); checked 
+headless (hooks install, settings load), the feel needs the in-game check.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -774,6 +777,34 @@ read of both codebases before merging. What changed and why:
   records the map pass can show one stale frame, and SpritePixels releasing 
   reloaded CPU levels while the render thread uploads them (on-demand texture 
   residency) could leave a texture short of mip levels.
+  - Camera controls (Oct 26, user request: the existing free look as the 
+  base way of moving the camera, as in 3D strategy games). Two IsoRimSettings, 
+  both on by default and saved under new keys (a settings file without them 
+  gets smoothTurn = freeLook && !instantTurn, so earlier opt-outs keep 
+  stepped turns; middleLooks = true): middleLooks, the middle button alone 
+  turns and tilts the view and the look modifier (R3D_LookModifier, Ctrl) held 
+  as it goes down drags the map instead (the old default was the other way 
+  round; the choice is latched on the press in View3D.LookHeld, updated on 
+  every call before its early returns); smoothTurn, Q/E held turn the view at 
+  90 deg/s through freeYaw (only a press that began while no designator or 
+  targeter took Q/E, so a shuttle landing or a building rotation can't spin 
+  it; frame time capped at 0.1 s; counted in View3D.Turning so the map edge is 
+  rebuilt once after the turn), with the 45/90 degree steps as the option off 
+  (the steps checkbox only shows then). Also: IsoRim's camera input now waits 
+  like the game's (View3D.CameraBlocked = world map shown or 
+  WindowStack.WindowsPreventCameraMotion; a middle drag on the globe used to 
+  turn the hidden 3D camera), the mouse look runs while a text box has focus, 
+  the movement keys keep working during a mouse look while the screen-edge 
+  scroll is dropped (StopGameDrag keeps desiredDolly, DollyVect_Postfix), and 
+  the tilt keys' frame time is capped too. The hold key's label is now "hold 
+  key for the middle button (drag the map, or free look)" (Defs, so both 
+  players need this build, as always); English and Chinese strings added. 
+  Camera state is per player and never synced. Reviewed by three agents with 
+  adversarial checks. Found in passing, not fixed here: Multiplayer's mouse 
+  ping and jump-to-ping buttons (sendPingButton Mouse4, jumpToPingButton 
+  Mouse3) and MpInput's middle-click detection use Input.GetKey*(KeyCode.MouseN), 
+  which UnityStubs answers only for keyboard keys, so those mouse bindings 
+  never fire on 1.7 (the keyboard ping key works).
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
   idle drafted pawns (walk one east and stop: the 3D player sees it face 

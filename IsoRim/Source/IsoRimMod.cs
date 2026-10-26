@@ -75,6 +75,8 @@ namespace IsoRim
         public int turn = 0;             // eighth turns of the camera, clockwise
         public bool snap45 = true;       // Q and E turn an eighth (45 degrees) at a time; otherwise a quarter
         public bool instantTurn = false; // Q and E (and the free-look snap) jump straight to the new angle, with no swing
+        public bool smoothTurn = true;   // Port: Q and E turn the view smoothly while held; off: steps (snap45)
+        public bool middleLooks = true;  // Port: the middle button turns the view with no hold key; with it, it drags the map
         public bool freeLook = true;     // the view can be turned and tilted by dragging with the mouse
         public float freeYaw = 0f;       // degrees turned by free look, on top of the eighth turns
         public float lookSensitivity = 0.25f;   // degrees per pixel dragged
@@ -112,7 +114,7 @@ namespace IsoRim
         public float tiltCentre = 0.5f;      // sharp band centre, fraction of the screen height from the top (0.3..0.7)
         public float tiltWidth = 0.3f;       // sharp band width, fraction of the screen height (0.1..0.6)
         public bool tiltPop = false;         // slightly richer colours with tilt-shift (TiltShift.PopAmount)
-        public int lookMode = 0;         // free look drag button: 0 = middle button with R3D_LookModifier (Ctrl), 1 = right button with nothing selected
+        public int lookMode = 0;         // free look drag button: 0 = middle button (Port: alone with middleLooks, else with R3D_LookModifier, Ctrl), 1 = right button with nothing selected
         public bool pawns3D = true;
         public bool hairUnderHats = false;   // hair shown, tucked in, under headgear that covers only the upper head (People.HairUnderHat)
         public List<string> keepPaper = new List<string>();   // races (ThingDef defNames) kept as cards although an alien pack makes them 3D (Api 25, AlienFigures)
@@ -201,7 +203,14 @@ namespace IsoRim
             Scribe_Values.Look(ref turn, "turnSteps", 0);
             Scribe_Values.Look(ref snap45, "snap45", true);
             Scribe_Values.Look(ref instantTurn, "instantTurn", false);
+            Scribe_Values.Look(ref smoothTurn, "smoothTurn", true);   // Port
+            Scribe_Values.Look(ref middleLooks, "middleLooks", true);   // Port
             Scribe_Values.Look(ref freeLook, "freeLook", true);
+            if (Scribe.mode == LoadSaveMode.LoadingVars && Scribe.loader.curXmlParent != null && Scribe.loader.curXmlParent["smoothTurn"] == null)
+            {
+                // Port: a settings file from before smoothTurn keeps its stepped turns if free look was off or instant turns on
+                smoothTurn = freeLook && !instantTurn;
+            }
             Scribe_Values.Look(ref freeYaw, "freeYaw", 0f);
             Scribe_Values.Look(ref lookSensitivity, "lookSensitivity", 0.25f);
             Scribe_Values.Look(ref invertY, "invertY", false);
@@ -415,7 +424,7 @@ namespace IsoRim
             Text.Font = GameFont.Small;
             GUI.color = Muted;
             string status = (View3D.Active ? "R3D_Settings_ViewIsOn" : "R3D_Settings_ViewIsOff").Translate()
-                + "   ·   " + "R3D_Settings_TurnStep".Translate(st.snap45 ? "45°" : "90°");
+                + "   ·   " + (st.smoothTurn ? "R3D_Settings_TurnSmoothly".Translate() : "R3D_Settings_TurnStep".Translate(st.snap45 ? "45°" : "90°"));   // Port
             Widgets.Label(new Rect(rect.x + 16f, rect.y, rect.width - 300f, rect.height), status);
             GUI.color = Color.white;
             Text.Font = GameFont.Small;
@@ -637,7 +646,8 @@ namespace IsoRim
             return "R3D_Settings_Cells".Translate(value.ToString(format));
         }
 
-        // Free look's own keys: "hold Ctrl and drag with the middle button" (without the hold key if it is unbound), or
+        // Free look's own keys: "drag with the middle button (hold Ctrl to drag the map)" (Port: middleLooks), "hold Ctrl
+        // and drag with the middle button" (without the hold key if it is unbound), or
         // "drag with the right button while nothing is selected".
         private static string LookKeysLabel(IsoRimSettings st)
         {
@@ -646,8 +656,13 @@ namespace IsoRim
                 return "R3D_Settings_LookKeysRight".Translate();
             }
             KeyBindingDef mod = R3DKeyDefOf.R3D_LookModifier;
-            return mod == null || mod.MainKey == KeyCode.None
-                ? "R3D_Settings_LookKeysDrag".Translate(DragButtonLabel(st))
+            if (mod == null || mod.MainKey == KeyCode.None)
+            {
+                return "R3D_Settings_LookKeysDrag".Translate(DragButtonLabel(st));
+            }
+            // Port: the middle button alone (middleLooks), the hold key for dragging the map
+            return st.middleLooks
+                ? "R3D_Settings_LookKeysDragMapHold".Translate(DragButtonLabel(st), mod.MainKeyLabel)
                 : "R3D_Settings_LookKeysHoldDrag".Translate(mod.MainKeyLabel, DragButtonLabel(st));
         }
 
@@ -694,7 +709,11 @@ namespace IsoRim
             {
                 Section(l, "R3D_Settings_Camera".Translate(), "R3D_Settings_CameraNote".Translate());
                 Check(l, "R3D_Settings_Isometric".Translate(), ref st.isometric, "R3D_Settings_IsometricTip".Translate());
-                Check(l, "R3D_Settings_Snap45".Translate(), ref st.snap45, "R3D_Settings_Snap45Tip".Translate());
+                Check(l, "R3D_Settings_SmoothTurn".Translate(), ref st.smoothTurn, "R3D_Settings_SmoothTurnTip".Translate());   // Port
+                if (!st.smoothTurn)   // Port: the steps are only used with smooth turning off
+                {
+                    Check(l, "R3D_Settings_Snap45".Translate(), ref st.snap45, "R3D_Settings_Snap45Tip".Translate());
+                }
                 Check(l, "R3D_Settings_InstantTurn".Translate(), ref st.instantTurn, "R3D_Settings_InstantTurnTip".Translate());
                 Check(l, "R3D_Settings_FreeLook".Translate(), ref st.freeLook, "R3D_Settings_FreeLookTip".Translate());
                 if (st.freeLook)
@@ -703,10 +722,20 @@ namespace IsoRim
                     KeyBindingDef hold = R3DKeyDefOf.R3D_LookModifier;
                     string middleTip = hold == null || hold.MainKey == KeyCode.None
                         ? "R3D_Settings_LookMiddleTipNoKey".Translate()
-                        : "R3D_Settings_LookMiddleTip".Translate(hold.MainKeyLabel);
+                        : st.middleLooks
+                            ? "R3D_Settings_LookMiddleFreeTip".Translate(hold.MainKeyLabel)   // Port
+                            : "R3D_Settings_LookMiddleTip".Translate(hold.MainKeyLabel);
                     if (l.RadioButton("R3D_Settings_LookMiddle".Translate(), st.lookMode != 1, 12f, middleTip))
                     {
                         st.lookMode = 0;
+                    }
+                    if (st.lookMode != 1 && hold != null && hold.MainKey != KeyCode.None)
+                    {
+                        // Port: the middle button turns the view as in 3D strategy games; the hold key drags the map. With
+                        // the hold key unbound the middle button always turns the view, so there is nothing to choose.
+                        l.Indent(24f);
+                        Check(l, "R3D_Settings_MiddleLooks".Translate(hold.MainKeyLabel), ref st.middleLooks, "R3D_Settings_MiddleLooksTip".Translate(hold.MainKeyLabel));
+                        l.Outdent(24f);
                     }
                     if (l.RadioButton("R3D_Settings_LookRight".Translate(), st.lookMode == 1, 12f, "R3D_Settings_LookRightTip".Translate()))
                     {

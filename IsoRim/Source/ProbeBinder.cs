@@ -351,6 +351,7 @@ namespace IsoRim
             });
             Vector3 start = Vector3.zero;
             int turn = 0;
+            float freeYaw = 0f;   // Port
             binderInput.Enqueue(() => { InputSystem.QueueMouseMove(p); InputSystem.QueueMouseButton(0, true, p); });
             binderInput.Enqueue(() => { });
             binderInput.Enqueue(() => { InputSystem.QueueMouseMove(p); InputSystem.QueueMouseButton(0, false, p); });
@@ -359,6 +360,7 @@ namespace IsoRim
             {
                 start = camRoot(Find.CameraDriver);
                 turn = IsoRimMod.Settings.turn;
+                freeYaw = IsoRimMod.Settings.freeYaw;   // Port: held Q/E turn freeYaw (smoothTurn)
                 Log.Message("[IsoRim probe] bindertype focus: control " + GUIUtility.keyboardControl);
             });
             // Type the text, one key a frame (down with its character, then up).
@@ -426,7 +428,7 @@ namespace IsoRim
             {
                 float after = (camRoot(Find.CameraDriver) - start).magnitude;
                 BinderWindow bw = BinderOpen;
-                bool ok = typedMove < 0.001f && after > 0.5f && turn == IsoRimMod.Settings.turn;
+                bool ok = typedMove < 0.001f && after > 0.5f && turn == IsoRimMod.Settings.turn && freeYaw == IsoRimMod.Settings.freeYaw;   // Port
                 Log.Message("[IsoRim probe] bindertype after clicking the map: focus control " + GUIUtility.keyboardControl + ", camera moved "
                     + after.ToString("0.###") + " -> " + (ok ? "CHECK ok" : "CHECK FAILED"));
                 Find.CameraDriver.SetRootPosAndSize(start, Find.CameraDriver.RootSize);

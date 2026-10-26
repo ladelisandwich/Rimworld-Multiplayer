@@ -18,6 +18,7 @@ namespace IsoRim
         private static Harmony harmony;
         private static AccessTools.FieldRef<PawnRenderer, Pawn> pawnOfRenderer;
         private static readonly List<FieldInfo> dragFields = new List<FieldInfo>();   // the game's own camera movement, cleared while the mod drags
+        private static readonly FieldInfo desiredDollyField = AccessTools.Field(typeof(CameraDriver), "desiredDolly");   // Port: the movement keys' dolly
         private static bool dragging;
         private static Vector3 dragAnchor;     // the point on the ground that was under the pointer when the drag began
         private static Vector3 dragStartPos;   // where the camera was at the start of this frame
@@ -1064,12 +1065,18 @@ namespace IsoRim
 
         // The direction asked for by the movement keys and by the pointer at a screen edge:
         // x is "right", y is "up the screen".
-        public static void DollyVect_Postfix(ref Vector2 __result)
+        public static void DollyVect_Postfix(CameraDriver __instance, ref Vector2 __result)
         {
             if (FirstPerson.On)
             {
                 __result = Vector2.zero;   // the camera rides with the colonist
                 return;
+            }
+            if (View3D.LookDragging && desiredDollyField != null)
+            {
+                // Port: turning the view with the mouse, only the movement keys move the camera: the pointer reaching a
+                // screen edge mid-turn mustn't start the edge scroll
+                __result = (Vector2)desiredDollyField.GetValue(__instance);
             }
             if (View3D.Ready && __result != Vector2.zero)
             {
@@ -1094,9 +1101,16 @@ namespace IsoRim
                 }
                 if (View3D.LookDragging || View3D.LookHeld())
                 {
-                    // The middle button is turning the view (free look), not dragging the map.
+                    // The middle button is turning the view (free look), not dragging the map. Port: only the game's own
+                    // drag is stopped, so the movement keys still move the camera while it turns (DollyVect_Postfix drops
+                    // the screen-edge scroll then).
                     dragging = false;
-                    StopGameDrag(__instance);
+                    StopGameDrag(__instance, true);
+                    return;
+                }
+                if (View3D.CameraBlocked)
+                {
+                    dragging = false;   // Port: the world map or a window holding the camera: the game doesn't move it either
                     return;
                 }
                 bool held = Input.GetMouseButton(2);
@@ -1152,10 +1166,14 @@ namespace IsoRim
             config.sizeRange.min = lim.y;
         }
 
-        private static void StopGameDrag(CameraDriver driver)
+        private static void StopGameDrag(CameraDriver driver, bool keepKeys = false)
         {
             for (int i = 0; i < dragFields.Count; i++)
             {
+                if (keepKeys && dragFields[i].Name == "desiredDolly")
+                {
+                    continue;   // Port: the movement keys' dolly (the game sets it from WASD each frame)
+                }
                 dragFields[i].SetValue(driver, Vector2.zero);
             }
         }

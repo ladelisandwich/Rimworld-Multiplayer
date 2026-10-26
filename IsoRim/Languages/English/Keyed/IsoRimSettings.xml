@@ -32,12 +32,20 @@
   <R3D_Settings_CameraNote>How the map is seen while the 3D view is on.</R3D_Settings_CameraNote>
   <R3D_Settings_Isometric>Isometric view</R3D_Settings_Isometric>
   <R3D_Settings_IsometricTip>The camera turned 45 degrees and lowered, as in isometric games. Off: north is up.</R3D_Settings_IsometricTip>
+  <!-- Port: smoothTurn and middleLooks (the Multiplayer port's camera defaults) -->
+  <R3D_Settings_SmoothTurn>Turn smoothly while Q or E is held</R3D_Settings_SmoothTurn>
+  <R3D_Settings_SmoothTurnTip>Q and E keep turning the camera for as long as they are held, as in 3D strategy games. Off: they turn it in steps (below).</R3D_Settings_SmoothTurnTip>
+  <R3D_Settings_TurnSmoothly>camera turns smoothly</R3D_Settings_TurnSmoothly>
+  <R3D_Settings_MiddleLooks>Middle button turns the view ({0} + middle button drags the map)</R3D_Settings_MiddleLooks>
+  <R3D_Settings_MiddleLooksTip>Drag with the middle button to turn and tilt the camera, with no key to hold, as in 3D strategy games. Hold {0} as you press the button to drag the map instead. Off: the middle button drags the map and {0} + middle button turns the view.</R3D_Settings_MiddleLooksTip>
+  <R3D_Settings_LookMiddleFreeTip>Drag to turn and tilt the camera. Hold {0} as you press the button to drag the map instead.</R3D_Settings_LookMiddleFreeTip>
+  <R3D_Settings_LookKeysDragMapHold>drag with {0} (hold {1} to drag the map)</R3D_Settings_LookKeysDragMapHold>
   <R3D_Settings_Snap45>Turn in 45° steps</R3D_Settings_Snap45>
   <R3D_Settings_Snap45Tip>Q and E turn the camera an eighth of a turn at a time. Off: a quarter turn.</R3D_Settings_Snap45Tip>
   <R3D_Settings_InstantTurn>Instant camera turns</R3D_Settings_InstantTurn>
-  <R3D_Settings_InstantTurnTip>Q and E jump straight to the new angle, with no swing. Can help if turning the view makes you dizzy.</R3D_Settings_InstantTurnTip>
+  <R3D_Settings_InstantTurnTip>The camera follows Q and E at once, with no easing swing. Can help if turning the view makes you dizzy.</R3D_Settings_InstantTurnTip>
   <R3D_Settings_FreeLook>Free look</R3D_Settings_FreeLook>
-  <R3D_Settings_FreeLookTip>Drag with the mouse to turn the camera all the way round and tilt it (5° to 89°). Q and E snap to the next step. The reset key (unbound at first) is in the game's keyboard options.</R3D_Settings_FreeLookTip>
+  <R3D_Settings_FreeLookTip>Drag with the mouse to turn the camera all the way round and tilt it (5° to 89°). With smooth turning off, Q and E snap to the next step. The reset key (unbound at first) is in the game's keyboard options.</R3D_Settings_FreeLookTip>
   <R3D_Settings_LookMiddle>Free look: middle button</R3D_Settings_LookMiddle>
   <R3D_Settings_LookMiddleTip>Hold {0} and drag. The hold key is in the game's keyboard options.</R3D_Settings_LookMiddleTip>
   <R3D_Settings_LookMiddleTipNoKey>The hold key is in the game's keyboard options.</R3D_Settings_LookMiddleTipNoKey>
