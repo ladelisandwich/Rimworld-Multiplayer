@@ -173,6 +173,7 @@ namespace IsoRim
         private static readonly int colorId = Shader.PropertyToID("_Color");
         private static readonly int mainTexStId = Shader.PropertyToID("_MainTex_ST");
         private static readonly int markPassId = Shader.PropertyToID("_MarkPass");
+        private static readonly int lightModeId = Shader.PropertyToID("_LightMode");   // Port: copied onto the marks (lamps by direction, Lamps.cs)
 
         public const int None = 0;      // _GlowMode: lit by the game's pulled overlay
         public const int OwnCell = 1;   // the face's own cell from the glow texture, applied by the light pass (marked)
@@ -243,6 +244,7 @@ namespace IsoRim
             mark.mainTexture = m.mainTexture;
             mark.SetVector(mainTexStId, m.GetVector(mainTexStId));
             mark.SetColor(colorId, m.color);
+            mark.SetFloat(lightModeId, m.GetFloat(lightModeId));   // Port: the light pass turns lamp light by direction only on sun-shaded faces (not glowing parts)
         }
 
         // The mark material for a material drawn now, or null if it needs none. Texture and colour
@@ -368,6 +370,7 @@ namespace IsoRim
                 // The floors still go over: the roof and slab clips read them too (the 1 x 1 neutral texture gives the
                 // same light wherever the floors' rows point).
                 Shader.SetGlobalVector(floorsId, Floors.GlowFloors());
+                IsoLamps.Off();   // Port: no lamp light on the faces, so no direction either
                 return;
             }
             IsoGlowMap g = IsoGlowMap.For(map);
@@ -377,7 +380,9 @@ namespace IsoRim
             Shader.SetGlobalVector(mapId, new Vector4(g.origin.x, g.origin.y, 1f / g.width, 1f / g.height));
             Color sky = SkyFor(map);
             Shader.SetGlobalVector(skyId, new Vector4(sky.r, sky.g, sky.b, 1f));
-            Shader.SetGlobalVector(floorsId, Floors.GlowFloors());
+            Vector4 floors = Floors.GlowFloors();   // Port: kept for IsoLamps
+            Shader.SetGlobalVector(floorsId, floors);
+            IsoLamps.BeginFrame(map, floors.x > 0.5f);   // Port: the lamps near the view, for lamp light by direction (Lamps.cs)
         }
 
         // No glow, no roof cover, white sky: light 1 (also the state before the first frame, so

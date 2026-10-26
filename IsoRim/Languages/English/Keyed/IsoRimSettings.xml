@@ -206,11 +206,29 @@
   <R3D_Settings_GroundShadows>Soft shadows under everything</R3D_Settings_GroundShadows>
   <R3D_Settings_TreeShadows>Trees cast sun shadows</R3D_Settings_TreeShadows>
   <R3D_Settings_TreeShadowLength>Tree shadow length</R3D_Settings_TreeShadowLength>
+  <!-- Port: sun shadows on 3D things and one sun for 3D things and the ground (SunShadows, option 4) -->
+  <R3D_Settings_FaceShadows>Walls and rock cast sun shadows on 3D things</R3D_Settings_FaceShadows>
+  <R3D_Settings_FaceShadowsTip>By day, walls, rock, doors and roofs (while shown) shade the sunny side of people, animals, furniture and other walls that stand in their shadow. Nothing changes at night, or indoors while "Night and indoor darkness on raised things" is on. People, trees and furniture don't cast these shadows; they keep their shadows on the ground. Not on maps with stacked floors.</R3D_Settings_FaceShadowsTip>
+  <R3D_Settings_FaceShadowStrength>Shadow strength on 3D things</R3D_Settings_FaceShadowStrength>
+  <R3D_Settings_OneSun>Ground shadows follow the 3D sun</R3D_Settings_OneSun>
+  <R3D_Settings_OneSunTip>Shadows on the ground fall straight away from the sun that lights the 3D view, as long as its walls would throw them, so they line up with the light and shadows on walls and people. They are shorter than the game's own. Off: the game's own shadow direction and length, turned to fall north.</R3D_Settings_OneSunTip>
   <R3D_Settings_Light>Light</R3D_Settings_Light>
   <R3D_Settings_LightingFix>Night and indoor darkness on raised things</R3D_Settings_LightingFix>
+  <!-- Port: lamps light faces by direction (IsoLamps) -->
+  <R3D_Settings_LampFacing>Lamps light the side that faces them</R3D_Settings_LampFacing>
+  <R3D_Settings_LampFacingTip>Walls, people and furniture are lit more on the side turned toward a lamp, torch or fire and less on the far side, in the colour of each light. Rooms keep the brightness the game gives them, and what the game counts as lit or dark does not change. Not on maps with stacked floors.</R3D_Settings_LampFacingTip>
+  <R3D_Settings_LampFacingStrength>Lamp direction strength</R3D_Settings_LampFacingStrength>
+  <R3D_Settings_LampFacingStrengthTip>How much brighter the side facing a lamp gets, and how much darker the far side: at 50% the facing side gets one and a half times the lamp light and the far side half.</R3D_Settings_LampFacingStrengthTip>
   <R3D_Settings_FogLid>Unexplored areas are a solid lid</R3D_Settings_FogLid>
   <R3D_Settings_SunMoves>Sun moves through the day</R3D_Settings_SunMoves>
   <R3D_Settings_SunMovesTip>The sun rises in the east, stands in the south at noon and sets in the west, and its light on walls, roofs and furniture moves on a few times a day. Off: it stays at its mid-morning place. Turning the camera never changes the light.</R3D_Settings_SunMovesTip>
+  <!-- Port: sunShade (docs/isorim-lighting.md, option 1) -->
+  <R3D_Settings_SunShade>Sun shade follows roofs, weather and time of day</R3D_Settings_SunShade>
+  <R3D_Settings_SunShadeTip>Under a roof, walls, people and furniture lose their sunny and shady sides. In rain, fog and snow, at dusk and by night their sides differ less, as the game's own shadows do, and at dawn and dusk the sunlit side turns warmer and the shaded side cooler. A clear noon looks as before. Roofs are only known while "Night and indoor darkness on raised things" is on. Off: the same strong sun shade everywhere and at all times, as before.</R3D_Settings_SunShadeTip>
+  <!-- Port: lampHalos (docs/isorim-lighting.md, option 3) -->
+  <R3D_Settings_LampHalos>Lamps and fires glow at night</R3D_Settings_LampHalos>
+  <R3D_Settings_LampHalosTip>A soft glow round every lit lamp, torch, campfire and fire in the 3D view, in the light's own colour, where its light comes from. Full at night, in caves and in dark rooms, faint in roofed rooms and on grey days, gone in clear daylight. Walls, roofs, people and anything else in front hide it. Fires are toned down, as the game already draws their glow. Not shown on maps with stacked floors.</R3D_Settings_LampHalosTip>
+  <R3D_Settings_HaloStrength>Glow strength</R3D_Settings_HaloStrength>
 
   <!-- ==================== Ground, water, roofs ==================== -->
   <R3D_Settings_Ground>Ground</R3D_Settings_Ground>

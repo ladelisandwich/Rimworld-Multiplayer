@@ -3555,7 +3555,60 @@ namespace IsoRim
         {
             lightSet = true;
             LightDir = dir;
-            Shader.SetGlobalVector(isoSunId, new Vector4(LightDir.x, LightDir.y, LightDir.z, 0f));
+            Shader.SetGlobalVector(isoSunId, new Vector4(LightDir.x, LightDir.y, LightDir.z, sunShadeW));   // Port: w = the sun shade (SetSunShade), was 0
+        }
+
+        // ---- Port: the sun shade (IsoRimSettings.sunShade; docs/isorim-lighting.md, option 1)
+        //
+        // How the sun's side-to-side shade looks this frame, for IsoRimSolid.frag.glsl (SunShadeAdjust), handed over in
+        // _IsoSun.w (no change to the shaders' uniform block): 0 with the setting off (the fixed curves, as before), else
+        // 1 + round(warmth * 63) + contrast. Nothing else may write _IsoSun: it goes only through SetLight.
+        // - contrast (MinContrast to 0.999): how dark the game's own sun shadow colour is (MatBases.SunShadow: white lerped
+        //   to the sky's shadow colour by GenCelestial.CurShadowStrength, set by SkyManager.SkyManagerUpdate) against
+        //   Clear's day shadow (0.718, 0.745, 0.757): 1 on a clear day, about 0.3 in rain, fog or snow (0.92), about 0.6 on
+        //   a clear night (0.85), MinContrast where the game's shadows swap from sun to moon (strength 0). So the faces
+        //   follow the ground shadows the game draws, with weather changes, game conditions and lightning flashes.
+        // - warmth (0 to 1): how orange the game's sky light is (MatBases.LightOverlay, the colour the light pass multiplies
+        //   every face by: Clear's dusk sky 0.858/0.650/0.423 = 1, white or bluish = 0; rain and fog have white dusks),
+        //   only while the light is the sun (1 - NightWeight). The shader warms the lit side and cools the shaded side
+        //   by it, evenly, so the game's own dusk tint is not doubled.
+        // The shader fades both out where the face's own spot is roofed (OpenSky: the glow texture's sky cover).
+        // Only reads the material colours SkyManagerUpdate set for the current map this frame; called inside Map.MapUpdate
+        // after it (View3D.LightMap).
+        public const float ClearDayShadow = 0.26f;   // 1 - the mean of Clear's day shadow colour
+        public const float DuskWarmth = 0.435f;      // red - blue of Clear's dusk sky colour
+        public const float MinContrast = 0.2f;       // the least side-to-side shade kept outdoors
+        private static float sunShadeW;
+
+        public static void SetSunShade(Map map)
+        {
+            sunShadeW = 0f;
+            IsoRimSettings st = IsoRimMod.Settings;
+            Material shadowMat = MatBases.SunShadow;
+            Material skyMat = MatBases.LightOverlay;
+            if (map == null || st == null || !st.sunShade || shadowMat == null || skyMat == null)
+            {
+                return;
+            }
+            Color shadow = shadowMat.color;
+            float contrast = Mathf.Clamp((1f - (shadow.r + shadow.g + shadow.b) / 3f) / ClearDayShadow, MinContrast, 0.999f);
+            Color sky = skyMat.color;
+            float warmth = Mathf.Clamp01((sky.r - sky.b) / DuskWarmth) * (1f - NightWeight(GenCelestial.CurCelestialSunGlow(map)));
+            sunShadeW = 1f + Mathf.Round(warmth * 63f) + contrast;
+        }
+
+        // The sun shade as last set, for the hourly light line (View3D.LightNow, ModLog.Diag).
+        public static string SunShadeNote
+        {
+            get
+            {
+                if (sunShadeW < 0.5f)
+                {
+                    return "sun shade off";
+                }
+                float steps = Mathf.Floor(sunShadeW - 1f);
+                return "sun shade contrast " + (sunShadeW - 1f - steps).ToString("0.00") + ", warmth " + (steps / 63f).ToString("0.00");
+            }
         }
 
         // The direction toward the camera in true space, and the squash, for the shaders' face

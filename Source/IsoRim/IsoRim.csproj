@@ -29,6 +29,7 @@
     <Compile Include="MpBridge.cs" />
     <Compile Include="MpFacing.cs" />
     <Compile Include="MpView.cs" />
+    <Compile Include="ShaderCheck.cs" />
   </ItemGroup>
 
   <ItemGroup>

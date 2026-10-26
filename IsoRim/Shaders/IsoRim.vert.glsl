@@ -66,6 +66,10 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
     vec4 _IsoSee;     // global, no default: see-through while building (BuildSee): x, y = the pointer (drawn x, z), z = the viewed floor's height (true cells), w = coverage at the pointer (0 = off)
     vec4 _IsoSee2;    // global, no default: x = radius of full coverage, y = radius where it ends (cells), z = dither cell (pixels)
     float _IsoOwnerFloor; // @default = 0.0   per draw (RoofClip.FloorBlock): 1 + the floor a moving model stands on; 0 = not given
+    float _IsoFade;   // @default = 0.0   faded floors (FadeFloors): share of pixels kept, 0 = drawn solid
+    float _IsoFadeFrom; // @default = 0.0   faded floors: where in the dither pattern (0-1) the kept share starts
+    vec4 _IsoLamps;   // global, no default (Port): lamps by direction (IsoLamps, Source/Lamps.cs): x = lamps in _IsoLampTex (0 = none), y = strength k
+    vec4 _IsoShadow;  // global, no default (Port): sun shadows on 3D faces (SunShadows, Source/SunShadows.cs): x = strength (0 = off), y = farthest march (cells along the ground), z = the highest top anything reaches (true cells above the ground), w = edge softness (true cells)
 } uMaterial;
 
 // ---- Step 7: the cut-away in the vertex stage (C# ShaderCut, Source\ShaderCut.cs). IsoRim's walls, damage,

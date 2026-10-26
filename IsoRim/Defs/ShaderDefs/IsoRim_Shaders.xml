@@ -550,4 +550,25 @@
     </shaderProgram>
   </ShaderDef>
 
+  <!-- (Port) Lamp and fire halos (Halos.cs, docs/isorim-lighting.md option 3): one instanced draw of camera-facing quads,
+       stood up at each lit lamp by IsoRimHalo.vert.glsl from a data record per light, the falloff worked out in
+       IsoRimHalo.frag.glsl (no texture). Added to what is behind (Additive: SrcAlpha One, only brightens), queue 3151 as
+       the game's glow motes: after the night and indoor light overlay (3100), so it is not darkened; before the fog-of-war
+       lid (3175) and the roofs (3600), which cover it. Depth-tested (walls, models and pawns in front hide it), no depth
+       write, no culling. -->
+  <ShaderDef>
+    <defName>IsoRimHalo</defName>
+    <shaderProgram>
+      <vertexShaderFileName>IsoRimHalo.vert.glsl</vertexShaderFileName>
+      <fragmentShaderFileName>IsoRimHalo.frag.glsl</fragmentShaderFileName>
+      <useTexture>false</useTexture>
+      <flipTextureST>false</flipTextureST>
+      <blendMode>Additive</blendMode>
+      <depthTest>true</depthTest>
+      <depthWrite>false</depthWrite>
+      <cullMode>None</cullMode>
+      <renderQueue>3151</renderQueue>
+    </shaderProgram>
+  </ShaderDef>
+
 </Defs>

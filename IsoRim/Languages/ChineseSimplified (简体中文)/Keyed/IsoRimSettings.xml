@@ -206,11 +206,29 @@
   <R3D_Settings_GroundShadows>所有物体下方的柔和阴影</R3D_Settings_GroundShadows>
   <R3D_Settings_TreeShadows>树木投下阳光阴影</R3D_Settings_TreeShadows>
   <R3D_Settings_TreeShadowLength>树影长度</R3D_Settings_TreeShadowLength>
+  <!-- Port: sun shadows on 3D things and one sun for 3D things and the ground (SunShadows, option 4) -->
+  <R3D_Settings_FaceShadows>墙壁和岩石在立体物体上投下阳光阴影</R3D_Settings_FaceShadows>
+  <R3D_Settings_FaceShadowsTip>白天，墙壁、岩石、门和屋顶（显示时）会遮住站在其阴影中的人物、动物、家具和其他墙壁的向阳面。夜间没有变化；开启“立体物体也受夜晚和室内黑暗影响”时，室内也没有变化。人物、树木和家具不投下这种阴影，它们仍在地面上投影。在有多层楼层的地图上不起作用。</R3D_Settings_FaceShadowsTip>
+  <R3D_Settings_FaceShadowStrength>立体物体上的阴影强度</R3D_Settings_FaceShadowStrength>
+  <R3D_Settings_OneSun>地面阴影跟随立体视图中的太阳</R3D_Settings_OneSun>
+  <R3D_Settings_OneSunTip>地面阴影朝照亮立体视图的太阳的反方向落下，长度与墙壁投下的一致，因此与墙壁和人物上的光影对齐。比游戏自身的阴影短。关闭：使用游戏自身的阴影方向和长度，并翻转为朝北。</R3D_Settings_OneSunTip>
   <R3D_Settings_Light>光照</R3D_Settings_Light>
   <R3D_Settings_LightingFix>立体物体也受夜晚和室内黑暗影响</R3D_Settings_LightingFix>
+  <!-- Port: lamps light faces by direction (IsoLamps) -->
+  <R3D_Settings_LampFacing>灯光照亮朝向它的一面</R3D_Settings_LampFacing>
+  <R3D_Settings_LampFacingTip>墙壁、人物和家具朝向灯、火把或火堆的一面会更亮，背面更暗，并带有各光源的颜色。房间保持游戏给出的亮度，游戏判定的明暗也不变。在有多层楼层的地图上不起作用。</R3D_Settings_LampFacingTip>
+  <R3D_Settings_LampFacingStrength>灯光方向强度</R3D_Settings_LampFacingStrength>
+  <R3D_Settings_LampFacingStrengthTip>朝向灯的一面变亮多少、背面变暗多少：50% 时朝向的一面得到一倍半的灯光，背面得到一半。</R3D_Settings_LampFacingStrengthTip>
   <R3D_Settings_FogLid>未探索区域显示为实心遮盖</R3D_Settings_FogLid>
   <R3D_Settings_SunMoves>太阳随时间移动</R3D_Settings_SunMoves>
   <R3D_Settings_SunMovesTip>太阳东升、正午在南、西落，墙壁、屋顶和家具上的光照每天变化几次。关闭：停在上午的位置。转动镜头不会改变光照。</R3D_Settings_SunMovesTip>
+  <!-- Port: sunShade (docs/isorim-lighting.md, option 1) -->
+  <R3D_Settings_SunShade>阳光明暗随屋顶、天气和时间变化</R3D_Settings_SunShade>
+  <R3D_Settings_SunShadeTip>屋顶下的墙壁、人物和家具不再有向阳面和背阴面。雨、雾、雪天，黄昏和夜间，各面之间的明暗差异会像游戏自身的阴影一样减弱；黎明和黄昏时，向阳面偏暖，背阴面偏冷。晴天正午与以前相同。只有开启“立体物体也受夜晚和室内黑暗影响”时才能识别屋顶。关闭：任何地方、任何时间都使用同样强烈的阳光明暗，与以前相同。</R3D_Settings_SunShadeTip>
+  <!-- Port: lampHalos (docs/isorim-lighting.md, option 3) -->
+  <R3D_Settings_LampHalos>灯和火在夜间发光</R3D_Settings_LampHalos>
+  <R3D_Settings_LampHalosTip>在立体视图中，每盏点亮的灯、火把、篝火和火焰周围都有一圈柔和的光晕，颜色与光源相同，位于光线发出的位置。夜间、洞穴和黑暗房间中最明显，有屋顶的房间和阴天时较淡，晴朗的白天不显示。墙壁、屋顶、人物和前方的其他物体会遮住它。火焰的光晕较弱，因为游戏已经绘制了它们的光芒。在有多层楼层的地图上不显示。</R3D_Settings_LampHalosTip>
+  <R3D_Settings_HaloStrength>光晕强度</R3D_Settings_HaloStrength>
 
   <!-- ==================== 地面、水体、屋顶 ==================== -->
   <R3D_Settings_Ground>地面</R3D_Settings_Ground>

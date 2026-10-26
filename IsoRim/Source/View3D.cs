@@ -1097,7 +1097,14 @@ namespace IsoRim
             {
                 return;
             }
-            R3DMaterials.SetLight(LightNow());
+            // Port: the light is set inside Map.MapUpdate now (LightMap: the viewed map's own clock under Multiplayer's async
+            // time, and this frame's sky for the sun shade). The camera update runs first in a frame (CameraDriver's execution
+            // order -103, Root_Play's -20), so this sets it only when LightMap did not run last frame (the map drawing hook
+            // missing, or the first frame back from the world map); LightMap then sets it again later in the same frame.
+            if (Time.frameCount - lightFrame > 1)
+            {
+                R3DMaterials.SetLight(LightNow());
+            }
 
             // A turn counts once the swing ends, also one that came back to where it started
             // (anything redrawn during the swing was built at an angle in between).
@@ -1147,6 +1154,24 @@ namespace IsoRim
         private static bool wasTurning;
         private static int litFacing = -1;
 
+        // Port: the light of the map drawn this frame, from MapDrawer.DrawMapMesh's prefix (Patches.DrawMapMesh_Prefix), so
+        // inside Map.MapUpdate: there Multiplayer's async time has put the map's own clock into the TickManager
+        // (Source/Client/AsyncTime/SetMapTime.cs, MapUpdateTimePatch), and the game has set this frame's sky and shadow
+        // colours (SkyManager.SkyManagerUpdate, the first thing MapUpdate does). From the camera update (Relight, before) the
+        // clock was the world's, so with async time the 3D sun could follow another time of day. Only reads game state.
+        public static void LightMap(Map map)
+        {
+            if (!Active || map == null)
+            {
+                return;
+            }
+            lightFrame = Time.frameCount;
+            R3DMaterials.SetSunShade(map);
+            R3DMaterials.SetLight(LightNow());
+        }
+
+        private static int lightFrame = -10;   // Port: Time.frameCount of the last LightMap
+
         // The hour the sun is at: the current map's time of day, or mid-morning with
         // "Sun moves through the day" off.
         // The direction of the light now: IsoRim's sun by day, the game's moon at night (see
@@ -1169,7 +1194,8 @@ namespace IsoRim
                     float glow = GenCelestial.CurCelestialSunGlow(map);
                     Log.Message("[IsoRim] light at " + hour.ToString("0.00") + " h: sun glow " + glow.ToString("0.000") + ", night " + R3DMaterials.NightWeight(glow).ToString("0.00")
                         + ", dir (" + dir.x.ToString("0.000") + ", " + dir.y.ToString("0.000") + ", " + dir.z.ToString("0.000") + ")"
-                        + ", azimuth " + Mathf.Repeat(Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg, 360f).ToString("0") + ", elevation " + (Mathf.Asin(Mathf.Clamp(dir.y, -1f, 1f)) * Mathf.Rad2Deg).ToString("0"));
+                        + ", azimuth " + Mathf.Repeat(Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg, 360f).ToString("0") + ", elevation " + (Mathf.Asin(Mathf.Clamp(dir.y, -1f, 1f)) * Mathf.Rad2Deg).ToString("0")
+                        + ", " + R3DMaterials.SunShadeNote);   // Port
                 }
             }
             return dir;

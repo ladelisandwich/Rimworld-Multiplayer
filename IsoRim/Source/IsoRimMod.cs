@@ -132,10 +132,15 @@ namespace IsoRim
         public bool doors3D = true;
         public bool models3D = true;
         public bool lightingFix = true;
+        public bool lampFacing = true;          // Port: lamps light the side of a 3D face turned toward them more, the far side less (IsoLamps, Lamps.cs)
+        public float lampFacingStrength = 0.5f; // Port: k in 1 + k cos: 0.5 = from half to one and a half times the lamp light
         public bool fogLid = true;
         public bool showRoofs = false;
         public int roofStyle = 0;        // slate, terracotta, thatch, tin, flat roof in steel, marble, granite (SectionLayer_IsoRimRoofs.StyleNames)
         public bool sunMoves = true;
+        public bool sunShade = true;     // Port: the sun shade follows roofs, weather and the time of day (R3DMaterials.SetSunShade)
+        public bool lampHalos = true;    // Port: a soft glow round lit lamps and fires at night (Halos)
+        public float haloStrength = 1f;  // Port: how bright those glows are (0.25-2)
         public bool cutFrontOnly = false;        // only walls between the camera and the pointer are lowered
         public bool cutNearColonists = false;    // walls round colonists are lowered too
         public float colonistRadius = 2.5f;
@@ -144,6 +149,9 @@ namespace IsoRim
         public float treeRadius = 2.5f;
         public bool roofHover = true;            // the roof of the room under the pointer is lifted off
         public bool roofOverColonists = false;   // and of every room a colonist is in     // the sun crosses the sky through the day; otherwise it stays put
+        public bool faceShadows = true;          // Port: by day walls, rock, doors and drawn roofs shade the sunlit 3D faces in their shadow (SunShadows)
+        public float faceShadowStrength = 0.75f; // Port: how much of the sun's share of a face's light a shadow takes away (1 = all)
+        public bool oneSun = true;               // Port: the game's ground shadows fall away from IsoRim's sun, as long as its walls throw them
 
         public override void ExposeData()
         {
@@ -271,10 +279,15 @@ namespace IsoRim
             Scribe_Values.Look(ref doors3D, "doors3D", true);
             Scribe_Values.Look(ref models3D, "models3D", true);
             Scribe_Values.Look(ref lightingFix, "lightingFix", true);
+            Scribe_Values.Look(ref lampFacing, "lampFacing", true);   // Port
+            Scribe_Values.Look(ref lampFacingStrength, "lampFacingStrength", 0.5f);   // Port
             Scribe_Values.Look(ref fogLid, "fogLid", true);
             Scribe_Values.Look(ref showRoofs, "showRoofs", false);
             Scribe_Values.Look(ref roofStyle, "roofStyle", 0);
             Scribe_Values.Look(ref sunMoves, "sunMoves", true);
+            Scribe_Values.Look(ref sunShade, "sunShade", true);   // Port
+            Scribe_Values.Look(ref lampHalos, "lampHalos", true);   // Port
+            Scribe_Values.Look(ref haloStrength, "haloStrength", 1f);   // Port
             Scribe_Values.Look(ref cutFrontOnly, "cutFrontOnly", false);
             Scribe_Values.Look(ref cutNearColonists, "cutNearColonists", false);
             Scribe_Values.Look(ref colonistRadius, "colonistRadius", 2.5f);
@@ -283,6 +296,9 @@ namespace IsoRim
             Scribe_Values.Look(ref treeRadius, "treeRadius", 2.5f);
             Scribe_Values.Look(ref roofHover, "roofHover", true);
             Scribe_Values.Look(ref roofOverColonists, "roofOverColonists", false);
+            Scribe_Values.Look(ref faceShadows, "faceShadows", true);   // Port
+            Scribe_Values.Look(ref faceShadowStrength, "faceShadowStrength", 0.75f);   // Port
+            Scribe_Values.Look(ref oneSun, "oneSun", true);   // Port
             if (lookName == null)
             {
                 lookName = "Gentle";
@@ -1014,9 +1030,25 @@ namespace IsoRim
                 {
                     st.treeShadowLength = Slider(r, "R3D_Settings_TreeShadowLength".Translate(), st.treeShadowLength, 0.05f, 0.5f, st.treeShadowLength.ToString("0.00"));
                 }
+                Check(r, "R3D_Settings_FaceShadows".Translate(), ref st.faceShadows, "R3D_Settings_FaceShadowsTip".Translate());   // Port
+                if (st.faceShadows)   // Port
+                {
+                    st.faceShadowStrength = Slider(r, "R3D_Settings_FaceShadowStrength".Translate(), st.faceShadowStrength, 0f, 1f, (st.faceShadowStrength * 100f).ToString("0") + "%");
+                }
+                Check(r, "R3D_Settings_OneSun".Translate(), ref st.oneSun, "R3D_Settings_OneSunTip".Translate());   // Port
 
                 Section(r, "R3D_Settings_Light".Translate());
                 Check(r, "R3D_Settings_LightingFix".Translate(), ref st.lightingFix);
+                if (st.lightingFix)
+                {
+                    // Port: lamps light faces by direction (IsoLamps); it works on the lamp light the fix brings to the faces
+                    Check(r, "R3D_Settings_LampFacing".Translate(), ref st.lampFacing, "R3D_Settings_LampFacingTip".Translate());
+                    if (st.lampFacing)
+                    {
+                        st.lampFacingStrength = Slider(r, "R3D_Settings_LampFacingStrength".Translate(), st.lampFacingStrength, 0.1f, 1f,
+                            (st.lampFacingStrength * 100f).ToString("0") + "%", "R3D_Settings_LampFacingStrengthTip".Translate());
+                    }
+                }
                 if (View3D.FogLidLocked)
                 {
                     LockedCheck(r, "R3D_Settings_FogLid".Translate(), View3D.LockedFogLid, View3D.FogLidLockTip);   // set by an addon (Api.LockFogLid)
@@ -1026,6 +1058,12 @@ namespace IsoRim
                     Check(r, "R3D_Settings_FogLid".Translate(), ref st.fogLid);
                 }
                 Check(r, "R3D_Settings_SunMoves".Translate(), ref st.sunMoves, "R3D_Settings_SunMovesTip".Translate());
+                Check(r, "R3D_Settings_SunShade".Translate(), ref st.sunShade, "R3D_Settings_SunShadeTip".Translate());   // Port
+                Check(r, "R3D_Settings_LampHalos".Translate(), ref st.lampHalos, "R3D_Settings_LampHalosTip".Translate());   // Port: Halos
+                if (st.lampHalos)
+                {
+                    st.haloStrength = Slider(r, "R3D_Settings_HaloStrength".Translate(), st.haloStrength, 0.25f, 2f, (st.haloStrength * 100f).ToString("0") + "%");
+                }
             }
         }
 

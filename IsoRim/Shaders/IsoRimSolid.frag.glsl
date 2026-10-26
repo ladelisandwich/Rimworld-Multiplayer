@@ -9,6 +9,7 @@
 // colour = vertex colour * _Color [* texture, cut out below alpha 0.5] * shade
 // shade (_LightMode): 0 unlit; 1 model curve; 2 wall curve; 3 roof slates (model curve * 1.05, at most 1.1).
 // The sun is IsoRim's own (C# R3DMaterials.SunDirAt), pushed every frame as the global _IsoSun.
+// Port: with _IsoSun.w > 0 the shade also follows roofs, weather and the time of day (SunShadeAdjust).
 // The face normal comes from screen derivatives of the world position in true (unsquashed) space,
 // turned toward the camera, and snapped to the same 26 direction groups as the C# BinOf.
 //
@@ -52,12 +53,15 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
     float _IsoOwnerFloor; // @default = 0.0   per draw (RoofClip.FloorBlock): 1 + the floor a moving model stands on; 0 = not given
     float _IsoFade;   // @default = 0.0   faded floors (FadeFloors): share of pixels kept, 0 = drawn solid
     float _IsoFadeFrom; // @default = 0.0   faded floors: where in the dither pattern (0-1) the kept share starts
+    vec4 _IsoLamps;   // global, no default (Port): lamps by direction (IsoLamps, Source/Lamps.cs): x = lamps in _IsoLampTex (0 = none), y = strength k
+    vec4 _IsoShadow;  // global, no default (Port): sun shadows on 3D faces (SunShadows, Source/SunShadows.cs): x = strength (0 = off), y = farthest march (cells along the ground), z = the highest top anything reaches (true cells above the ground), w = edge softness (true cells)
 } uMaterial;
 
 layout(set = 2, binding = 1) uniform sampler2D _MainTex;
 layout(set = 2, binding = 2) uniform sampler2D _IsoGlowTex;   // global: texel (x, z) = cell corner (x, z)
 layout(set = 2, binding = 3) uniform sampler2D _IsoCellTex;   // @vertex @default = black   global: the cell texture, read by the vertex stages (shader cut-away) and the roof clipping
 layout(set = 2, binding = 5) uniform sampler2D _IsoRoofTex;   // @default = black   global: the roof over each cell (RoofClip)
+layout(set = 2, binding = 6) uniform sampler2D _IsoLampTex;   // @default = black   global (Port): the lamps near the view, two texels each (IsoLamps, Source/Lamps.cs)
 
 // Read by the vertex stages of instanced draws (IsoRim.vert.glsl, IsoRimTex.vert.glsl); declared here
 // because the engine takes the material layout (and so this binding) from the fragment stage.
@@ -295,6 +299,257 @@ vec3 GlowLight(vec4 g)
     return L;
 }
 
+// ---- Port: lamps light a face by its direction (C# IsoLamps, Source/Lamps.cs; docs/isorim-lighting.md, option 2).
+// _IsoLampTex: lamp i in texels 2i and 2i + 1 of row 0 (texelFetch). 2i: r = cell x & 255, g = cell z & 255,
+// b = (x >> 8) | (z >> 8) << 4, a = glow radius * 6 (cells). 2i + 1: r, g, b = the game's glow colour, a = the light's
+// height above the ground * 64 (true cells). _IsoLamps: x = lamps in the texture (0 = none), y = strength k.
+const int LampMax = 32;   // IsoLamps.MaxLamps
+
+// A factor per colour channel for the lamp light on a face with normal n at p (true space): 1 + k * the mean cosine
+// between n and the lamps, each lamp weighted by what the game adds to the glow there, glowColor * lerp(1 - d/r, 1/d^2,
+// 0.4) with d counted from 1 in the lamp's own cell (Verse.Glow.ComputeGlowGridsJob.SetGlowFromDist; here in a straight
+// line, without walls). Above 1 toward the lamps, below 1 away, 1 on average over all directions: the glow texture keeps
+// the brightness. Close to a light (its lamp's own faces) the direction counts for nothing.
+vec3 LampFacing(vec3 p, vec3 n, vec3 glow)
+{
+    int count = min(int(uMaterial._IsoLamps.x + 0.5), LampMax);
+    vec3 sw = vec3(0.0);
+    vec3 sf = vec3(0.0);
+    // Port (review): a wall face takes light only from its own side (the game's light stops at walls, and its corner
+    // averages leave wall cells out), so on a face backed by a wall, rock or door (cell bit 16 just behind it) the lamps
+    // behind its plane are left out.
+    bool backed = false;
+    if (uMaterial._IsoCellMap.z > 0.5 && abs(n.y) < 0.92)
+    {
+        bool inside;
+        ivec2 t = RoofTexel(ivec2(floor(p.xz - n.xz * 0.1)), inside);
+        backed = inside && (int(round(texelFetch(_IsoCellTex, t, 0).a * 255.0)) & 16) != 0;
+    }
+    for (int i = 0; i < count; i++)
+    {
+        ivec4 la = ivec4(round(texelFetch(_IsoLampTex, ivec2(2 * i, 0), 0) * 255.0));
+        vec3 lp = vec3(float(la.r | ((la.b & 15) << 8)) + 0.5, 0.0, float(la.g | ((la.b >> 4) << 8)) + 0.5);
+        float radius = float(la.a) / 6.0;
+        float dg = 1.0 + length(lp.xz - p.xz);
+        if (dg > radius)
+            continue;
+        ivec4 lb = ivec4(round(texelFetch(_IsoLampTex, ivec2(2 * i + 1, 0), 0) * 255.0));
+        lp.y = float(lb.a) / 64.0 + uMaterial._IsoLevel.x;
+        vec3 d = lp - p;
+        if (backed && dot(n, d) < 0.0)
+            continue;
+        float dl = length(d);
+        float cosine = dl > 1e-3 ? dot(n, d / dl) * smoothstep(0.35, 0.8, dl) : 0.0;
+        vec3 w = vec3(lb.rgb) * (mix(1.0 - dg / radius, 1.0 / (dg * dg), 0.4) / 255.0);
+        sw += w;
+        sf += w * cosine;
+    }
+    // Port (review): the direction term is scaled by the share of the face's glow the listed lamps explain (w is in the
+    // glow texture's units), so a face lit mostly by a light that isn't listed (the list holds the lamps nearest the view)
+    // keeps its brightness, and lamps entering or leaving the list don't make it jump. On a backed face every cosine is
+    // at least 0, so the mean is centred on 0.5 to keep the face's average brightness.
+    vec3 share = clamp(1.3 * sw / max(glow, vec3(1e-3)), 0.0, 1.0);   // (1.3: the corner averaging and 8-bit colours leave sw a little under the glow)
+    vec3 mean = sf / max(sw, vec3(1e-5));
+    if (backed)
+        mean -= vec3(0.5);
+    return vec3(1.0) + uMaterial._IsoLamps.y * share * mean;
+}
+
+// ---- Port: sun shadows on 3D faces (C# SunShadows, Source/SunShadows.cs; docs/isorim-lighting.md, option 4). From a sunlit
+// fragment the ray toward IsoRim's sun (_IsoSun) is followed cell by cell along the ground (a 2D DDA over the cell
+// texture) for at most _IsoShadow.y cells, and only while it can still pass under something (_IsoShadow.z, the highest
+// top). A cell casts where its top stands above the ray at the point the ray enters it (the ray only climbs, so that is
+// its lowest point over the cell): a wall, rock or door (cell bit 16, IsoCellMap.Work; its full top, or with SHADOW_CUT
+// what the cut-away leaves of it, as FogLid) or, while roofs are drawn, a built, rock or ship roof that is not opened (its
+// underside, RoofUnderside). The fragment's own cell is never tested (a wall's own top, a door over the one standing in
+// it). Whether the fragment is under a roof is OpenSky's (the sun shade's) read, in SunShadeAdjust. Off without the cell
+// texture, with stacked floors (their rows are shifted per storey; not handled yet) and with the sun nearly overhead or
+// down. True space throughout: x, z in map cells, y in true cells above the map's ground (p.y - _IsoLevel.x); no squash.
+#define SHADOW_CUT 0              // 1: a wall lowered by the cut-away casts only what is left of it; 0: its full height, so
+                                  // shadows stay put as the pointer moves (as the game's ground shadows do). Only with the
+                                  // shader cut-away (texturedWalls, the default): otherwise the cell texture holds the
+                                  // lowered tops and their shadows move with the pointer either way.
+const int ShadowSteps = 24;       // cells crossed at most (12 cells along a diagonal cross 17)
+const float ShadowLift = 0.02;    // the ray starts this far out along the face's normal, off its own face
+
+// 1 = the sun reaches the fragment at p (true space) on a face with normal n; down to 1 - strength in full shadow.
+float SunVisible(vec3 p, vec3 n)
+{
+    vec4 sh = uMaterial._IsoShadow;
+    vec3 L = uMaterial._IsoSun.xyz;
+    vec4 cm = uMaterial._IsoCellMap;
+    float across = length(L.xz);
+    if (sh.x <= 0.0 || cm.z < 1.0 || uMaterial._IsoFloorGlow.x > 0.5 || L.y < 0.05 || across < 1e-3)
+        return 1.0;
+    vec3 s = p + n * ShadowLift;
+    float h0 = s.y - uMaterial._IsoLevel.x;
+    if (h0 >= sh.z)
+        return 1.0;   // above every top
+    vec2 dir = L.xz / across;    // toward the sun along the ground
+    float rise = L.y / across;   // how much the ray climbs per cell along the ground
+    ivec2 size = ivec2(cm.zw);
+    ivec2 origin = ivec2(floor(cm.xy + 0.5));
+    ivec2 c = ivec2(floor(s.xz));
+    ivec2 q = c - origin;
+    if (q.x < 0 || q.y < 0 || q.x >= size.x || q.y >= size.y)
+        return 1.0;
+    ivec2 stepDir = ivec2(dir.x >= 0.0 ? 1 : -1, dir.y >= 0.0 ? 1 : -1);
+    vec2 inv = vec2(1.0 / max(abs(dir.x), 1e-6), 1.0 / max(abs(dir.y), 1e-6));
+    vec2 f0 = s.xz - vec2(c);
+    vec2 tNext = vec2(dir.x >= 0.0 ? 1.0 - f0.x : f0.x, dir.y >= 0.0 ? 1.0 - f0.y : f0.y) * inv;   // to the next x and z cell edge
+    float tEnd = min(sh.y, (sh.z - h0) / rise);
+    bool roofs = (int(round(uMaterial._IsoRoof.x)) & 1) != 0;
+    float soft = max(sh.w, 0.001);
+    float occ = 0.0;
+    for (int i = 0; i < ShadowSteps; i++)
+    {
+        float t;
+        if (tNext.x < tNext.y)
+        {
+            t = tNext.x;
+            c.x += stepDir.x;
+            tNext.x += inv.x;
+        }
+        else
+        {
+            t = tNext.y;
+            c.y += stepDir.y;
+            tNext.y += inv.y;
+        }
+        if (t > tEnd)
+            break;
+        q = c - origin;
+        if (q.x < 0 || q.y < 0 || q.x >= size.x || q.y >= size.y)
+            break;   // off the map: nothing casts from there
+        ivec2 tc = ivec2(q.x, size.y - 1 - q.y);   // rows stored north first
+        vec4 o = texelFetch(_IsoCellTex, tc, 0);
+        int bits = int(round(o.a * 255.0));
+        float top = -1.0;
+        if ((bits & 16) != 0)
+        {
+            top = (round(o.r * 255.0) * 256.0 + round(o.g * 255.0)) / 4096.0;
+#if SHADOW_CUT
+            top *= 1.0 - (1.0 - uMaterial._IsoLevel.y) * o.b;
+#endif
+        }
+        if (roofs && (bits & 2) == 0)
+        {
+            vec4 r = texelFetch(_IsoRoofTex, tc, 0);
+            int kind = int(round(r.r * 255.0));
+            if (kind >= 1 && kind <= 3)
+                top = max(top, RoofUnderside(kind, r, clamp(s.xz + dir * t - vec2(c), vec2(0.0), vec2(1.0))));
+        }
+        float h = h0 + t * rise;   // the ray's height where it enters this cell
+        occ = max(occ, clamp((top - h) / soft, 0.0, 1.0));
+        if (occ >= 1.0)
+            break;
+    }
+    return 1.0 - occ * sh.x;
+}
+
+// ---- Port (sun shade; IsoRimSettings.sunShade, docs/isorim-lighting.md option 1). C# R3DMaterials.SetSunShade puts it in
+// _IsoSun.w every frame, inside Map.MapUpdate: 0 = off (the curves above alone, as before); otherwise
+// 1 + a warmth step (0-63) + the contrast (0-0.999).
+// - Contrast: how much of the sun's side-to-side shade is kept, from the game's own sun shadow colour (1 on a clear day,
+//   about 0.3 in rain, fog or snow, about 0.6 on a clear night, least where the game's shadows swap from sun to moon).
+//   Where the face's own spot is under a roof (OpenSky) the shade goes over to FlatShade entirely, whatever the weather.
+// - Warmth: how orange the game's sky light is while the light is the sun (dawn and dusk in clear weather). The lit side
+//   is tinted warm and the shaded side cool by the same amount (DuskTint around a facing of 0.5), so the warm dusk sky the
+//   light pass already multiplies every face by (_IsoSky) is not doubled. None under a roof.
+// At a clear noon (contrast 1, warmth 0) the shade is the curves' alone, as before.
+const float RoofedCover = 0.38;   // sky cover counted as fully roofed (100/255 = 0.392, less a margin for the filtering)
+const float FlatSide = 0.78;      // FlatShade: upright model faces
+const float FlatDown = 0.62;      // FlatShade: model faces turned straight down
+const float FlatWallSide = 0.68;  // FlatShade: wall and rock sides (WallShade: 0.52 to 0.80 round them)
+const vec3 DuskTint = vec3(0.20, 0.04, -0.24);   // at full warmth: the lit side x (1.10, 1.02, 0.88), the shaded side x (0.90, 0.98, 1.12)
+
+// The shade with no sun to speak of: light from the sky above, the same all round. Models (and roof slates, * 1.05 as
+// theirs): 1 on top, FlatSide upright, FlatDown underneath, in between by steepness. Walls: 1 on top and underneath (as
+// WallShade), FlatWallSide round the sides.
+float FlatShade(vec3 n, float mode)
+{
+    if (mode > 1.5 && mode < 2.5)
+        return (n.y >= 0.92 || n.y <= -0.92) ? 1.0 : FlatWallSide;
+    float s = n.y >= 0.0 ? mix(FlatSide, 1.0, n.y) : mix(FlatSide, FlatDown, -n.y);
+    return mode > 2.5 ? min(1.1, s * 1.05) : s;
+}
+
+// How far a face is turned to the light, 0 (away) to 1 (full on), as the curves see it: ModelShade's lit share, or
+// WallShade's side-to-side share (1 on top, 0 underneath).
+float SunFacing(vec3 n, vec3 L, float mode)
+{
+    if (mode > 1.5 && mode < 2.5)
+    {
+        if (n.y >= 0.92)
+            return 1.0;
+        if (n.y <= -0.92)
+            return 0.0;
+        vec2 sunFlat = dot(L.xz, L.xz) < 1e-6 ? vec2(0.0, -1.0) : normalize(L.xz);
+        return (dot(normalize(n.xz), sunFlat) + 1.0) * 0.5;
+    }
+    return clamp(max(0.0, dot(n, L)) / max(0.2, L.y), 0.0, 1.0);
+}
+
+// The glow texture coordinate of a fragment, the same lookup as the light pass in main (keep the two in step): upright
+// faces a little outward along their own normal, faces on stacked floors in their own floor's rows.
+vec2 GlowUv(vec3 p, vec3 faceNormal, float squash)
+{
+    vec2 xz = vWorldPos.xz;
+    if (squash > 0.0 && abs(faceNormal.y) < 0.92)
+        xz += faceNormal.xz * 0.1;
+    vec4 fg = uMaterial._IsoFloorGlow;
+    if (fg.x > 0.5 && fg.y > 0.0)
+        xz.y += clamp(floor((p.y + 0.01) / fg.y), 0.0, fg.x) * fg.z;
+    vec4 gm = uMaterial._IsoGlowMap;
+    return vec2((xz.x - gm.x + 0.5) * gm.z, 1.0 - (xz.y - gm.y + 0.5) * gm.w);
+}
+
+// How open the sky is over a fragment of a sun-shaded face: 1 outdoors, 0 under a roof, smooth in between (bilinear).
+// The glow texture's alpha at the face's own spot: the game's sky cover, raised to at least 100/255 at every corner next
+// to a roofed cell, the value the light pass takes the sky light away by. The one roof read the sun shade and the sun
+// shadows share. 1 where there is no cover to read: roof slates (_GlowMode 2), faces left to the pulled overlay (0), and
+// with the lighting fix off (the neutral glow texture has none).
+float OpenSky(vec3 p, vec3 faceNormal, float squash, float glowMode)
+{
+    if (!((glowMode > 0.5 && glowMode < 1.5) || glowMode > 2.5))
+        return 1.0;
+    float cover = textureLod(_IsoGlowTex, GlowUv(p, faceNormal, squash), 0.0).a;
+    return 1.0 - clamp(cover / RoofedCover, 0.0, 1.0);
+}
+
+// shade: the curves' shade, the sun's share of it taken away in a sun shadow (SunVisible; models and walls facing the sun,
+// out of doors), then faded toward FlatShade under a roof and as the game's shadows weaken; tint: the dawn and dusk tint
+// (1 = none). Nothing changes while _IsoSun.w and _IsoShadow.x are both 0. The roof read (OpenSky) is made once for both.
+void SunShadeAdjust(vec3 n, vec3 L, float mode, float glowMode, vec3 p, vec3 faceNormal, float squash, inout float shade, out vec3 tint)
+{
+    tint = vec3(1.0);
+    float w = uMaterial._IsoSun.w;
+    bool shadows = uMaterial._IsoShadow.x > 0.0 && mode < 2.5 && dot(n, L) > 0.0 && dot(L.xz, L.xz) > 1e-6;   // Port (sun shadows)
+    if (w < 0.5 && !shadows)
+        return;
+    float openSky = OpenSky(p, faceNormal, squash, glowMode);
+    float sunLeft = 1.0;   // the share of the sun that reaches the face (1: no shadow)
+    if (shadows && openSky > 0.01)
+    {
+        // Where something stands between the face and the sun, the face keeps only the shade it has with no sun on it (a
+        // model face turned away, a wall side-on to the sun); under a roof (openSky 0) nothing is taken (indoors is the
+        // sun shade's, FlatShade).
+        float unlit = mode < 1.5 ? ModelShade(vec3(0.0, -1.0, 0.0), L) : WallShade(normalize(vec3(-L.z, 0.0, L.x)), L);
+        if (shade > unlit + 0.005)
+        {
+            sunLeft = 1.0 - (1.0 - SunVisible(p, faceNormal)) * openSky;
+            shade = unlit + (shade - unlit) * sunLeft;
+        }
+    }
+    if (w < 0.5)
+        return;
+    float steps = floor(w - 1.0);
+    float contrast = w - 1.0 - steps;
+    float warmth = steps / 63.0;
+    shade = mix(FlatShade(n, mode), shade, contrast * openSky);
+    tint = vec3(1.0) + DuskTint * (warmth * openSky * (SunFacing(n, L, mode) * sunLeft - 0.5));
+}
+
 // ---- Faded floors (Source/FadeFloors.cs, prototype): a fragment of a floor above the viewed one is dropped where the
 // 4 x 4 ordered dither pattern, fixed on the screen, is outside the floor's kept range: _IsoFade wide (0 = drawn solid), from
 // _IsoFadeFrom, wrapping round (floors with overlapping ranges cover each other only there).
@@ -370,6 +625,14 @@ void main()
             vec4 gm = uMaterial._IsoGlowMap;
             vec2 uv = vec2((xz.x - gm.x + 0.5) * gm.z, 1.0 - (xz.y - gm.y + 0.5) * gm.w);
             g = textureLod(_IsoGlowTex, uv, 0.0);
+            // Port: lamp light by direction (LampFacing), in the light pass, on faces the sun shades (_LightMode 1-3, copied
+            // onto the marks by IsoGlow.SyncMark; not glowing parts, mode 0), where any lamp light arrived, not with floors.
+            // (Port, review: not where the sky part alone already reaches the game's clamp, outdoors by day, where lamp
+            // direction can't show; that skips the lamp loop for most pixels by day.)
+            vec3 skyPart = uMaterial._IsoSky.rgb * (1.0 - g.a);
+            if (lightPass && uMaterial._IsoLamps.x > 0.5 && uMaterial._LightMode > 0.5 && squash > 0.0 && fg.x < 0.5
+                && max(g.r, max(g.g, g.b)) > 0.002 && min(skyPart.r, min(skyPart.g, skyPart.b)) < 0.95)
+                g.rgb *= LampFacing(p, faceNormal, g.rgb);
         }
         glowLight = GlowLight(g);
         if (lightPass)
@@ -382,6 +645,7 @@ void main()
 
     float mode = uMaterial._LightMode;
     float shade = 1.0;
+    vec3 tint = vec3(1.0);   // Port (sun shade): the dawn and dusk tint
     if (mode > 0.5 && squash > 0.0)
     {
 #if QUANTIZE
@@ -394,8 +658,9 @@ void main()
             shade = WallShade(n, L);
         else
             shade = min(1.1, ModelShade(n, L) * 1.05);
+        SunShadeAdjust(n, L, mode, glowMode, p, faceNormal, squash, shade, tint);   // Port (sun shade, sun shadows)
     }
-    color.rgb *= shade;
+    color.rgb *= shade * tint;   // Port: * tint
 
     if (glowMode > 1.5)
     {

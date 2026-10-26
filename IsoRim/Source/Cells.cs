@@ -14,6 +14,8 @@ namespace IsoRim
     //   b, a = the shader cut-away (ShaderCut): b = how far the cell's block is cut down, a = tree thinned (1),
     //       roof open (2); and a = fogged in the game's fog grid (4, always): nothing drawn in a fogged cell rises
     //       above the fog lid (RoofClip: the fog clips as roofs do).
+    //   Port: a = a wall, rock or door stands in the cell (16), always: sun shadows on 3D faces (SunShadows,
+    //       IsoRimSolid.frag.glsl SunVisible).
     // A second texture of the same size (_IsoRoofTex) holds the roof drawn over each cell, written by the roofs
     // layer as it builds (RoofClip.cs: things under a roof are clipped at its underside).
     // (A float texture would be simpler, but an RGBAFloat texture filled with SetPixels reads as 0 in
@@ -285,6 +287,13 @@ namespace IsoRim
             {
                 bits |= 4;   // fogged: whatever is drawn here above the fog lid is clipped (RoofClip, the fog)
             }
+            // Port: sun shadows on 3D faces (SunShadows): 16 = a wall, rock or door stands here (its top casts on 3D faces;
+            // furniture and other tops do not).
+            Building edifice = c.GetEdifice(map);
+            if (edifice != null && (edifice.def.IsDoor || WallBoxes.IsWallForm(Forms.For(edifice.def))))
+            {
+                bits |= 16;
+            }
             int za = aboveRow != null ? aboveRow[c.z] : -1;
             if (za >= 0 && !map.terrainGrid.topGrid[za * width + c.x].dontRender)
             {
@@ -434,7 +443,7 @@ namespace IsoRim
         {
             bool roofClip = RoofClip.TextureOn;   // roofs or slabs clip
             Shader.SetGlobalVector(roofId, RoofClip.Globals);   // x = 0: nothing is clipped (bits: 1 roofs, 2 the fog, 4 slabs)
-            if (!View3D.Active || map == null || !(View3D.FogLid || RoofClip.FogOn || ShaderCut.On || roofClip))
+            if (!View3D.Active || map == null || !(View3D.FogLid || RoofClip.FogOn || ShaderCut.On || roofClip || SunShadows.Wanted))   // Port: SunShadows
             {
                 return;
             }

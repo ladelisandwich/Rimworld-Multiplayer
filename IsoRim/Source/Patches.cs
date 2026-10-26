@@ -730,14 +730,48 @@ namespace IsoRim
             {
                 Log.ErrorOnce("[IsoRim] Handing the map's cell data to the shaders failed: " + e, 93611203);
             }
+            // Port: the 3D sun and its shade, here inside Map.MapUpdate (the map's own clock under Multiplayer's async time, after
+            // this frame's sky): View3D.LightMap.
+            try
+            {
+                View3D.LightMap(Find.CurrentMap);
+            }
+            catch (Exception e)
+            {
+                Log.ErrorOnce("[IsoRim] Setting the 3D sun for the map failed: " + e, 93611206);
+            }
+            try
+            {
+                Halos.Draw(Find.CurrentMap);   // Port: lamp and fire halos (docs/isorim-lighting.md option 3)
+            }
+            catch (Exception e)
+            {
+                Log.ErrorOnce("[IsoRim] Drawing lamp halos failed: " + e, 93611801);
+            }
+            try
+            {
+                SunShadows.BeginFrame(Find.CurrentMap);   // Port: sun shadows on 3D faces (after the cell texture is up to date)
+            }
+            catch (Exception e)
+            {
+                Log.ErrorOnce("[IsoRim] Handing the sun shadows to the shaders failed: " + e, 93611207);
+            }
         }
 
         // The game's sun is in the north (its shadows always point south); IsoRim's is in the south.
         // East and west already agree, so in 3D only the north-south part is mirrored.
-        public static void GetLightSourceInfo_Postfix(GenCelestial.LightType type, ref GenCelestial.LightInfo __result)
+        // Port (one sun, SunShadows.CastFor): with "Ground shadows follow the 3D sun" on, the cast is IsoRim's own light
+        // instead, so ground shadows fall straight away from the sun that shades and shadows the 3D faces.
+        public static void GetLightSourceInfo_Postfix(Map map, GenCelestial.LightType type, ref GenCelestial.LightInfo __result)
         {
             if (type == GenCelestial.LightType.Shadow && View3D.Active)
             {
+                Vector2 cast;
+                if (SunShadows.CastFor(map, out cast))   // Port
+                {
+                    __result.vector = cast;
+                    return;
+                }
                 __result.vector.y = -__result.vector.y;
             }
         }

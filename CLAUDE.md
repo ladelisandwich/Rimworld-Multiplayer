@@ -248,6 +248,27 @@ load failure there stops MultiplayerLoader) or AssembliesCustom (IsoRimMod
 would never be constructed). check_staged refuses duplicate paths across 
 load folders, Brutal.*.dll and PublishedFileId.txt. The modVersion shows the 
 IsoRim commit: "0.11.5.17 (<port commit>, IsoRim 3fff2ec)".
+- Shader check (IsoRim GLSL, before launching): python3 
+scripts/check_isorim_shaders.py (offline, ~3 s; needs apt glslang-tools 
+spirv-tools, installed in the container). It rebuilds every variant the way 
+Waylith does (ShaderModuleCache.BuildVariantSource: quoted #includes 
+expanded, USE_TEXTURE/INSTANCED/OUTLINE_MRT defines only when the file names 
+them, put right after #version), compiles each with glslangValidator and 
+spirv-val, applies ShaderMetadataParser's annotation and stage-interface 
+rules, and compares the engine's material block offsets (vec3 = 16 bytes, 
+max 512 bytes, 16 samplers) with std140; --list prints the variants. 
+glslang is stricter than the game's Slang 2026.19 but not identical, so 
+--headless installed|repo|all runs the Windows build headless under Proton 
+with -isorimshadercheck (Source/IsoRim/ShaderCheck.cs: the game's own 
+RuntimeShaderCompiler on the exact variant text; report, sources and SPIR-V 
+in the test prefix's LocalLow/.../IsoRimShaderCheck). In game a failed 
+variant draws magenta and Player.log has "ERROR [Vulkan] Failed to compile 
+shader 'Mesh.<file>[_kw<hash>].<stage>': <Slang message> Substituting 
+magenta fallback shader." (line numbers count the injected #define lines); 
+the startup prewarm logs the first failure per file as "WARN [Vulkan] 
+ShaderPrewarm: failed to warm '<file>': ...", and annotation errors as 
+"ERROR [Vulkan] Shader '<file>' ..." (the whole def magenta). -WatchShaders 
+hot-reloads *.glsl of Mods-folder mods: edit the installed copy.
 - Two instances on this PC: ./scripts/run_two.sh (host, then Enter, then a 
 client that auto-joins 127.0.0.1:30502 with -connect=). Each instance has 
 its own XDG_CONFIG_HOME and -savedatafolder under ~/.rw-mp-test/<host|client>; 
@@ -357,7 +378,10 @@ that hosted session (MpFacing, no "replaced N rotation writes" error). The
 two-player check of the IsoRim features is still pending. Oct 26 (user 
 request): IsoRim's free look is the base camera control now (middle button 
 turns and tilts, Q/E turn smoothly; Known gaps, IsoRim, camera); checked 
-headless (hooks install, settings load), the feel needs the in-game check.
+headless (hooks install, settings load), the feel needs the in-game check. 
+Oct 26 (user request): IsoRim lighting options 1-4 of docs/isorim-lighting.md 
+(sun shade, lamps by direction, halos, sun shadows and one sun; Known gaps, 
+IsoRim, lighting); in-game check pending.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -815,6 +839,48 @@ read of both codebases before merging. What changed and why:
   unconfirmed in game: IsoRim's 3D sun hour is computed in the CameraDriver 
   postfix, outside Map.MapUpdate, so with async time it likely follows world 
   time instead of the viewed map's.
+  - Lighting options 1-4 (Oct 26, user request; each behind its own IsoRim 
+  setting, visual only, per player): (1) sun shade (sunShade, on): the face 
+  shade fades to an even sky shade under a roof (the glow texture's sky 
+  cover, OpenSky, the one roof read options 1 and 4 share; none with the 
+  lighting fix off), keeps the contrast of the game's sun shadow colour 
+  (MatBases.SunShadow), and splits the dusk sky's warmth into a warm lit and 
+  a cool shaded side, packed into _IsoSun.w (only SetLight may write 
+  _IsoSun). The 3D sun is now set inside Map.MapUpdate (DrawMapMesh prefix, 
+  View3D.LightMap), so with async time it follows the viewed map's clock; 
+  the gravship flight shadow too; the perspective sky (Sky.Draw) still reads 
+  the world clock. (2) Lamps by direction (lampFacing, on, strength 0.5): 
+  IsoLamps (Lamps.cs) reads GlowGrid.lights once a frame (FieldRefAccess, 
+  NoInlining reader; a moved field turns options 2 and 3 off with one 
+  warning), the 32 nearest the view go into a 64x1 LiveTexture 
+  (_IsoLampTex, binding 6) for a 1 + k cos term in the light pass; no 
+  occlusion test, off with stacked floors. (3) Halos (lampHalos, on): one 
+  instanced additive draw (IsoRimHalo def, queue 3151, depth-tested) at up 
+  to 256 lit glower things from the same list, light points from LampPlace; 
+  no soft particles (a faint hard edge where a halo meets a wall beside its 
+  lamp). (4) Sun shadows on faces (faceShadows, on, 0.75) by a cell march 
+  over _IsoCellTex (new bit 16: wall, rock or door) and the shown roofs, and 
+  one sun (oneSun, on): the GetLightSourceInfo(Shadow) postfix returns 
+  IsoRim's light as the cast (2.3-2.7x shorter ground shadows than the 
+  game's). All three MaterialUniforms blocks are identical again (vertex 
+  copies gained _IsoFade, _IsoFadeFrom, _IsoLamps, _IsoShadow). Specs by five 
+  agents, merged into one validated patch, then reviewed from four angles 
+  with adversarial checks. Fixed from the review: lamp facing leaves out 
+  lamps behind a wall face's own wall (cell bit 16 just behind the face) and 
+  scales the direction term by the share of the face's glow the listed lamps 
+  explain (no direction from a faint far lamp, no pops as lamps enter or 
+  leave the 32), and it's skipped where the sky alone reaches the game's 
+  clamp (outdoors by day, most pixels); IsoLamps keeps only the 32 nearest 
+  glowing-terrain lights (one per lava cell) and only for the lamp texture, 
+  sorts only when a list is cut, and places only what is used. Left: the 
+  lamp loop still visits up to 32 lamps per lamp-lit pixel at night (a 
+  per-block lamp mask would make it 2-6); the face-shadow march assumes the 
+  tallest pitched roof style (4 levels) whenever roofs show; with textured 
+  walls off, walls lowered by the cut-away cast shorter shadows. Verified 
+  headless on Proton 1.7.4990: the game's Slang compiles all 38 IsoRim 
+  variants (ShaderCheck, now sequential: compiling on worker threads during 
+  the static constructors hung the load), a game loads to a map with 0 
+  errors. Frame cost unmeasured; in-game check pending.
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
   idle drafted pawns (walk one east and stop: the 3D player sees it face 

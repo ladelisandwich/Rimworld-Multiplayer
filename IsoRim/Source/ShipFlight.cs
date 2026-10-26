@@ -1544,7 +1544,7 @@ namespace IsoRim
             {
                 return;
             }
-            Vector3 light = View3D.LightNow();
+            Vector3 light = R3DMaterials.SunDir;   // Port: the light set for the map this frame (View3D.LightMap: the map's own clock), not worked out again from the world update
             float up = Mathf.Max(0.3f, light.y);
             Vector3 off = new Vector3(-light.x, 0f, -light.z) / up * height;
             float grow = 1f + 0.006f * height;
