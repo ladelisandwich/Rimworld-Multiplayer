@@ -1,0 +1,109 @@
+# quest_turrets.mtl - fixed colours (no stuff_); glow_ = emissive in IsoRim
+newmtl amortar_base
+Kd 0.310 0.330 0.280
+
+newmtl amortar_plate
+Kd 0.550 0.550 0.530
+
+newmtl amortar_tube
+Kd 0.400 0.330 0.270
+
+newmtl aturret_band
+Kd 0.720 0.740 0.620
+
+newmtl aturret_base
+Kd 0.230 0.230 0.230
+
+newmtl aturret_base_lt
+Kd 0.320 0.320 0.310
+
+newmtl aturret_gun
+Kd 0.200 0.200 0.220
+
+newmtl aturret_metal
+Kd 0.360 0.370 0.400
+
+newmtl aturret_olive
+Kd 0.400 0.420 0.300
+
+newmtl aturret_rust
+Kd 0.440 0.310 0.260
+
+newmtl bcell_dark
+Kd 0.200 0.170 0.170
+
+newmtl bcell_shell
+Kd 0.660 0.720 0.760
+
+newmtl chem_base
+Kd 0.220 0.220 0.170
+
+newmtl chem_pipe
+Kd 0.360 0.370 0.350
+
+newmtl chem_sign
+Kd 0.860 0.700 0.160
+
+newmtl chem_tank
+Kd 0.440 0.440 0.420
+
+newmtl chem_tank_dk
+Kd 0.300 0.300 0.290
+
+newmtl emanator_core
+Kd 0.620 0.660 0.520
+
+newmtl emanator_frame
+Kd 0.280 0.300 0.240
+
+newmtl emanator_panel
+Kd 0.440 0.480 0.370
+
+newmtl glow_burningcell
+Kd 1.000 0.550 0.200
+
+newmtl glow_chemreactor
+Kd 1.000 0.840 0.450
+
+newmtl glow_lifesupport
+Kd 1.000 0.620 0.250
+
+newmtl glow_vanometric
+Kd 0.890 0.910 0.660
+
+newmtl life_box
+Kd 0.240 0.250 0.230
+
+newmtl life_panel
+Kd 0.400 0.400 0.410
+
+newmtl mship_camo
+Kd 0.220 0.240 0.200
+
+newmtl mship_glass
+Kd 0.160 0.200 0.220
+
+newmtl mship_hull
+Kd 0.680 0.700 0.620
+
+newmtl mship_mid
+Kd 0.500 0.530 0.440
+
+newmtl mship_pit
+Kd 0.120 0.110 0.100
+
+newmtl secturret_body
+Kd 0.460 0.480 0.460
+
+newmtl secturret_leg
+Kd 0.200 0.200 0.200
+
+newmtl vano_cap
+Kd 0.550 0.560 0.450
+
+newmtl vano_case
+Kd 0.360 0.390 0.320
+
+newmtl vano_rim
+Kd 0.240 0.250 0.200
+

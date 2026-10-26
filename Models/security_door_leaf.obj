@@ -1,0 +1,30 @@
+# IsoRim security_door_leaf (security door, 2026-10-16); closed parts, outward winding, file z = -game z
+mtllib isorim.mtl
+o security_door_leaf
+v 0.0700 0.0000 -0.0000
+v 0.0000 0.0000 0.2000
+v 1.0000 0.0000 0.2000
+v 1.0000 0.0000 -0.2000
+v 0.0000 0.0000 -0.2000
+v 0.0700 1.0600 -0.0000
+v 0.0000 1.0600 0.2000
+v 1.0000 1.0600 0.2000
+v 1.0000 1.0600 -0.2000
+v 0.0000 1.0600 -0.2000
+usemtl stuff_plain_deep
+f 1 3 2
+f 1 4 3
+f 1 5 4
+f 10 8 9
+f 10 7 8
+f 10 6 7
+f 1 7 6
+f 1 2 7
+f 2 8 7
+f 2 3 8
+f 3 9 8
+f 3 4 9
+f 4 10 9
+f 4 5 10
+f 5 6 10
+f 5 1 6

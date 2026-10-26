@@ -1,0 +1,151 @@
+# cooler_anima_crates.mtl - fixed colours (no stuff_); glow_ = emissive in IsoRim
+newmtl bark_anima
+Kd 0.440 0.360 0.300
+
+newmtl bark_anima_dk
+Kd 0.300 0.240 0.210
+
+newmtl box_comp
+Kd 0.400 0.200 0.180
+
+newmtl box_comp_dk
+Kd 0.260 0.130 0.120
+
+newmtl box_slag
+Kd 0.250 0.350 0.360
+
+newmtl box_slag_dk
+Kd 0.160 0.220 0.230
+
+newmtl box_spacer
+Kd 0.450 0.250 0.360
+
+newmtl box_spacer_dk
+Kd 0.280 0.160 0.220
+
+newmtl chem_can
+Kd 0.500 0.200 0.180
+
+newmtl chem_can_dk
+Kd 0.320 0.130 0.120
+
+newmtl chem_cap
+Kd 0.300 0.300 0.300
+
+newmtl cont_dk
+Kd 0.300 0.300 0.250
+
+newmtl cont_frame
+Kd 0.420 0.360 0.340
+
+newmtl cont_slat
+Kd 0.720 0.720 0.660
+
+newmtl cooler_body
+Kd 0.800 0.800 0.800
+
+newmtl cooler_cold
+Kd 0.360 0.620 0.900
+
+newmtl cooler_frame
+Kd 0.520 0.520 0.520
+
+newmtl cooler_grille
+Kd 0.360 0.360 0.370
+
+newmtl cooler_hot
+Kd 0.720 0.100 0.100
+
+newmtl cooler_vent
+Kd 0.620 0.620 0.620
+
+newmtl crate_dk
+Kd 0.300 0.300 0.290
+
+newmtl crate_grey
+Kd 0.520 0.520 0.500
+
+newmtl crate_lid
+Kd 0.720 0.720 0.700
+
+newmtl glow_anima
+Kd 0.920 0.920 0.980
+
+newmtl glow_crate
+Kd 1.000 0.550 0.150
+
+newmtl herm_body
+Kd 0.540 0.540 0.540
+
+newmtl herm_dk
+Kd 0.180 0.180 0.180
+
+newmtl herm_lid
+Kd 0.660 0.660 0.660
+
+newmtl herm_red
+Kd 0.440 0.330 0.330
+
+newmtl inner_dark
+Kd 0.140 0.140 0.150
+
+newmtl leaf_anima
+Kd 0.620 0.740 0.640
+
+newmtl leaf_anima_dk
+Kd 0.380 0.480 0.400
+
+newmtl leaf_anima_lt
+Kd 0.800 0.860 0.820
+
+newmtl meal_pack
+Kd 0.780 0.620 0.220
+
+newmtl med_box
+Kd 0.400 0.600 0.620
+
+newmtl pallet_wood
+Kd 0.300 0.360 0.360
+
+newmtl parts_grey
+Kd 0.550 0.550 0.540
+
+newmtl parts_khaki
+Kd 0.450 0.420 0.300
+
+newmtl parts_white
+Kd 0.820 0.820 0.800
+
+newmtl pod_dk
+Kd 0.360 0.360 0.370
+
+newmtl pod_hull
+Kd 0.550 0.550 0.550
+
+newmtl rust
+Kd 0.460 0.300 0.280
+
+newmtl safe_body
+Kd 0.340 0.380 0.340
+
+newmtl safe_dk
+Kd 0.220 0.240 0.220
+
+newmtl safe_steel
+Kd 0.550 0.560 0.550
+
+newmtl slag
+Kd 0.420 0.420 0.420
+
+newmtl slag_dk
+Kd 0.300 0.300 0.310
+
+newmtl strap
+Kd 0.080 0.080 0.080
+
+newmtl tarp_dark
+Kd 0.260 0.270 0.270
+
+newmtl tarp_rust
+Kd 0.460 0.250 0.220
+

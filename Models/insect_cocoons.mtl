@@ -1,0 +1,61 @@
+# insect_cocoons.mtl - fixed colours (no stuff_); glow_ = emissive in IsoRim
+newmtl cocoon_locust_dark
+Kd 0.270 0.260 0.200
+
+newmtl cocoon_locust_ridge
+Kd 0.560 0.540 0.430
+
+newmtl cocoon_locust_shell
+Kd 0.450 0.440 0.350
+
+newmtl cocoon_scarab_dark
+Kd 0.250 0.245 0.190
+
+newmtl cocoon_scarab_ridge
+Kd 0.520 0.510 0.420
+
+newmtl cocoon_scarab_shell
+Kd 0.400 0.390 0.310
+
+newmtl cocoon_spelo_dark
+Kd 0.300 0.295 0.250
+
+newmtl cocoon_spelo_ridge
+Kd 0.400 0.390 0.330
+
+newmtl cocoon_spelo_shell
+Kd 0.530 0.520 0.450
+
+newmtl cocoon_spider_dark
+Kd 0.360 0.290 0.250
+
+newmtl cocoon_spider_shell
+Kd 0.500 0.430 0.370
+
+newmtl cocoon_spider_vein
+Kd 0.430 0.290 0.250
+
+newmtl glow_glowpod
+Kd 0.550 0.860 0.520
+
+newmtl glowpod_stalk
+Kd 0.400 0.360 0.270
+
+newmtl glowpod_stalk_dk
+Kd 0.270 0.240 0.180
+
+newmtl msp_body
+Kd 0.720 0.620 0.450
+
+newmtl msp_bone
+Kd 0.880 0.830 0.700
+
+newmtl msp_dark
+Kd 0.200 0.150 0.110
+
+newmtl msp_eye
+Kd 0.050 0.040 0.035
+
+newmtl msp_shade
+Kd 0.560 0.470 0.330
+

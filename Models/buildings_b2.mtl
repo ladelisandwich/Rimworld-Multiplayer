@@ -1,0 +1,23 @@
+# IsoRim coverage buildings batch 2 (2026-10-15): fixed colours sampled from the vanilla sprites.
+newmtl b2_dirt
+Kd 0.42 0.35 0.27
+newmtl b2_dirt_dark
+Kd 0.34 0.28 0.22
+newmtl b2_sand
+Kd 0.54 0.46 0.38
+newmtl b2_sand_dark
+Kd 0.45 0.38 0.31
+newmtl b2_stone
+Kd 0.48 0.47 0.47
+newmtl b2_stone_dark
+Kd 0.38 0.37 0.37
+newmtl b2_scrap
+Kd 0.45 0.45 0.46
+newmtl b2_scrap_dark
+Kd 0.33 0.32 0.33
+newmtl b2_void
+Kd 0.37 0.34 0.34
+newmtl b2_void_dark
+Kd 0.27 0.24 0.24
+newmtl b2_void_red
+Kd 0.58 0.26 0.25

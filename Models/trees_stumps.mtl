@@ -1,0 +1,173 @@
+# IsoRim trees & stumps - Grok
+
+newmtl bark_graypine
+Kd 0.250 0.200 0.160
+
+newmtl bark_harbinger
+Kd 0.430 0.310 0.300
+
+newmtl bark_harbinger_bloom
+Kd 0.500 0.240 0.280
+
+newmtl bark_harbinger_dk
+Kd 0.300 0.170 0.170
+
+newmtl bark_harbinger_eye
+Kd 0.850 0.700 0.620
+
+newmtl bark_harbinger_lt
+Kd 0.550 0.430 0.420
+
+newmtl bark_harbinger_stump
+Kd 0.420 0.290 0.290
+
+newmtl bark_harbinger_stump_dk
+Kd 0.300 0.180 0.180
+
+newmtl bark_harbinger_stump_lt
+Kd 0.560 0.420 0.420
+
+newmtl bark_pebblecactus
+Kd 0.310 0.260 0.190
+
+newmtl bark_pebblecactus_dk
+Kd 0.220 0.190 0.140
+
+newmtl bark_pebblecactus_lt
+Kd 0.350 0.300 0.220
+
+newmtl bark_ratpalm
+Kd 0.240 0.200 0.160
+
+newmtl bark_stump
+Kd 0.353 0.290 0.212
+
+newmtl bark_stump_anima
+Kd 0.404 0.361 0.298
+
+newmtl bark_stump_anima_dk
+Kd 0.200 0.153 0.106
+
+newmtl bark_stump_archean
+Kd 0.412 0.337 0.176
+
+newmtl bark_stump_archean_dk
+Kd 0.325 0.263 0.133
+
+newmtl bark_stump_dk
+Kd 0.247 0.192 0.137
+
+newmtl bark_stump_gauranlen
+Kd 0.529 0.459 0.282
+
+newmtl bark_stump_gauranlen_dk
+Kd 0.341 0.286 0.184
+
+newmtl bark_stump_polluted
+Kd 0.188 0.153 0.122
+
+newmtl bark_stump_polluted_dk
+Kd 0.141 0.114 0.086
+
+newmtl bark_stump_polux
+Kd 0.235 0.196 0.157
+
+newmtl bark_stump_polux_dk
+Kd 0.192 0.145 0.110
+
+newmtl bark_willowgill
+Kd 0.660 0.540 0.360
+
+newmtl bark_willowgill_cap
+Kd 0.360 0.260 0.120
+
+newmtl bark_willowgill_cap_lt
+Kd 0.500 0.380 0.180
+
+newmtl bark_witchwood
+Kd 0.220 0.180 0.140
+
+newmtl burnt_ash
+Kd 0.500 0.480 0.440
+
+newmtl burnt_char
+Kd 0.370 0.340 0.290
+
+newmtl burnt_char_dk
+Kd 0.250 0.235 0.210
+
+newmtl glow_willowgill
+Kd 0.880 0.850 0.740
+
+newmtl leaf_graypine
+Kd 0.340 0.310 0.250
+
+newmtl leaf_graypine_dk
+Kd 0.240 0.210 0.170
+
+newmtl leaf_graypine_lt
+Kd 0.370 0.390 0.300
+
+newmtl leaf_ratpalm
+Kd 0.300 0.250 0.200
+
+newmtl leaf_ratpalm_dk
+Kd 0.210 0.170 0.140
+
+newmtl leaf_witchwood
+Kd 0.300 0.270 0.200
+
+newmtl leaf_witchwood_dk
+Kd 0.210 0.190 0.150
+
+newmtl leaf_witchwood_lt
+Kd 0.330 0.400 0.280
+
+newmtl stump_core
+Kd 0.510 0.416 0.278
+
+newmtl stump_core_anima
+Kd 0.514 0.443 0.329
+
+newmtl stump_core_anima_dk
+Kd 0.431 0.373 0.275
+
+newmtl stump_core_archean
+Kd 0.514 0.490 0.318
+
+newmtl stump_core_archean_dk
+Kd 0.431 0.392 0.251
+
+newmtl stump_core_dk
+Kd 0.431 0.353 0.235
+
+newmtl stump_core_gauranlen
+Kd 0.643 0.529 0.345
+
+newmtl stump_core_gauranlen_dk
+Kd 0.545 0.459 0.278
+
+newmtl stump_core_harbinger
+Kd 0.660 0.500 0.500
+
+newmtl stump_core_polluted
+Kd 0.341 0.314 0.282
+
+newmtl stump_core_polluted_dk
+Kd 0.275 0.251 0.224
+
+newmtl stump_core_polux
+Kd 0.376 0.376 0.373
+
+newmtl stump_core_polux_dk
+Kd 0.286 0.247 0.231
+
+newmtl twig_bark_graypine
+Kd 0.250 0.200 0.160
+
+newmtl twig_bark_ratpalm
+Kd 0.240 0.200 0.160
+
+newmtl twig_bark_witchwood
+Kd 0.220 0.180 0.140
+

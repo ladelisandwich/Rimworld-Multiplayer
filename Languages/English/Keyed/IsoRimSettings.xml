@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- ==================== Mod settings: header ==================== -->
+  <R3D_Settings_ViewIsOn>3D view is on</R3D_Settings_ViewIsOn>
+  <R3D_Settings_ViewIsOff>3D view is off</R3D_Settings_ViewIsOff>
+  <R3D_Settings_TurnStep>camera turns {0} a step</R3D_Settings_TurnStep>
+  <R3D_Settings_TurnViewOn>Turn 3D view on</R3D_Settings_TurnViewOn>
+  <R3D_Settings_TurnViewOff>Turn 3D view off</R3D_Settings_TurnViewOff>
+  <R3D_Settings_AlwaysOnWith>Always on with {0}</R3D_Settings_AlwaysOnWith>
+  <R3D_Settings_ResetAll>Reset all</R3D_Settings_ResetAll>
+  <R3D_Settings_ResetAllConfirm>Put every IsoRim option back to its default?</R3D_Settings_ResetAllConfirm>
+
+  <!-- Tabs -->
+  <R3D_Settings_TabView>View and camera</R3D_Settings_TabView>
+  <R3D_Settings_TabSeeThrough>See-through</R3D_Settings_TabSeeThrough>
+  <R3D_Settings_TabColour>Colour and light</R3D_Settings_TabColour>
+  <R3D_Settings_TabWorld>Ground, water, roofs</R3D_Settings_TabWorld>
+  <R3D_Settings_TabObjects>What is 3D</R3D_Settings_TabObjects>
+  <R3D_Settings_TabGraphics>Graphics</R3D_Settings_TabGraphics>
+
+  <!-- Values -->
+  <R3D_Settings_Cells>{0} cells</R3D_Settings_Cells>
+  <R3D_Settings_DegPerPixel>{0}°/px</R3D_Settings_DegPerPixel>
+  <R3D_Settings_Never>never</R3D_Settings_Never>
+  <R3D_Settings_Flat>flat</R3D_Settings_Flat>
+  <R3D_Settings_MiddleButton>the middle button</R3D_Settings_MiddleButton>
+  <R3D_Settings_RightButton>the right button</R3D_Settings_RightButton>
+
+  <!-- ==================== View and camera ==================== -->
+  <R3D_Settings_Camera>Camera</R3D_Settings_Camera>
+  <R3D_Settings_CameraNote>How the map is seen while the 3D view is on.</R3D_Settings_CameraNote>
+  <R3D_Settings_Isometric>Isometric view</R3D_Settings_Isometric>
+  <R3D_Settings_IsometricTip>The camera turned 45 degrees and lowered, as in isometric games. Off: north is up.</R3D_Settings_IsometricTip>
+  <R3D_Settings_Snap45>Turn in 45° steps</R3D_Settings_Snap45>
+  <R3D_Settings_Snap45Tip>Q and E turn the camera an eighth of a turn at a time. Off: a quarter turn.</R3D_Settings_Snap45Tip>
+  <R3D_Settings_InstantTurn>Instant camera turns</R3D_Settings_InstantTurn>
+  <R3D_Settings_InstantTurnTip>Q and E jump straight to the new angle, with no swing. Can help if turning the view makes you dizzy.</R3D_Settings_InstantTurnTip>
+  <R3D_Settings_FreeLook>Free look</R3D_Settings_FreeLook>
+  <R3D_Settings_FreeLookTip>Drag with the mouse to turn the camera all the way round and tilt it (5° to 89°). Q and E snap to the next step. The reset key (unbound at first) is in the game's keyboard options.</R3D_Settings_FreeLookTip>
+  <R3D_Settings_LookMiddle>Free look: middle button</R3D_Settings_LookMiddle>
+  <R3D_Settings_LookMiddleTip>Hold {0} and drag. The hold key is in the game's keyboard options.</R3D_Settings_LookMiddleTip>
+  <R3D_Settings_LookMiddleTipNoKey>The hold key is in the game's keyboard options.</R3D_Settings_LookMiddleTipNoKey>
+  <R3D_Settings_LookRight>Free look: right button</R3D_Settings_LookRight>
+  <R3D_Settings_LookRightTip>Drag while nothing is selected.</R3D_Settings_LookRightTip>
+  <R3D_Settings_LookSpeed>Free look speed</R3D_Settings_LookSpeed>
+  <R3D_Settings_InvertY>Invert up and down</R3D_Settings_InvertY>
+  <R3D_Settings_InvertYTip>Dragging up tilts the camera toward top-down.</R3D_Settings_InvertYTip>
+  <R3D_Settings_FpFov>First person field of view</R3D_Settings_FpFov>
+  <R3D_Settings_FpFovTip>{0} with one person selected: the camera in their head. Drag with {1} to look round.</R3D_Settings_FpFovTip>
+  <R3D_Settings_FpEyeHeight>First person eye height</R3D_Settings_FpEyeHeight>
+  <R3D_Settings_MinZoom>Closest zoom</R3D_Settings_MinZoom>
+  <R3D_Settings_MinZoomTip>How close the mouse wheel can bring the camera. The game's own limit is 11.</R3D_Settings_MinZoomTip>
+  <R3D_Settings_Weather3D>3D rain and snow</R3D_Settings_Weather3D>
+  <R3D_Settings_Weather3DTip>Rain and snow fall as drops and flakes round the camera, fog and haze stand in front of it.</R3D_Settings_Weather3DTip>
+  <R3D_Settings_WeatherSize>  Rain and snow size</R3D_Settings_WeatherSize>
+  <R3D_Settings_WeatherSizeTip>How big the drops and flakes look on screen. They no longer grow as the camera zooms in.</R3D_Settings_WeatherSizeTip>
+  <R3D_Settings_ThingLabels>Item labels</R3D_Settings_ThingLabels>
+  <R3D_Settings_ThingLabelsTip>Labels on things lying on the map (stack counts, quality). Names over people are not affected.</R3D_Settings_ThingLabelsTip>
+  <R3D_Settings_Perspective>Perspective</R3D_Settings_Perspective>
+  <R3D_Settings_PerspectiveTip>A real perspective camera: far things get smaller, as in Rim3D. Off: the flat (orthographic) view.</R3D_Settings_PerspectiveTip>
+  <R3D_Settings_Fov>Field of view</R3D_Settings_Fov>
+  <R3D_Settings_FovTip>Wider shows more round the edges and makes depth stronger.</R3D_Settings_FovTip>
+  <R3D_Settings_ViewDistance>View distance</R3D_Settings_ViewDistance>
+  <R3D_Settings_ViewDistanceTip>How far past the middle of the screen the map is drawn when the camera is low. Further costs frame time.</R3D_Settings_ViewDistanceTip>
+  <R3D_Settings_Sky>Sky</R3D_Settings_Sky>
+  <R3D_Settings_SkyTip>A sky with the sun and moon behind the map, following the time of day and the weather.</R3D_Settings_SkyTip>
+  <R3D_Settings_SkyStyle>Sky style: {0}</R3D_Settings_SkyStyle>
+  <R3D_Settings_Sky_Painted>Painted</R3D_Settings_Sky_Painted>
+  <R3D_Settings_Sky_Classic>Classic</R3D_Settings_Sky_Classic>
+  <R3D_Settings_DistanceFog>Distance fog</R3D_Settings_DistanceFog>
+  <R3D_Settings_DistanceFogTip>The far map fades into the horizon, so the edge of what is drawn never shows.</R3D_Settings_DistanceFogTip>
+  <R3D_Settings_FogStart>Fog starts</R3D_Settings_FogStart>
+  <R3D_Settings_FogStartTip>Where between the middle of the screen and the view distance the fog begins.</R3D_Settings_FogStartTip>
+  <R3D_Settings_FogStrength>Fog strength</R3D_Settings_FogStrength>
+  <R3D_Settings_FogStrengthTip>100% is solid at the view distance and hides the edge.</R3D_Settings_FogStrengthTip>
+  <R3D_Settings_LabelFade>Far labels fade from</R3D_Settings_LabelFade>
+  <R3D_Settings_LabelFadeTip>Labels (stack counts, quality, names) fade out past this many times the distance to the middle of the screen. Your colonists keep their names.</R3D_Settings_LabelFadeTip>
+  <R3D_Settings_IsoPitch>Isometric camera angle</R3D_Settings_IsoPitch>
+  <R3D_Settings_IsoPitchTip>35 is the true isometric angle.</R3D_Settings_IsoPitchTip>
+  <R3D_Settings_Pitch>Camera angle</R3D_Settings_Pitch>
+  <R3D_Settings_PitchTip>90 looks straight down.</R3D_Settings_PitchTip>
+  <R3D_Settings_WallHeight>Wall height</R3D_Settings_WallHeight>
+  <R3D_Settings_FixedBy>Fixed by {0}.</R3D_Settings_FixedBy>
+
+  <R3D_Settings_Keys>Keys</R3D_Settings_Keys>
+  <R3D_Settings_KeysNote>Change them under Options &gt; Keyboard configuration &gt; IsoRim.</R3D_Settings_KeysNote>
+  <R3D_Settings_KeyToggleView>3D view on and off</R3D_Settings_KeyToggleView>
+  <R3D_Settings_KeyIsometric>isometric or straight-on</R3D_Settings_KeyIsometric>
+  <R3D_Settings_KeyTurnLeft>turn the camera left</R3D_Settings_KeyTurnLeft>
+  <R3D_Settings_KeyTurnRight>turn the camera right</R3D_Settings_KeyTurnRight>
+  <R3D_Settings_KeyTiltDown>lower the camera</R3D_Settings_KeyTiltDown>
+  <R3D_Settings_KeyTiltUp>raise the camera</R3D_Settings_KeyTiltUp>
+  <R3D_Settings_KeyToggleRoofs>roofs on and off</R3D_Settings_KeyToggleRoofs>
+  <R3D_Settings_FreeLookKeys>Free look: {0}.</R3D_Settings_FreeLookKeys>
+  <R3D_Settings_LookKeysRight>drag with the right button while nothing is selected</R3D_Settings_LookKeysRight>
+  <R3D_Settings_LookKeysDrag>drag with {0}</R3D_Settings_LookKeysDrag>
+  <R3D_Settings_LookKeysHoldDrag>hold {0} and drag with {1}</R3D_Settings_LookKeysHoldDrag>
+  <R3D_Settings_CornerButtonsNote>The 3D view and the roofs also have buttons in the bottom right corner of the screen, next to the game's own.</R3D_Settings_CornerButtonsNote>
+
+  <R3D_Settings_NightSky>Night sky</R3D_Settings_NightSky>
+  <R3D_Settings_NightSkyNote>The sky turns with the hour round a pole set by the map's latitude.</R3D_Settings_NightSkyNote>
+  <R3D_Settings_Stars>Stars</R3D_Settings_Stars>
+  <R3D_Settings_StarsTip>Thousands of stars that twinkle, more of them near the horizon's haze. Hidden by rain, snow and fog.</R3D_Settings_StarsTip>
+  <R3D_Settings_MilkyWay>Milky Way</R3D_Settings_MilkyWay>
+  <R3D_Settings_MilkyWayTip>A band of the galaxy across the sky, with dark dust lanes and a bright core.</R3D_Settings_MilkyWayTip>
+  <R3D_Settings_Planets>Planets (realistic)</R3D_Settings_Planets>
+  <R3D_Settings_PlanetsTip>Three steady points of light that wander along the sky from day to day.</R3D_Settings_PlanetsTip>
+  <R3D_Settings_GasGiant>Gas giant with rings (sci-fi)</R3D_Settings_GasGiant>
+  <R3D_Settings_GasGiantTip>A big ringed planet high in the sky, lit by the sun so it shows phases. Faint by day.</R3D_Settings_GasGiantTip>
+  <R3D_Settings_GasGiantSize>Gas giant size</R3D_Settings_GasGiantSize>
+  <R3D_Settings_LowSky>Sun, moon and gas giant low in the sky</R3D_Settings_LowSky>
+  <R3D_Settings_LowSkyTip>Drawn about a third as high, so the map camera (which cannot look up) sees them. The light and shadows do not change. Off: where they really are, seen in first person.</R3D_Settings_LowSkyTip>
+  <R3D_Settings_MoonPhases>Moon phases</R3D_Settings_MoonPhases>
+  <R3D_Settings_MoonPhasesTip>The moon goes from new to full and back over a quadrum (15 days). Off: always full.</R3D_Settings_MoonPhasesTip>
+  <R3D_Settings_StarBrightness>Night sky brightness</R3D_Settings_StarBrightness>
+  <R3D_Settings_StarBrightnessTip>Stars, Milky Way and planets.</R3D_Settings_StarBrightnessTip>
+
+  <R3D_Settings_Advanced>Advanced</R3D_Settings_Advanced>
+  <R3D_Settings_FeetOffset>Where upright sprites stand</R3D_Settings_FeetOffset>
+  <R3D_Settings_FeetOffsetTip>Only for people and animals still drawn as flat sprites.</R3D_Settings_FeetOffsetTip>
+  <R3D_Settings_Squash>Layer flattening</R3D_Settings_Squash>
+  <R3D_Settings_SquashTip>How tightly the game's flat drawing layers are pressed together. Leave it unless things flicker.</R3D_Settings_SquashTip>
+
+  <!-- ==================== See-through ==================== -->
+  <R3D_Settings_Walls>Walls</R3D_Settings_Walls>
+  <R3D_Settings_WallsNote>Walls are lowered so you can see and click what is behind them. Natural rock never is.</R3D_Settings_WallsNote>
+  <R3D_Settings_CutHover>Lower walls near the pointer</R3D_Settings_CutHover>
+  <R3D_Settings_DissolveRadius>Reach round the pointer</R3D_Settings_DissolveRadius>
+  <R3D_Settings_CutFrontOnly>Only walls in front of the pointer</R3D_Settings_CutFrontOnly>
+  <R3D_Settings_CutFrontOnlyTip>Only the walls between the camera and the pointer are lowered; the ones behind it stay up.</R3D_Settings_CutFrontOnlyTip>
+  <R3D_Settings_CutWholeWall>Lower walls on every floor</R3D_Settings_CutWholeWall>
+  <R3D_Settings_CutWholeWallTip>With stacked floors, a lowered wall is lowered on all shown floors.</R3D_Settings_CutWholeWallTip>
+  <R3D_Settings_BuildSee>See through while building</R3D_Settings_BuildSee>
+  <R3D_Settings_BuildSeeTip>With a build or order tool in hand, what is near the pointer turns see-through.</R3D_Settings_BuildSeeTip>
+  <R3D_Settings_SeeStrength>See-through strength</R3D_Settings_SeeStrength>
+  <R3D_Settings_SeeStrengthTip>How much is hidden at the pointer. 100% hides it fully.</R3D_Settings_SeeStrengthTip>
+  <R3D_Settings_SeeRadius>See-through reach</R3D_Settings_SeeRadius>
+  <R3D_Settings_MineXray>Floors above and below while mining</R3D_Settings_MineXray>
+  <R3D_Settings_MineXrayTip>With the Mine tool, outline the open ground and people on the floors below and above. With stairs, the floor above.</R3D_Settings_MineXrayTip>
+  <R3D_Settings_MineCrosshair>Mining crosshair</R3D_Settings_MineCrosshair>
+  <R3D_Settings_MineCrosshairTip>With the Mine tool on a map with floors, mark the pointer's row and column.</R3D_Settings_MineCrosshairTip>
+  <R3D_Settings_CutNearColonists>Lower walls near colonists</R3D_Settings_CutNearColonists>
+  <R3D_Settings_CutNearColonistsTip>Walls between the camera and each colonist are lowered wherever they go. Costs a little more as they move about.</R3D_Settings_CutNearColonistsTip>
+  <R3D_Settings_ColonistRadius>Reach round each colonist</R3D_Settings_ColonistRadius>
+  <R3D_Settings_CutRooms>Lower walls in front of every room</R3D_Settings_CutRooms>
+  <R3D_Settings_CutRoomsTip>Walls between the camera and a roofed room are always drawn lowered.</R3D_Settings_CutRoomsTip>
+  <R3D_Settings_CutRock>  ...and rock in front of rooms dug into mountains</R3D_Settings_CutRock>
+  <R3D_Settings_CutRockTip>Up to three cells of rock between the camera and a room are lowered; the rest of the mountain stays whole.</R3D_Settings_CutRockTip>
+  <R3D_Settings_CutHeight>Height left of a lowered wall</R3D_Settings_CutHeight>
+  <R3D_Settings_Trees>Trees</R3D_Settings_Trees>
+  <R3D_Settings_TreesNote>Trees drop their leaves while something you want to see is under them.</R3D_Settings_TreesNote>
+  <R3D_Settings_TreesNearPointer>Thin out trees near the pointer</R3D_Settings_TreesNearPointer>
+  <R3D_Settings_TreesNearColonists>Thin out trees near colonists</R3D_Settings_TreesNearColonists>
+  <R3D_Settings_TreeRadius>Reach</R3D_Settings_TreeRadius>
+  <R3D_Settings_Roofs>Roofs</R3D_Settings_Roofs>
+  <R3D_Settings_SeeThroughRoofsNote>Only while roofs are shown.</R3D_Settings_SeeThroughRoofsNote>
+  <R3D_Settings_RoofHover>Lift the roof of the room under the pointer</R3D_Settings_RoofHover>
+  <R3D_Settings_RoofOverColonists>Lift the roofs of rooms with colonists in them</R3D_Settings_RoofOverColonists>
+
+  <!-- ==================== Colour and light ==================== -->
+  <R3D_Settings_ColourLook>Colour look</R3D_Settings_ColourLook>
+  <R3D_Settings_ColourLookNote>A colour grade over the 3D view. The interface is not affected.</R3D_Settings_ColourLookNote>
+  <R3D_Settings_Grade>Colour grade on</R3D_Settings_Grade>
+  <R3D_Settings_LookButton>Look: {0}</R3D_Settings_LookButton>
+  <R3D_Settings_LutNote>A lookup table from the mod's LUTs folder. Your own 1024 x 32 strips can go there too.</R3D_Settings_LutNote>
+  <R3D_Settings_Strength>Strength</R3D_Settings_Strength>
+  <R3D_Settings_ColourKept>Colour kept</R3D_Settings_ColourKept>
+  <R3D_Settings_Brightness>Brightness</R3D_Settings_Brightness>
+  <R3D_Settings_PreviewTip>Top: colours as they are. Bottom: under this look.</R3D_Settings_PreviewTip>
+
+  <R3D_Settings_Look_Gentle>Gentle</R3D_Settings_Look_Gentle>
+  <R3D_Settings_Look_Gentle_Desc>A little less colour and brightness. The mod's usual look.</R3D_Settings_Look_Gentle_Desc>
+  <R3D_Settings_Look_WarmAfternoon>Warm afternoon</R3D_Settings_Look_WarmAfternoon>
+  <R3D_Settings_Look_WarmAfternoon_Desc>Golden highlights and warm shadows.</R3D_Settings_Look_WarmAfternoon_Desc>
+  <R3D_Settings_Look_CoolMorning>Cool morning</R3D_Settings_Look_CoolMorning>
+  <R3D_Settings_Look_CoolMorning_Desc>Fresh blue-green light, slightly muted.</R3D_Settings_Look_CoolMorning_Desc>
+  <R3D_Settings_Look_Filmic>Filmic</R3D_Settings_Look_Filmic>
+  <R3D_Settings_Look_Filmic_Desc>Deeper shadows, softer colour and a faint warm cast, like film stock.</R3D_Settings_Look_Filmic_Desc>
+  <R3D_Settings_Look_Bleak>Bleak rim</R3D_Settings_Look_Bleak>
+  <R3D_Settings_Look_Bleak_Desc>Washed-out, cold and hard: life on the edge.</R3D_Settings_Look_Bleak_Desc>
+  <R3D_Settings_Look_Vivid>Vivid</R3D_Settings_Look_Vivid>
+  <R3D_Settings_Look_Vivid_Desc>Punchier contrast and a touch brighter.</R3D_Settings_Look_Vivid_Desc>
+  <R3D_Settings_Look_Autumn>Autumn</R3D_Settings_Look_Autumn>
+  <R3D_Settings_Look_Autumn_Desc>Amber light and rich, earthy tones.</R3D_Settings_Look_Autumn_Desc>
+  <R3D_Settings_Look_Moonlight>Moonlight</R3D_Settings_Look_Moonlight>
+  <R3D_Settings_Look_Moonlight_Desc>Cold blue night light over everything.</R3D_Settings_Look_Moonlight_Desc>
+  <R3D_Settings_Look_Toxic>Toxic</R3D_Settings_Look_Toxic>
+  <R3D_Settings_Look_Toxic_Desc>A sickly green haze.</R3D_Settings_Look_Toxic_Desc>
+  <R3D_Settings_Look_Sepia>Sepia</R3D_Settings_Look_Sepia>
+  <R3D_Settings_Look_Sepia_Desc>Old photograph browns.</R3D_Settings_Look_Sepia_Desc>
+  <R3D_Settings_Look_Noir>Noir</R3D_Settings_Look_Noir>
+  <R3D_Settings_Look_Noir_Desc>Black and white with hard contrast.</R3D_Settings_Look_Noir_Desc>
+  <R3D_Settings_Look_Custom>Custom</R3D_Settings_Look_Custom>
+  <R3D_Settings_Look_Custom_Desc>Set colour and brightness yourself with the two sliders below.</R3D_Settings_Look_Custom_Desc>
+
+  <R3D_Settings_Shadows>Shadows</R3D_Settings_Shadows>
+  <R3D_Settings_GroundShadows>Soft shadows under everything</R3D_Settings_GroundShadows>
+  <R3D_Settings_TreeShadows>Trees cast sun shadows</R3D_Settings_TreeShadows>
+  <R3D_Settings_TreeShadowLength>Tree shadow length</R3D_Settings_TreeShadowLength>
+  <R3D_Settings_Light>Light</R3D_Settings_Light>
+  <R3D_Settings_LightingFix>Night and indoor darkness on raised things</R3D_Settings_LightingFix>
+  <R3D_Settings_FogLid>Unexplored areas are a solid lid</R3D_Settings_FogLid>
+  <R3D_Settings_SunMoves>Sun moves through the day</R3D_Settings_SunMoves>
+  <R3D_Settings_SunMovesTip>The sun rises in the east, stands in the south at noon and sets in the west, and its light on walls, roofs and furniture moves on a few times a day. Off: it stays at its mid-morning place. Turning the camera never changes the light.</R3D_Settings_SunMovesTip>
+
+  <!-- ==================== Ground, water, roofs ==================== -->
+  <R3D_Settings_Ground>Ground</R3D_Settings_Ground>
+  <R3D_Settings_GroundNote>Only the picture changes, and only while the 3D view is on.</R3D_Settings_GroundNote>
+  <R3D_Settings_GroundStyle>Natural ground in the mod's style</R3D_Settings_GroundStyle>
+  <R3D_Settings_GrassSoil>Soil drawn as soft grass</R3D_Settings_GrassSoil>
+  <R3D_Settings_GrassSoilTip>Rich soil gets a darker, lusher grass so farmland still stands out.</R3D_Settings_GrassSoilTip>
+  <R3D_Settings_FloorStyle>Built floors in the mod's style</R3D_Settings_FloorStyle>
+  <R3D_Settings_Water>Water</R3D_Settings_Water>
+  <R3D_Settings_WaterStyle>Stylised water</R3D_Settings_WaterStyle>
+  <R3D_Settings_WaterStyleTip>Faceted bands of colour from the shore to the deep, foam along the shores, streaks on rivers and sparkles.</R3D_Settings_WaterStyleTip>
+  <R3D_Settings_RoofsNote>Built roofs as slate lids over your rooms, and rock roofs over caves.</R3D_Settings_RoofsNote>
+  <R3D_Settings_ShowRoofs>Show roofs</R3D_Settings_ShowRoofs>
+  <R3D_Settings_ShowRoofsTip>All roofs or none: switch them off again to see inside.</R3D_Settings_ShowRoofsTip>
+  <R3D_Settings_RoofColour>Roof style: {0}</R3D_Settings_RoofColour>
+  <R3D_Settings_Roof_Slate>Slate</R3D_Settings_Roof_Slate>
+  <R3D_Settings_Roof_Terracotta>Terracotta</R3D_Settings_Roof_Terracotta>
+  <R3D_Settings_Roof_Thatch>Thatch</R3D_Settings_Roof_Thatch>
+  <R3D_Settings_Roof_Tin>Tin</R3D_Settings_Roof_Tin>
+  <R3D_Settings_Roof_FlatSteel>Flat roof (steel)</R3D_Settings_Roof_FlatSteel>
+  <R3D_Settings_Roof_FlatMarble>Flat roof (marble)</R3D_Settings_Roof_FlatMarble>
+  <R3D_Settings_Roof_FlatGranite>Flat roof (granite)</R3D_Settings_Roof_FlatGranite>
+  <R3D_Settings_RoofShapeNote>Built roofs rise from every edge to a ridge, like hipped roofs. There is a button for them in the bottom right corner of the screen, and a key you can set.</R3D_Settings_RoofShapeNote>
+
+  <!-- ==================== What is 3D ==================== -->
+  <R3D_Settings_BuildingsNature>Buildings and nature</R3D_Settings_BuildingsNature>
+  <R3D_Settings_BuildingsNatureNote>Switch one off if it misbehaves.</R3D_Settings_BuildingsNatureNote>
+  <R3D_Settings_Walls3D>Walls and rock as solid blocks</R3D_Settings_Walls3D>
+  <R3D_Settings_TexturedWalls>Walls use the mod's textures</R3D_Settings_TexturedWalls>
+  <R3D_Settings_RuggedRock>Rock has broken, sloping edges</R3D_Settings_RuggedRock>
+  <R3D_Settings_Doors3D>Doors</R3D_Settings_Doors3D>
+  <R3D_Settings_Models3D>Hand-made models</R3D_Settings_Models3D>
+  <R3D_Settings_Models3DTip>Furniture, machines, wrecks, people, animals and armour.</R3D_Settings_Models3DTip>
+  <R3D_Settings_Trees3D>Trees</R3D_Settings_Trees3D>
+  <R3D_Settings_SmallPlants3D>Grass, flowers and crops</R3D_Settings_SmallPlants3D>
+  <R3D_Settings_SmallPlants3DTip>Thousands of these on a big map cost memory; switch off if it drags.</R3D_Settings_SmallPlants3DTip>
+  <R3D_Settings_AutoExtrude>Everything else, from its sprite</R3D_Settings_AutoExtrude>
+  <R3D_Settings_ThickItems>Items get a little thickness</R3D_Settings_ThickItems>
+  <R3D_Settings_ItemThickness>  How thick items are</R3D_Settings_ItemThickness>
+  <R3D_Settings_ItemThicknessTip>Thins out items, weapons and clothes on the ground. All the way down lays them flat.</R3D_Settings_ItemThicknessTip>
+  <R3D_Settings_ItemsFromArt>Items and weapons use the game's art</R3D_Settings_ItemsFromArt>
+  <R3D_Settings_ItemsFromArtTip>Items, weapons and clothing are made solid from their own game sprites, so they look exactly like RimWorld. Off: the mod's hand-made item models.</R3D_Settings_ItemsFromArtTip>
+  <R3D_Settings_RawModels>3D raw materials</R3D_Settings_RawModels>
+  <R3D_Settings_RawModelsTip>Steel, wood, blocks, cloth, leather and other resources as 3D models, by stack size.</R3D_Settings_RawModelsTip>
+  <R3D_Settings_UprightPlants>Other plants stand upright</R3D_Settings_UprightPlants>
+  <R3D_Settings_PlantCardSize>  Size of plants drawn from their sprite</R3D_Settings_PlantCardSize>
+  <R3D_Settings_PlantCardSizeTip>Bushes, brambles, grass and flowers without a 3D model (trees keep their size). The game's sprite covers the cell seen from above, so stood up it can look too big.</R3D_Settings_PlantCardSizeTip>
+  <R3D_Settings_MapEdge3D>Map edge cut through the earth</R3D_Settings_MapEdge3D>
+  <R3D_Settings_MapEdge3DTip>The edge of the map shows layers of soil and rock, like a diorama.</R3D_Settings_MapEdge3DTip>
+  <R3D_Settings_CreaturesEffects>Creatures and effects</R3D_Settings_CreaturesEffects>
+  <R3D_Settings_Pawns3D>Colonists and other people</R3D_Settings_Pawns3D>
+  <R3D_Settings_Animals3D>Animals</R3D_Settings_Animals3D>
+  <R3D_Settings_Mechs3D>Mechanoids</R3D_Settings_Mechs3D>
+  <R3D_Settings_HeldWeapons3D>Weapons in hand</R3D_Settings_HeldWeapons3D>
+  <R3D_Settings_WorkAnimations>Work animations with tools</R3D_Settings_WorkAnimations>
+  <R3D_Settings_WorkAnimationsTip>Axes, pickaxes, hammers, scythes, hoes and brooms while colonists work.</R3D_Settings_WorkAnimationsTip>
+  <R3D_Settings_Ghosts3D>Blueprints show the finished build</R3D_Settings_Ghosts3D>
+  <R3D_Settings_Ghosts3DTip>Blueprints, frames and the placement preview as see-through 3D models.</R3D_Settings_Ghosts3DTip>
+  <R3D_Settings_Damage3D>Damage marks on buildings</R3D_Settings_Damage3D>
+  <R3D_Settings_Effects3D>Flames, smoke, steam and sparkles</R3D_Settings_Effects3D>
+  <R3D_Settings_CollapseDebris>Collapse debris</R3D_Settings_CollapseDebris>
+  <R3D_Settings_CollapseDebrisTip>Collapsing roofs and floors break into pieces that fall.</R3D_Settings_CollapseDebrisTip>
+  <R3D_Settings_UprightPawns>Sprites stand upright</R3D_Settings_UprightPawns>
+  <R3D_Settings_UprightPawnsTip>For people and animals without a model.</R3D_Settings_UprightPawnsTip>
+  <R3D_Settings_HairUnderHats>  Show hair under hats</R3D_Settings_HairUnderHats>
+  <R3D_Settings_HairUnderHatsTip>Hair shows below brimmed hats and caps, tucked in.</R3D_Settings_HairUnderHatsTip>
+  <R3D_Settings_KeepAsPaper>Keep as paper</R3D_Settings_KeepAsPaper>
+  <R3D_Settings_KeepAsPaperTip>Aliens that stay flat.</R3D_Settings_KeepAsPaperTip>
+  <R3D_AlienTune_Title>Alien tuning</R3D_AlienTune_Title>
+  <R3D_AlienTune_Pick>Pick an alien pawn</R3D_AlienTune_Pick>
+  <R3D_AlienTune_Copy>Copy XML</R3D_AlienTune_Copy>
+  <R3D_AlienTune_Copied>Copied.</R3D_AlienTune_Copied>
+  <R3D_AlienTune_Reset>Reset</R3D_AlienTune_Reset>
+  <R3D_Settings_FaceDecal>  Facial Animation face on 3D heads</R3D_Settings_FaceDecal>
+  <R3D_Settings_FaceDecalTip>Facial Animation's animated eyes, brows and mouth laid on the front of the 3D head instead of IsoRim's eyes.</R3D_Settings_FaceDecalTip>
+  <R3D_Settings_FaceDecalSize>    Face size</R3D_Settings_FaceDecalSize>
+  <R3D_Settings_FaceDecalHeight>    Face height (cells)</R3D_Settings_FaceDecalHeight>
+  <R3D_Settings_FaceDecalMouth>    Mouth size</R3D_Settings_FaceDecalMouth>
+  <R3D_Settings_FaceDecalMouthHeight>    Mouth height (cells)</R3D_Settings_FaceDecalMouthHeight>
+  <R3D_Settings_FaceDecalAddApparel>    Own placing for an apparel...</R3D_Settings_FaceDecalAddApparel>
+  <R3D_Settings_FaceDecalRemove>Remove</R3D_Settings_FaceDecalRemove>
+  <R3D_Settings_FullPawnDraw>  Always draw sprites in full</R3D_Settings_FullPawnDraw>
+  <R3D_Settings_FullPawnDrawTip>Zoomed out, the game draws people from a cached image, which keeps Facial Animation's faces still. Costs some speed with many people.</R3D_Settings_FullPawnDrawTip>
+  <R3D_Settings_ModelStyle>Model style</R3D_Settings_ModelStyle>
+  <R3D_Settings_TexturedModels>Textures on models</R3D_Settings_TexturedModels>
+  <R3D_Settings_Outlines>Dark outlines on models</R3D_Settings_Outlines>
+
+  <!-- ==================== Graphics ==================== -->
+  <R3D_Settings_Image>Image</R3D_Settings_Image>
+  <R3D_Settings_AntiAlias>Anti-aliasing (FXAA)</R3D_Settings_AntiAlias>
+  <R3D_Settings_AntiAliasTip>Softens jagged edges of walls and models.</R3D_Settings_AntiAliasTip>
+  <R3D_Settings_AntiAliasStrength>Edge smoothing</R3D_Settings_AntiAliasStrength>
+  <R3D_Settings_Sharpen>Sharpen</R3D_Settings_Sharpen>
+  <R3D_Settings_SharpenTip>Crisper image, mostly when zoomed out.</R3D_Settings_SharpenTip>
+  <R3D_Settings_SharpenStrength>Sharpness</R3D_Settings_SharpenStrength>
+  <R3D_Settings_TiltShift>Tilt-shift</R3D_Settings_TiltShift>
+  <R3D_Settings_TiltShiftTip>Blurs the top and bottom of the view for a miniature look.</R3D_Settings_TiltShiftTip>
+  <R3D_Settings_TiltStrength>Strength</R3D_Settings_TiltStrength>
+  <R3D_Settings_TiltCentre>Focus position</R3D_Settings_TiltCentre>
+  <R3D_Settings_TiltWidth>Focus width</R3D_Settings_TiltWidth>
+  <R3D_Settings_TiltPop>Pop colours</R3D_Settings_TiltPop>
+  <R3D_Settings_TiltPopTip>Slightly richer colours with tilt-shift.</R3D_Settings_TiltPopTip>
+  <R3D_Settings_Textures>Textures</R3D_Settings_Textures>
+  <R3D_Settings_Aniso>Anisotropic filtering</R3D_Settings_Aniso>
+  <R3D_Settings_AnisoTip>Sharper ground at shallow angles.</R3D_Settings_AnisoTip>
+  <R3D_Settings_Off>off</R3D_Settings_Off>
+
+  <!-- ==================== In-game messages and corner buttons ==================== -->
+  <R3D_Msg_ViewOn>IsoRim: 3D view on</R3D_Msg_ViewOn>
+  <R3D_Preparing3D>Preparing 3D…</R3D_Preparing3D>
+  <R3D_Msg_ViewOff>IsoRim: 3D view off</R3D_Msg_ViewOff>
+  <R3D_Msg_AlwaysOnWith>IsoRim: 3D view is always on with {0}</R3D_Msg_AlwaysOnWith>
+  <R3D_Msg_Isometric>IsoRim: isometric view</R3D_Msg_Isometric>
+  <R3D_Msg_StraightOn>IsoRim: straight-on view</R3D_Msg_StraightOn>
+  <R3D_Msg_CameraReset>IsoRim: camera reset</R3D_Msg_CameraReset>
+  <R3D_Msg_SelectOnePerson>IsoRim: select one person for first person</R3D_Msg_SelectOnePerson>
+  <R3D_Msg_FirstPersonWith>IsoRim: first person with {0}</R3D_Msg_FirstPersonWith>
+  <R3D_Msg_FirstPersonOff>IsoRim: first person off</R3D_Msg_FirstPersonOff>
+  <R3D_Msg_ViewButton>IsoRim: 3D view ({0})</R3D_Msg_ViewButton>
+  <R3D_Msg_ViewButtonLocked>IsoRim: 3D view (always on with {0})</R3D_Msg_ViewButtonLocked>
+  <R3D_Msg_RoofsButton>IsoRim: show roofs ({0})</R3D_Msg_RoofsButton>
+  <R3D_Msg_NoKeySet>no key set</R3D_Msg_NoKeySet>
+
+</LanguageData>

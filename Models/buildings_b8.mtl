@@ -1,0 +1,53 @@
+# IsoRim coverage buildings batch 8 (2026-10-16): grave, vanilla ship parts, plant pot, holding spot. Fixed colours
+# sampled from the vanilla sprites (lifted ~1.15x like the other building colours). The plant pot body is stuff*.
+# Earth colours carry no swatch: the Soil swatch is brown itself (mean 0.31 0.22 0.15) and darkened them (in-game pass).
+newmtl b8_dirt
+Kd 0.47 0.40 0.32
+newmtl b8_dirt_dark
+Kd 0.37 0.31 0.25
+newmtl b8_pit
+Kd 0.11 0.09 0.08
+newmtl b8_pit_wall
+Kd 0.22 0.18 0.15
+newmtl b8_headstone
+Kd 0.58 0.58 0.60
+map_Kd IsoRim/Swatches/Stone
+newmtl b8_headstone_dark
+Kd 0.42 0.42 0.44
+map_Kd IsoRim/Swatches/Stone
+newmtl b8_soil
+Kd 0.66 0.55 0.44
+newmtl b8_ship_light
+Kd 0.72 0.72 0.73
+map_Kd IsoRim/Swatches/Metal
+newmtl b8_ship
+Kd 0.58 0.58 0.59
+map_Kd IsoRim/Swatches/Metal
+newmtl b8_ship_mid
+Kd 0.46 0.46 0.47
+map_Kd IsoRim/Swatches/Metal
+newmtl b8_ship_dark
+Kd 0.35 0.35 0.36
+map_Kd IsoRim/Swatches/Metal
+newmtl b8_ship_olive
+Kd 0.39 0.39 0.36
+map_Kd IsoRim/Swatches/Metal
+newmtl b8_ship_deep
+Kd 0.17 0.17 0.18
+newmtl b8_ship_copper
+Kd 0.52 0.36 0.25
+map_Kd IsoRim/Swatches/Metal
+newmtl b8_ship_amber
+Kd 0.70 0.60 0.40
+map_Kd IsoRim/Swatches/Metal
+newmtl b8_ship_slot
+Kd 0.60 0.48 0.27
+newmtl b8_screen
+Kd 0.42 0.46 0.28
+newmtl glow_b8_glyph
+Kd 0.80 0.88 0.42
+map_Kd IsoRim/Swatches/Glow
+newmtl b8_glass
+Kd 0.08 0.08 0.07
+newmtl b8_spot_line
+Kd 0.24 0.25 0.31

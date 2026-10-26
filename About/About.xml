@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>IsoRim Waylith</name>
+  <author>Lin, Connor (original)</author>
+  <packageId>Peren.IsoRim17</packageId>
+  <url>https://github.com/peren717/IsoRim-1.7</url>
+  <supportedVersions>
+    <li>1.7</li>
+  </supportedVersions>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+      <downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+  </loadAfter>
+  <incompatibleWith>
+    <li>connor.isorim</li>
+  </incompatibleWith>
+  <description>Early access, work in progress.
+
+Your colony in 3D, seen through an isometric camera that turns round your base. IsoRim Waylith is IsoRim ported to RimWorld 1.7 and its new Waylith engine.
+
+Credit:
+- IsoRim is by Connor (kndzio). The original models, textures and code are his work. This port makes it run on 1.7.
+- The port adds over 230 new models for things the original didn't cover: buildings and furniture from every DLC, mechanoids, Anomaly entities, armour, helmets, gear and more.
+- Original mod: https://steamcommunity.com/sharedfiles/filedetails/?id=3819266222
+- Original source: https://github.com/kndzio/IsoRim
+- This port: https://github.com/peren717/IsoRim-1.7
+- MIT licence for the original and the port, full text in the LICENSE file.
+
+Features:
+- 3D models for buildings, furniture and benches. Items, weapons and clothing are made solid from their own art.
+- Trees, plants, animals, mechanoids, entities and colonists in 3D. Colonists work with real tools and wear their gear.
+- Sloped roofs, calm water, flowing rivers, and a sun that moves through the day.
+- Gravships with 3D hulls and deck roofs.
+- Colour looks: gentle, warm, filmic, noir and more.
+- Walls lower, trees thin out and roofs lift near the pointer.
+
+How to use:
+- 0, or the cube button in the bottom right: 3D view on and off.
+- 9: isometric or straight-on. Q and E: turn the camera. [ and ]: camera angle.
+- Roofs are hidden by default. Show them with the IsoRim roof button in the bottom right.
+- Keys and settings: Options, Mod settings, IsoRim.
+
+What the port changed:
+RimWorld 1.7 runs on the new Waylith engine, which broke the original's rendering. The port keeps IsoRim's models and look, and:
+- Rebuilt for RimWorld 1.7's .NET 10 runtime and Harmony 3. Every hook re-checked.
+- The Unity shaders the original relied on don't exist in Waylith. All 3D drawing now uses new GLSL shaders.
+- Lighting is per pixel on the GPU.
+- Colour looks rebuilt as one full-screen pass, no asset bundle needed.
+- Faster: no full-map rebuild when you tilt or turn the camera, and off-screen parts are skipped. Plus fixes for various other issues and crashes.
+
+Compatibility:
+- Tested with the base game and DLCs. Other mods are untested.
+- Do not use with the original IsoRim.
+- Visual only: safe to add to or remove from a save.
+
+Known limitations:
+- On the very first launch the 3D view may show garbled colours for a few seconds while shaders compile. Only once.
+- Launching and landing a gravship is not yet tested in 3D.
+- More models are being added.
+Please report problems with a log in the comments or on GitHub.
+
+Requirements:
+- Harmony
+- RimWorld 1.7 only
+
+====================
+
+IsoRim Waylith
+
+抢先体验，开发中。
+
+用等距视角的 3D 镜头看你的殖民地，镜头可以绕着基地旋转。IsoRim Waylith 是 IsoRim 的移植版，适用于 RimWorld 1.7 及其新引擎 Waylith。
+
+致谢：
+- IsoRim 的作者是 Connor（kndzio）。原版的模型、贴图和代码都是他的作品，本移植版让它能在 1.7 上运行。
+- 移植版为原版没有覆盖的内容新做了 230 多个模型：各个 DLC 的建筑和家具、机械体、异象实体、盔甲、头盔、装备等。
+- 原版 mod：https://steamcommunity.com/sharedfiles/filedetails/?id=3819266222
+- 原版源码：https://github.com/kndzio/IsoRim
+- 移植版源码：https://github.com/peren717/IsoRim-1.7
+- 原版和移植版都是 MIT 许可证，全文见 LICENSE 文件。
+
+功能：
+- 建筑、家具和工作台都有 3D 模型。物品、武器和衣服按各自的贴图做成立体。
+- 树木、植物、动物、机械体、实体和小人都是 3D 的。小人干活时拿着真正的工具，身上穿着各自的装备。
+- 斜屋顶，平静的水面，流动的河流，太阳随时间移动。
+- 引力船有 3D 船体和甲板屋顶。
+- 色调风格：柔和、暖色、电影感、黑白等。
+- 鼠标附近的墙会降低，树会变稀，屋顶会掀开。
+
+使用方法：
+- 0 键，或右下角的方块按钮：开关 3D 视角。
+- 9 键：等距或正视。Q、E：旋转镜头。[ 和 ]：镜头角度。
+- 屋顶默认隐藏，可用右下角的 IsoRim 屋顶按钮显示。
+- 按键和设置：选项，模组设置，IsoRim。
+
+移植版做了什么：
+RimWorld 1.7 换成了新引擎 Waylith，原版的渲染因此失效。移植版保留了 IsoRim 的模型和画风，并且：
+- 针对 1.7 的 .NET 10 运行时和 Harmony 3 重新编译，逐个检查了所有补丁。
+- 原版依赖的 Unity 着色器在 Waylith 里不存在，所有 3D 绘制改用新写的 GLSL 着色器。
+- 光照改为在 GPU 上逐像素计算。
+- 色调风格改为一次全屏处理，不再需要 AssetBundle。
+- 更快：倾斜或旋转镜头时不再重建整张地图，屏幕外的部分直接跳过。以及修复了其他各种问题和崩溃。
+
+兼容性：
+- 只测试过本体和 DLC，其他 mod 未测试。
+- 不要和原版 IsoRim 同时使用。
+- 只改画面，可随时加入或移出存档。
+
+已知问题：
+- 第一次启动时，3D 视角可能有几秒颜色错乱，这是在编译着色器，只发生一次。
+- 引力船起飞和降落还没有在 3D 下测试过。
+- 新模型还在陆续加入。
+遇到问题请在评论区或 GitHub 上附日志反馈。
+
+前置：
+- Harmony
+- 仅支持 RimWorld 1.7</description>
+</ModMetaData>

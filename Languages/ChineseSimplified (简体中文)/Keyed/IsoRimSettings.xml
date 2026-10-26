@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- ==================== 模组设置：顶部 ==================== -->
+  <R3D_Settings_ViewIsOn>3D 视图已开启</R3D_Settings_ViewIsOn>
+  <R3D_Settings_ViewIsOff>3D 视图已关闭</R3D_Settings_ViewIsOff>
+  <R3D_Settings_TurnStep>镜头每次转 {0}</R3D_Settings_TurnStep>
+  <R3D_Settings_TurnViewOn>开启 3D 视图</R3D_Settings_TurnViewOn>
+  <R3D_Settings_TurnViewOff>关闭 3D 视图</R3D_Settings_TurnViewOff>
+  <R3D_Settings_AlwaysOnWith>{0} 要求始终开启</R3D_Settings_AlwaysOnWith>
+  <R3D_Settings_ResetAll>重置全部</R3D_Settings_ResetAll>
+  <R3D_Settings_ResetAllConfirm>将 IsoRim 的所有选项恢复为默认值？</R3D_Settings_ResetAllConfirm>
+
+  <!-- 标签页 -->
+  <R3D_Settings_TabView>视角与镜头</R3D_Settings_TabView>
+  <R3D_Settings_TabSeeThrough>遮挡处理</R3D_Settings_TabSeeThrough>
+  <R3D_Settings_TabColour>色彩与光照</R3D_Settings_TabColour>
+  <R3D_Settings_TabWorld>地面、水体、屋顶</R3D_Settings_TabWorld>
+  <R3D_Settings_TabObjects>3D 内容</R3D_Settings_TabObjects>
+  <R3D_Settings_TabGraphics>画质</R3D_Settings_TabGraphics>
+
+  <!-- 数值 -->
+  <R3D_Settings_Cells>{0} 格</R3D_Settings_Cells>
+  <R3D_Settings_DegPerPixel>{0}°/像素</R3D_Settings_DegPerPixel>
+  <R3D_Settings_Never>从不</R3D_Settings_Never>
+  <R3D_Settings_Flat>平放</R3D_Settings_Flat>
+  <R3D_Settings_MiddleButton>鼠标中键</R3D_Settings_MiddleButton>
+  <R3D_Settings_RightButton>鼠标右键</R3D_Settings_RightButton>
+
+  <!-- ==================== 视角与镜头 ==================== -->
+  <R3D_Settings_Camera>镜头</R3D_Settings_Camera>
+  <R3D_Settings_CameraNote>3D 视图开启时如何观看地图。</R3D_Settings_CameraNote>
+  <R3D_Settings_Isometric>等距视角</R3D_Settings_Isometric>
+  <R3D_Settings_IsometricTip>镜头转 45 度并压低，类似等距视角游戏。关闭：北方朝上。</R3D_Settings_IsometricTip>
+  <R3D_Settings_Snap45>每次转 45°</R3D_Settings_Snap45>
+  <R3D_Settings_Snap45Tip>Q 和 E 每次将镜头转八分之一圈。关闭：每次四分之一圈。</R3D_Settings_Snap45Tip>
+  <R3D_Settings_InstantTurn>视角秒切</R3D_Settings_InstantTurn>
+  <R3D_Settings_InstantTurnTip>按 Q 和 E 时直接切到新角度，没有旋转过渡。转动视角会头晕时可以打开。</R3D_Settings_InstantTurnTip>
+  <R3D_Settings_FreeLook>自由视角</R3D_Settings_FreeLook>
+  <R3D_Settings_FreeLookTip>用鼠标拖动可将镜头任意旋转和俯仰（5° 至 89°）。Q 和 E 转到下一档。重置键（默认未设置）在游戏的按键设置中。</R3D_Settings_FreeLookTip>
+  <R3D_Settings_LookMiddle>自由视角：鼠标中键</R3D_Settings_LookMiddle>
+  <R3D_Settings_LookMiddleTip>按住 {0} 并拖动。按住键可在游戏的按键设置中修改。</R3D_Settings_LookMiddleTip>
+  <R3D_Settings_LookMiddleTipNoKey>按住键可在游戏的按键设置中修改。</R3D_Settings_LookMiddleTipNoKey>
+  <R3D_Settings_LookRight>自由视角：鼠标右键</R3D_Settings_LookRight>
+  <R3D_Settings_LookRightTip>未选中任何东西时拖动。</R3D_Settings_LookRightTip>
+  <R3D_Settings_LookSpeed>自由视角速度</R3D_Settings_LookSpeed>
+  <R3D_Settings_InvertY>反转上下</R3D_Settings_InvertY>
+  <R3D_Settings_InvertYTip>向上拖动时镜头转向俯视。</R3D_Settings_InvertYTip>
+  <R3D_Settings_FpFov>第一人称视野</R3D_Settings_FpFov>
+  <R3D_Settings_FpFovTip>选中一人后按 {0}：镜头进入其视角。用{1}拖动环顾四周。</R3D_Settings_FpFovTip>
+  <R3D_Settings_FpEyeHeight>第一人称视线高度</R3D_Settings_FpEyeHeight>
+  <R3D_Settings_MinZoom>最近缩放</R3D_Settings_MinZoom>
+  <R3D_Settings_MinZoomTip>鼠标滚轮能把镜头拉到多近。游戏自身的限制是 11。</R3D_Settings_MinZoomTip>
+  <R3D_Settings_Weather3D>3D 雨雪</R3D_Settings_Weather3D>
+  <R3D_Settings_Weather3DTip>雨和雪化作雨滴和雪花在镜头周围落下，雾和霾立在镜头前。</R3D_Settings_Weather3DTip>
+  <R3D_Settings_WeatherSize>  雨雪大小</R3D_Settings_WeatherSize>
+  <R3D_Settings_WeatherSizeTip>雨滴和雪花在屏幕上的大小。镜头拉近时不再变大。</R3D_Settings_WeatherSizeTip>
+  <R3D_Settings_ThingLabels>物品标签</R3D_Settings_ThingLabels>
+  <R3D_Settings_ThingLabelsTip>地图上物品的标签（堆叠数量、品质）。人物头上的名字不受影响。</R3D_Settings_ThingLabelsTip>
+  <R3D_Settings_Perspective>透视镜头</R3D_Settings_Perspective>
+  <R3D_Settings_PerspectiveTip>真正的透视镜头：远处的东西变小，类似 Rim3D。关闭：平面（正交）视图。</R3D_Settings_PerspectiveTip>
+  <R3D_Settings_Fov>视野</R3D_Settings_Fov>
+  <R3D_Settings_FovTip>越宽，边缘看到的越多，纵深感越强。</R3D_Settings_FovTip>
+  <R3D_Settings_ViewDistance>视距</R3D_Settings_ViewDistance>
+  <R3D_Settings_ViewDistanceTip>镜头较低时，地图从屏幕中央向远处绘制多远。越远越耗性能。</R3D_Settings_ViewDistanceTip>
+  <R3D_Settings_Sky>天空</R3D_Settings_Sky>
+  <R3D_Settings_SkyTip>地图后方显示有太阳和月亮的天空，随时间和天气变化。</R3D_Settings_SkyTip>
+  <R3D_Settings_SkyStyle>天空风格：{0}</R3D_Settings_SkyStyle>
+  <R3D_Settings_Sky_Painted>手绘</R3D_Settings_Sky_Painted>
+  <R3D_Settings_Sky_Classic>经典</R3D_Settings_Sky_Classic>
+  <R3D_Settings_DistanceFog>远景雾</R3D_Settings_DistanceFog>
+  <R3D_Settings_DistanceFogTip>远处的地图渐渐融入地平线，不会露出绘制的边界。</R3D_Settings_DistanceFogTip>
+  <R3D_Settings_FogStart>雾的起点</R3D_Settings_FogStart>
+  <R3D_Settings_FogStartTip>雾在屏幕中央到视距之间的哪个位置开始。</R3D_Settings_FogStartTip>
+  <R3D_Settings_FogStrength>雾的浓度</R3D_Settings_FogStrength>
+  <R3D_Settings_FogStrengthTip>100% 时视距处完全不透明，遮住边缘。</R3D_Settings_FogStrengthTip>
+  <R3D_Settings_LabelFade>远处标签淡出</R3D_Settings_LabelFade>
+  <R3D_Settings_LabelFadeTip>标签（堆叠数、品质、名字）超过屏幕中央距离的这一倍数后淡出。你的殖民者始终显示名字。</R3D_Settings_LabelFadeTip>
+  <R3D_Settings_IsoPitch>等距视角镜头角度</R3D_Settings_IsoPitch>
+  <R3D_Settings_IsoPitchTip>35 是标准等距角度。</R3D_Settings_IsoPitchTip>
+  <R3D_Settings_Pitch>镜头角度</R3D_Settings_Pitch>
+  <R3D_Settings_PitchTip>90 为垂直俯视。</R3D_Settings_PitchTip>
+  <R3D_Settings_WallHeight>墙高</R3D_Settings_WallHeight>
+  <R3D_Settings_FixedBy>由 {0} 固定。</R3D_Settings_FixedBy>
+
+  <R3D_Settings_Keys>按键</R3D_Settings_Keys>
+  <R3D_Settings_KeysNote>在 选项 &gt; 按键设置 &gt; IsoRim 中修改。</R3D_Settings_KeysNote>
+  <R3D_Settings_KeyToggleView>开关 3D 视图</R3D_Settings_KeyToggleView>
+  <R3D_Settings_KeyIsometric>等距或正视</R3D_Settings_KeyIsometric>
+  <R3D_Settings_KeyTurnLeft>镜头左转</R3D_Settings_KeyTurnLeft>
+  <R3D_Settings_KeyTurnRight>镜头右转</R3D_Settings_KeyTurnRight>
+  <R3D_Settings_KeyTiltDown>放低镜头</R3D_Settings_KeyTiltDown>
+  <R3D_Settings_KeyTiltUp>抬高镜头</R3D_Settings_KeyTiltUp>
+  <R3D_Settings_KeyToggleRoofs>开关屋顶</R3D_Settings_KeyToggleRoofs>
+  <R3D_Settings_FreeLookKeys>自由视角：{0}。</R3D_Settings_FreeLookKeys>
+  <R3D_Settings_LookKeysRight>未选中任何东西时用鼠标右键拖动</R3D_Settings_LookKeysRight>
+  <R3D_Settings_LookKeysDrag>用{0}拖动</R3D_Settings_LookKeysDrag>
+  <R3D_Settings_LookKeysHoldDrag>按住 {0} 并用{1}拖动</R3D_Settings_LookKeysHoldDrag>
+  <R3D_Settings_CornerButtonsNote>屏幕右下角游戏自带按钮旁也有 3D 视图和屋顶的按钮。</R3D_Settings_CornerButtonsNote>
+
+  <R3D_Settings_NightSky>夜空</R3D_Settings_NightSky>
+  <R3D_Settings_NightSkyNote>星空随时间绕天极旋转，天极位置由地图纬度决定。</R3D_Settings_NightSkyNote>
+  <R3D_Settings_Stars>星星</R3D_Settings_Stars>
+  <R3D_Settings_StarsTip>数千颗闪烁的星星，靠近地平线的雾霭处更多。雨、雪和雾会遮住它们。</R3D_Settings_StarsTip>
+  <R3D_Settings_MilkyWay>银河</R3D_Settings_MilkyWay>
+  <R3D_Settings_MilkyWayTip>横跨天空的星系光带，带有暗色尘埃带和明亮的核心。</R3D_Settings_MilkyWayTip>
+  <R3D_Settings_Planets>行星（写实）</R3D_Settings_Planets>
+  <R3D_Settings_PlanetsTip>三个稳定的光点，逐日在天空中游移。</R3D_Settings_PlanetsTip>
+  <R3D_Settings_GasGiant>带环气态巨行星（科幻）</R3D_Settings_GasGiant>
+  <R3D_Settings_GasGiantTip>高挂天空的带环大行星，受阳光照射而有圆缺变化。白天较暗淡。</R3D_Settings_GasGiantTip>
+  <R3D_Settings_GasGiantSize>气态巨行星大小</R3D_Settings_GasGiantSize>
+  <R3D_Settings_LowSky>日、月和气态巨行星压低显示</R3D_Settings_LowSky>
+  <R3D_Settings_LowSkyTip>绘制高度约为实际的三分之一，让无法仰视的地图镜头也能看到。光照和阴影不变。关闭：位于真实位置，第一人称下可见。</R3D_Settings_LowSkyTip>
+  <R3D_Settings_MoonPhases>月相</R3D_Settings_MoonPhases>
+  <R3D_Settings_MoonPhasesTip>月亮在一象（15 天）内由新月到满月再回到新月。关闭：始终满月。</R3D_Settings_MoonPhasesTip>
+  <R3D_Settings_StarBrightness>夜空亮度</R3D_Settings_StarBrightness>
+  <R3D_Settings_StarBrightnessTip>星星、银河和行星。</R3D_Settings_StarBrightnessTip>
+
+  <R3D_Settings_Advanced>高级</R3D_Settings_Advanced>
+  <R3D_Settings_FeetOffset>竖立贴图的站立点</R3D_Settings_FeetOffset>
+  <R3D_Settings_FeetOffsetTip>仅用于仍以平面贴图显示的人和动物。</R3D_Settings_FeetOffsetTip>
+  <R3D_Settings_Squash>图层压缩</R3D_Settings_Squash>
+  <R3D_Settings_SquashTip>游戏平面绘制图层之间压得多紧。除非出现闪烁，否则不要改动。</R3D_Settings_SquashTip>
+
+  <!-- ==================== 遮挡处理 ==================== -->
+  <R3D_Settings_Walls>墙壁</R3D_Settings_Walls>
+  <R3D_Settings_WallsNote>降低墙壁，以便看到并点击墙后的东西。天然岩石不会降低。</R3D_Settings_WallsNote>
+  <R3D_Settings_CutHover>降低光标附近的墙</R3D_Settings_CutHover>
+  <R3D_Settings_DissolveRadius>光标周围范围</R3D_Settings_DissolveRadius>
+  <R3D_Settings_CutFrontOnly>只降低光标前方的墙</R3D_Settings_CutFrontOnly>
+  <R3D_Settings_CutFrontOnlyTip>只降低镜头与光标之间的墙，光标后面的墙保持不变。</R3D_Settings_CutFrontOnlyTip>
+  <R3D_Settings_CutWholeWall>降低所有楼层的墙</R3D_Settings_CutWholeWall>
+  <R3D_Settings_CutWholeWallTip>有多层楼时，降低的墙在所有显示的楼层都会降低。</R3D_Settings_CutWholeWallTip>
+  <R3D_Settings_BuildSee>建造时透视</R3D_Settings_BuildSee>
+  <R3D_Settings_BuildSeeTip>手持建造或指令工具时，光标附近的物体变为半透明。</R3D_Settings_BuildSeeTip>
+  <R3D_Settings_SeeStrength>透视强度</R3D_Settings_SeeStrength>
+  <R3D_Settings_SeeStrengthTip>光标处隐藏多少。100%为完全隐藏。</R3D_Settings_SeeStrengthTip>
+  <R3D_Settings_SeeRadius>透视范围</R3D_Settings_SeeRadius>
+  <R3D_Settings_MineXray>开采时显示上下层</R3D_Settings_MineXray>
+  <R3D_Settings_MineXrayTip>拿着开采工具时，显示下一层和上一层的空地和人；放置楼梯时显示上一层。</R3D_Settings_MineXrayTip>
+  <R3D_Settings_MineCrosshair>开采十字线</R3D_Settings_MineCrosshair>
+  <R3D_Settings_MineCrosshairTip>在有楼层的地图上拿着开采工具时，标出光标所在的行和列。</R3D_Settings_MineCrosshairTip>
+  <R3D_Settings_CutNearColonists>降低殖民者附近的墙</R3D_Settings_CutNearColonists>
+  <R3D_Settings_CutNearColonistsTip>无论殖民者走到哪里，镜头与其之间的墙都会降低。殖民者走动时性能开销稍大。</R3D_Settings_CutNearColonistsTip>
+  <R3D_Settings_ColonistRadius>每个殖民者周围范围</R3D_Settings_ColonistRadius>
+  <R3D_Settings_CutRooms>降低所有房间前方的墙</R3D_Settings_CutRooms>
+  <R3D_Settings_CutRoomsTip>镜头与有屋顶的房间之间的墙始终降低显示。</R3D_Settings_CutRoomsTip>
+  <R3D_Settings_CutRock>  ……以及山中房间前方的岩石</R3D_Settings_CutRock>
+  <R3D_Settings_CutRockTip>镜头与房间之间最多三格岩石会降低，其余山体保持完整。</R3D_Settings_CutRockTip>
+  <R3D_Settings_CutHeight>降低后墙的剩余高度</R3D_Settings_CutHeight>
+  <R3D_Settings_Trees>树木</R3D_Settings_Trees>
+  <R3D_Settings_TreesNote>树下有你想看的东西时，树会落叶。</R3D_Settings_TreesNote>
+  <R3D_Settings_TreesNearPointer>光标附近的树变稀疏</R3D_Settings_TreesNearPointer>
+  <R3D_Settings_TreesNearColonists>殖民者附近的树变稀疏</R3D_Settings_TreesNearColonists>
+  <R3D_Settings_TreeRadius>范围</R3D_Settings_TreeRadius>
+  <R3D_Settings_Roofs>屋顶</R3D_Settings_Roofs>
+  <R3D_Settings_SeeThroughRoofsNote>仅在显示屋顶时有效。</R3D_Settings_SeeThroughRoofsNote>
+  <R3D_Settings_RoofHover>掀开光标所在房间的屋顶</R3D_Settings_RoofHover>
+  <R3D_Settings_RoofOverColonists>掀开有殖民者的房间的屋顶</R3D_Settings_RoofOverColonists>
+
+  <!-- ==================== 色彩与光照 ==================== -->
+  <R3D_Settings_ColourLook>色调风格</R3D_Settings_ColourLook>
+  <R3D_Settings_ColourLookNote>对 3D 视图调色。不影响界面。</R3D_Settings_ColourLookNote>
+  <R3D_Settings_Grade>启用调色</R3D_Settings_Grade>
+  <R3D_Settings_LookButton>风格：{0}</R3D_Settings_LookButton>
+  <R3D_Settings_LutNote>来自模组 LUTs 文件夹的颜色查找表。你也可以把自己的 1024 x 32 色条放进去。</R3D_Settings_LutNote>
+  <R3D_Settings_Strength>强度</R3D_Settings_Strength>
+  <R3D_Settings_ColourKept>色彩保留</R3D_Settings_ColourKept>
+  <R3D_Settings_Brightness>亮度</R3D_Settings_Brightness>
+  <R3D_Settings_PreviewTip>上：原本的颜色。下：此风格下的颜色。</R3D_Settings_PreviewTip>
+
+  <R3D_Settings_Look_Gentle>柔和</R3D_Settings_Look_Gentle>
+  <R3D_Settings_Look_Gentle_Desc>色彩和亮度略微降低。模组的默认风格。</R3D_Settings_Look_Gentle_Desc>
+  <R3D_Settings_Look_WarmAfternoon>温暖午后</R3D_Settings_Look_WarmAfternoon>
+  <R3D_Settings_Look_WarmAfternoon_Desc>金色高光与暖色阴影。</R3D_Settings_Look_WarmAfternoon_Desc>
+  <R3D_Settings_Look_CoolMorning>清冷早晨</R3D_Settings_Look_CoolMorning>
+  <R3D_Settings_Look_CoolMorning_Desc>清新的蓝绿色光线，略微柔和。</R3D_Settings_Look_CoolMorning_Desc>
+  <R3D_Settings_Look_Filmic>胶片</R3D_Settings_Look_Filmic>
+  <R3D_Settings_Look_Filmic_Desc>更深的阴影、更柔的色彩和淡淡的暖色调，像胶片。</R3D_Settings_Look_Filmic_Desc>
+  <R3D_Settings_Look_Bleak>荒凉边缘</R3D_Settings_Look_Bleak>
+  <R3D_Settings_Look_Bleak_Desc>褪色、冰冷而严酷：边缘上的生活。</R3D_Settings_Look_Bleak_Desc>
+  <R3D_Settings_Look_Vivid>鲜艳</R3D_Settings_Look_Vivid>
+  <R3D_Settings_Look_Vivid_Desc>对比更强烈，稍微更亮。</R3D_Settings_Look_Vivid_Desc>
+  <R3D_Settings_Look_Autumn>秋日</R3D_Settings_Look_Autumn>
+  <R3D_Settings_Look_Autumn_Desc>琥珀色光线与浓郁的大地色调。</R3D_Settings_Look_Autumn_Desc>
+  <R3D_Settings_Look_Moonlight>月光</R3D_Settings_Look_Moonlight>
+  <R3D_Settings_Look_Moonlight_Desc>冷蓝色的夜光笼罩一切。</R3D_Settings_Look_Moonlight_Desc>
+  <R3D_Settings_Look_Toxic>毒雾</R3D_Settings_Look_Toxic>
+  <R3D_Settings_Look_Toxic_Desc>病态的绿色薄雾。</R3D_Settings_Look_Toxic_Desc>
+  <R3D_Settings_Look_Sepia>老照片</R3D_Settings_Look_Sepia>
+  <R3D_Settings_Look_Sepia_Desc>老照片般的棕褐色调。</R3D_Settings_Look_Sepia_Desc>
+  <R3D_Settings_Look_Noir>黑白</R3D_Settings_Look_Noir>
+  <R3D_Settings_Look_Noir_Desc>高对比度的黑白画面。</R3D_Settings_Look_Noir_Desc>
+  <R3D_Settings_Look_Custom>自定义</R3D_Settings_Look_Custom>
+  <R3D_Settings_Look_Custom_Desc>用下面两个滑块自行设置色彩和亮度。</R3D_Settings_Look_Custom_Desc>
+
+  <R3D_Settings_Shadows>阴影</R3D_Settings_Shadows>
+  <R3D_Settings_GroundShadows>所有物体下方的柔和阴影</R3D_Settings_GroundShadows>
+  <R3D_Settings_TreeShadows>树木投下阳光阴影</R3D_Settings_TreeShadows>
+  <R3D_Settings_TreeShadowLength>树影长度</R3D_Settings_TreeShadowLength>
+  <R3D_Settings_Light>光照</R3D_Settings_Light>
+  <R3D_Settings_LightingFix>立体物体也受夜晚和室内黑暗影响</R3D_Settings_LightingFix>
+  <R3D_Settings_FogLid>未探索区域显示为实心遮盖</R3D_Settings_FogLid>
+  <R3D_Settings_SunMoves>太阳随时间移动</R3D_Settings_SunMoves>
+  <R3D_Settings_SunMovesTip>太阳东升、正午在南、西落，墙壁、屋顶和家具上的光照每天变化几次。关闭：停在上午的位置。转动镜头不会改变光照。</R3D_Settings_SunMovesTip>
+
+  <!-- ==================== 地面、水体、屋顶 ==================== -->
+  <R3D_Settings_Ground>地面</R3D_Settings_Ground>
+  <R3D_Settings_GroundNote>只改变画面，且仅在 3D 视图开启时。</R3D_Settings_GroundNote>
+  <R3D_Settings_GroundStyle>自然地面使用模组风格</R3D_Settings_GroundStyle>
+  <R3D_Settings_GrassSoil>土壤显示为柔软草地</R3D_Settings_GrassSoil>
+  <R3D_Settings_GrassSoilTip>肥沃土壤显示为更深、更茂盛的草，农田依然醒目。</R3D_Settings_GrassSoilTip>
+  <R3D_Settings_FloorStyle>建造的地板使用模组风格</R3D_Settings_FloorStyle>
+  <R3D_Settings_Water>水体</R3D_Settings_Water>
+  <R3D_Settings_WaterStyle>风格化水面</R3D_Settings_WaterStyle>
+  <R3D_Settings_WaterStyleTip>从岸边到深水的分层色带、岸边的泡沫、河面的水纹和波光。</R3D_Settings_WaterStyleTip>
+  <R3D_Settings_RoofsNote>房间上方显示为石板屋顶，洞穴上方显示为岩顶。</R3D_Settings_RoofsNote>
+  <R3D_Settings_ShowRoofs>显示屋顶</R3D_Settings_ShowRoofs>
+  <R3D_Settings_ShowRoofsTip>全部显示或全部隐藏：关闭即可看到室内。</R3D_Settings_ShowRoofsTip>
+  <R3D_Settings_RoofColour>屋顶样式：{0}</R3D_Settings_RoofColour>
+  <R3D_Settings_Roof_Slate>石板</R3D_Settings_Roof_Slate>
+  <R3D_Settings_Roof_Terracotta>陶瓦</R3D_Settings_Roof_Terracotta>
+  <R3D_Settings_Roof_Thatch>茅草</R3D_Settings_Roof_Thatch>
+  <R3D_Settings_Roof_Tin>铁皮</R3D_Settings_Roof_Tin>
+  <R3D_Settings_Roof_FlatSteel>平顶（钢铁）</R3D_Settings_Roof_FlatSteel>
+  <R3D_Settings_Roof_FlatMarble>平顶（大理石）</R3D_Settings_Roof_FlatMarble>
+  <R3D_Settings_Roof_FlatGranite>平顶（花岗岩）</R3D_Settings_Roof_FlatGranite>
+  <R3D_Settings_RoofShapeNote>建造的屋顶从四边升至屋脊，类似四坡顶。屏幕右下角有它的按钮，也可设置按键。</R3D_Settings_RoofShapeNote>
+
+  <!-- ==================== 3D 内容 ==================== -->
+  <R3D_Settings_BuildingsNature>建筑与自然</R3D_Settings_BuildingsNature>
+  <R3D_Settings_BuildingsNatureNote>哪项出问题就单独关闭。</R3D_Settings_BuildingsNatureNote>
+  <R3D_Settings_Walls3D>墙壁和岩石为实心方块</R3D_Settings_Walls3D>
+  <R3D_Settings_TexturedWalls>墙壁使用模组材质</R3D_Settings_TexturedWalls>
+  <R3D_Settings_RuggedRock>岩石带有破碎倾斜的边缘</R3D_Settings_RuggedRock>
+  <R3D_Settings_Doors3D>门</R3D_Settings_Doors3D>
+  <R3D_Settings_Models3D>手工模型</R3D_Settings_Models3D>
+  <R3D_Settings_Models3DTip>家具、机器、残骸、人物、动物和护甲。</R3D_Settings_Models3DTip>
+  <R3D_Settings_Trees3D>树木</R3D_Settings_Trees3D>
+  <R3D_Settings_SmallPlants3D>草、花和作物</R3D_Settings_SmallPlants3D>
+  <R3D_Settings_SmallPlants3DTip>大地图上数以千计，会占用内存；卡顿时可关闭。</R3D_Settings_SmallPlants3DTip>
+  <R3D_Settings_AutoExtrude>其他所有东西，由贴图生成</R3D_Settings_AutoExtrude>
+  <R3D_Settings_ThickItems>物品带一点厚度</R3D_Settings_ThickItems>
+  <R3D_Settings_ItemThickness>  物品厚度</R3D_Settings_ItemThickness>
+  <R3D_Settings_ItemThicknessTip>让地上的物品、武器和衣物变薄。拉到最低则平放。</R3D_Settings_ItemThicknessTip>
+  <R3D_Settings_ItemsFromArt>物品和武器使用游戏原画</R3D_Settings_ItemsFromArt>
+  <R3D_Settings_ItemsFromArtTip>物品、武器和衣物由游戏自身的贴图生成立体模型，看起来和原版完全一样。关闭：使用模组手工制作的物品模型。</R3D_Settings_ItemsFromArtTip>
+  <R3D_Settings_RawModels>3D 原材料</R3D_Settings_RawModels>
+  <R3D_Settings_RawModelsTip>钢铁、木材、砖块、布料、皮革等资源按堆叠数量显示为 3D 模型。</R3D_Settings_RawModelsTip>
+  <R3D_Settings_UprightPlants>其他植物竖立</R3D_Settings_UprightPlants>
+  <R3D_Settings_PlantCardSize>  贴图植物大小</R3D_Settings_PlantCardSize>
+  <R3D_Settings_PlantCardSizeTip>没有 3D 模型的灌木、荆棘、草和花（树木保持原大小）。游戏贴图按俯视铺满一格，竖起来可能显得太大。</R3D_Settings_PlantCardSizeTip>
+  <R3D_Settings_MapEdge3D>地图边缘显示地层剖面</R3D_Settings_MapEdge3D>
+  <R3D_Settings_MapEdge3DTip>地图边缘显示土壤和岩石的分层，像沙盘模型。</R3D_Settings_MapEdge3DTip>
+  <R3D_Settings_CreaturesEffects>生物与特效</R3D_Settings_CreaturesEffects>
+  <R3D_Settings_Pawns3D>殖民者和其他人</R3D_Settings_Pawns3D>
+  <R3D_Settings_Animals3D>动物</R3D_Settings_Animals3D>
+  <R3D_Settings_Mechs3D>机械族</R3D_Settings_Mechs3D>
+  <R3D_Settings_HeldWeapons3D>手持武器</R3D_Settings_HeldWeapons3D>
+  <R3D_Settings_WorkAnimations>使用工具的工作动画</R3D_Settings_WorkAnimations>
+  <R3D_Settings_WorkAnimationsTip>殖民者工作时的斧头、镐、锤子、镰刀、锄头和扫帚。</R3D_Settings_WorkAnimationsTip>
+  <R3D_Settings_Ghosts3D>蓝图显示建成后的样子</R3D_Settings_Ghosts3D>
+  <R3D_Settings_Ghosts3DTip>蓝图、建造框架和放置预览显示为半透明 3D 模型。</R3D_Settings_Ghosts3DTip>
+  <R3D_Settings_Damage3D>建筑上的损伤痕迹</R3D_Settings_Damage3D>
+  <R3D_Settings_Effects3D>火焰、烟雾、蒸汽和火花</R3D_Settings_Effects3D>
+  <R3D_Settings_CollapseDebris>坍塌碎块</R3D_Settings_CollapseDebris>
+  <R3D_Settings_CollapseDebrisTip>坍塌的屋顶和楼板碎成块落下。</R3D_Settings_CollapseDebrisTip>
+  <R3D_Settings_UprightPawns>贴图竖立</R3D_Settings_UprightPawns>
+  <R3D_Settings_UprightPawnsTip>用于没有模型的人和动物。</R3D_Settings_UprightPawnsTip>
+  <R3D_Settings_HairUnderHats>  帽子下显示头发</R3D_Settings_HairUnderHats>
+  <R3D_Settings_HairUnderHatsTip>头发会显示在帽子和便帽下面，并收进帽子里。</R3D_Settings_HairUnderHatsTip>
+  <R3D_Settings_KeepAsPaper>保持纸片人</R3D_Settings_KeepAsPaper>
+  <R3D_Settings_KeepAsPaperTip>这些异种族保持平面。</R3D_Settings_KeepAsPaperTip>
+  <R3D_AlienTune_Title>异种族调整</R3D_AlienTune_Title>
+  <R3D_AlienTune_Pick>选择一个异种族小人</R3D_AlienTune_Pick>
+  <R3D_AlienTune_Copy>复制 XML</R3D_AlienTune_Copy>
+  <R3D_AlienTune_Copied>已复制。</R3D_AlienTune_Copied>
+  <R3D_AlienTune_Reset>重置</R3D_AlienTune_Reset>
+  <R3D_Settings_FaceDecal>  3D 头部显示 Facial Animation 的脸</R3D_Settings_FaceDecal>
+  <R3D_Settings_FaceDecalTip>把 Facial Animation 的动态眼睛、眉毛和嘴巴贴在 3D 头部正面，代替 IsoRim 的眼睛。</R3D_Settings_FaceDecalTip>
+  <R3D_Settings_FaceDecalSize>    脸部大小</R3D_Settings_FaceDecalSize>
+  <R3D_Settings_FaceDecalHeight>    脸部高度（格）</R3D_Settings_FaceDecalHeight>
+  <R3D_Settings_FaceDecalMouth>    嘴巴大小</R3D_Settings_FaceDecalMouth>
+  <R3D_Settings_FaceDecalMouthHeight>    嘴巴高度（格）</R3D_Settings_FaceDecalMouthHeight>
+  <R3D_Settings_FaceDecalAddApparel>    为某件服装单独设置...</R3D_Settings_FaceDecalAddApparel>
+  <R3D_Settings_FaceDecalRemove>移除</R3D_Settings_FaceDecalRemove>
+  <R3D_Settings_FullPawnDraw>  始终完整绘制贴图</R3D_Settings_FullPawnDraw>
+  <R3D_Settings_FullPawnDrawTip>拉远时游戏用缓存图像绘制人物，Facial Animation 的表情因此不动。人多时会慢一些。</R3D_Settings_FullPawnDrawTip>
+  <R3D_Settings_ModelStyle>模型风格</R3D_Settings_ModelStyle>
+  <R3D_Settings_TexturedModels>模型使用材质</R3D_Settings_TexturedModels>
+  <R3D_Settings_Outlines>模型深色描边</R3D_Settings_Outlines>
+
+  <!-- ==================== 画质 ==================== -->
+  <R3D_Settings_Image>画面</R3D_Settings_Image>
+  <R3D_Settings_AntiAlias>抗锯齿（FXAA）</R3D_Settings_AntiAlias>
+  <R3D_Settings_AntiAliasTip>柔化墙壁和模型边缘的锯齿。</R3D_Settings_AntiAliasTip>
+  <R3D_Settings_AntiAliasStrength>边缘平滑度</R3D_Settings_AntiAliasStrength>
+  <R3D_Settings_Sharpen>锐化</R3D_Settings_Sharpen>
+  <R3D_Settings_SharpenTip>画面更清晰，镜头拉远时最明显。</R3D_Settings_SharpenTip>
+  <R3D_Settings_SharpenStrength>锐化强度</R3D_Settings_SharpenStrength>
+  <R3D_Settings_TiltShift>移轴</R3D_Settings_TiltShift>
+  <R3D_Settings_TiltShiftTip>模糊画面上下边缘，呈现微缩模型效果。</R3D_Settings_TiltShiftTip>
+  <R3D_Settings_TiltStrength>强度</R3D_Settings_TiltStrength>
+  <R3D_Settings_TiltCentre>清晰带位置</R3D_Settings_TiltCentre>
+  <R3D_Settings_TiltWidth>清晰带宽度</R3D_Settings_TiltWidth>
+  <R3D_Settings_TiltPop>鲜艳</R3D_Settings_TiltPop>
+  <R3D_Settings_TiltPopTip>配合移轴让颜色更鲜艳。</R3D_Settings_TiltPopTip>
+  <R3D_Settings_Textures>纹理</R3D_Settings_Textures>
+  <R3D_Settings_Aniso>各向异性过滤</R3D_Settings_Aniso>
+  <R3D_Settings_AnisoTip>斜看时地面更清晰。</R3D_Settings_AnisoTip>
+  <R3D_Settings_Off>关闭</R3D_Settings_Off>
+
+  <!-- ==================== 游戏内提示与右下角按钮 ==================== -->
+  <R3D_Msg_ViewOn>IsoRim：3D 视图已开启</R3D_Msg_ViewOn>
+  <R3D_Preparing3D>正在准备 3D…</R3D_Preparing3D>
+  <R3D_Msg_ViewOff>IsoRim：3D 视图已关闭</R3D_Msg_ViewOff>
+  <R3D_Msg_AlwaysOnWith>IsoRim：{0} 要求 3D 视图始终开启</R3D_Msg_AlwaysOnWith>
+  <R3D_Msg_Isometric>IsoRim：等距视角</R3D_Msg_Isometric>
+  <R3D_Msg_StraightOn>IsoRim：正视视角</R3D_Msg_StraightOn>
+  <R3D_Msg_CameraReset>IsoRim：镜头已重置</R3D_Msg_CameraReset>
+  <R3D_Msg_SelectOnePerson>IsoRim：请只选中一个人来进入第一人称</R3D_Msg_SelectOnePerson>
+  <R3D_Msg_FirstPersonWith>IsoRim：{0} 的第一人称</R3D_Msg_FirstPersonWith>
+  <R3D_Msg_FirstPersonOff>IsoRim：已退出第一人称</R3D_Msg_FirstPersonOff>
+  <R3D_Msg_ViewButton>IsoRim：3D 视图（{0}）</R3D_Msg_ViewButton>
+  <R3D_Msg_ViewButtonLocked>IsoRim：3D 视图（{0} 要求始终开启）</R3D_Msg_ViewButtonLocked>
+  <R3D_Msg_RoofsButton>IsoRim：显示屋顶（{0}）</R3D_Msg_RoofsButton>
+  <R3D_Msg_NoKeySet>未设置按键</R3D_Msg_NoKeySet>
+
+</LanguageData>
