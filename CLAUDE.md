@@ -805,6 +805,16 @@ read of both codebases before merging. What changed and why:
   Mouse3) and MpInput's middle-click detection use Input.GetKey*(KeyCode.MouseN), 
   which UnityStubs answers only for keyboard keys, so those mouse bindings 
   never fire on 1.7 (the keyboard ping key works).
+  - Lighting research (Oct 26, user request, nothing built yet): 
+  docs/isorim-lighting.md. Waylith does no lighting of its own (8-bit gamma 
+  map target, no readable depth, no HDR, shadow-map hooks unused); all light 
+  is the game's GlowGrid overlay and IsoRim's shader maths. Ranked options 
+  and a recommended first step (lamp facing on 3D faces from a small light 
+  list in a LiveTexture, not Shader.SetGlobalVectorArray, which switches 
+  every material in the game onto a slower path). Found in passing, 
+  unconfirmed in game: IsoRim's 3D sun hour is computed in the CameraDriver 
+  postfix, outside Map.MapUpdate, so with async time it likely follows world 
+  time instead of the viewed map's.
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
   idle drafted pawns (walk one east and stop: the 3D player sees it face 
