@@ -132,7 +132,7 @@ namespace IsoRim
             Vector3 p = pawn.DrawPos;
             if (!headingSet)
             {
-                heading = pawn.Rotation.AsAngle;
+                heading = MpFacing.Drawn(pawn).AsAngle;   // MP: a drafted pawn's kept facing (MpFacing)
                 headingSet = true;
                 lastPos = p;
             }
@@ -147,7 +147,7 @@ namespace IsoRim
             else if (!pawn.pather.Moving)
             {
                 // Standing (working, talking): face the way the game turns them.
-                target = pawn.Rotation.AsAngle;
+                target = MpFacing.Drawn(pawn).AsAngle;   // MP: a drafted pawn's kept facing (MpFacing)
                 lastPos = p;
             }
             float k = 1f - Mathf.Exp(-TurnRate * Time.unscaledDeltaTime);

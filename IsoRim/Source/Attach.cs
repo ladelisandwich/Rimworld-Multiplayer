@@ -317,7 +317,7 @@ namespace IsoRim
                 p.yaw = hostYaw;
                 return true;
             }
-            float want = aim ?? (p.a.facing == AttachFacing.Own ? t.Rotation.AsAngle : hostYaw);
+            float want = aim ?? (p.a.facing == AttachFacing.Own ? MpFacing.Drawn(t).AsAngle : hostYaw);   // MP: a drafted pawn's kept facing (MpFacing)
             int id = t.thingIDNumber;
             int frame = Time.frameCount;
             Turn turn;
@@ -385,7 +385,7 @@ namespace IsoRim
             float yaw, phase, gait;
             if (!Animals.LastState(pawn, out yaw, out phase, out gait))
             {
-                yaw = pawn.Rotation.AsAngle;
+                yaw = MpFacing.Drawn(pawn).AsAngle;   // MP: a drafted pawn's kept facing (MpFacing)
             }
             float size = AlienFigures.SizeOf(pawn);   // (a race's scale too, Api 25)
             h.position = new Vector3(d.x, 0f, d.z);
@@ -411,7 +411,7 @@ namespace IsoRim
             float spriteHeight = Patches.CardHeight(pawn);
             Vector3 feet = Patches.CardFeet(pawn, pawn.DrawPos, spriteHeight);
             h.position = new Vector3(feet.x, 0f, feet.z);
-            h.yaw = pawn.Rotation.AsAngle;
+            h.yaw = MpFacing.Drawn(pawn).AsAngle;   // MP: a drafted pawn's kept facing (MpFacing)
             h.model = false;
             h.back = CardBack * spriteHeight;
             h.top = CardTop * spriteHeight;

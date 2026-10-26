@@ -204,7 +204,7 @@ namespace IsoRim
             }
             CompTurretGun turret = lying ? null : pawn.TryGetComp<CompTurretGun>();
             float turretAim = turret != null ? turret.curRotation - turret.Props.angleOffset : yaw;
-            if (turret != null && turret.curRotation == 0f && pawn.Rotation == Rot4.West)
+            if (turret != null && turret.curRotation == 0f && MpFacing.Drawn(pawn) == Rot4.West)   // MP: a drafted pawn's kept facing (MpFacing)
             {
                 turretAim += 180f;   // never aimed yet: the game's sprite is turned round for a mech facing west
             }
@@ -496,7 +496,7 @@ namespace IsoRim
                 }
                 int age;
                 float? drawn = Animals.DrawnYaw(pawn, out age);
-                float yaw = drawn ?? pawn.Rotation.AsAngle;
+                float yaw = drawn ?? MpFacing.Drawn(pawn).AsAngle;   // MP: a drafted pawn's kept facing (MpFacing)
                 float aim = dir.sqrMagnitude > 0.0001f ? dir.AngleFlat() : yaw;
                 float size = entry.def.scale * (entry.def.lookBy == "lifeStage" ? 1f : Animals.SizeOf(pawn));
                 Matrix4x4 local = Matrix4x4.Translate(p.def.pivot) * Matrix4x4.Rotate(Quaternion.AngleAxis(Mathf.DeltaAngle(yaw, aim), Vector3.up)) * Matrix4x4.Translate(-p.def.pivot);

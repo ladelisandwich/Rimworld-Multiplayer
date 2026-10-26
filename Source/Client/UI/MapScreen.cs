@@ -24,6 +24,24 @@ namespace Multiplayer.Client
             return true;
         }
 
+        // UI position of a map point and the size in UI pixels of one map cell there, on top of what stands at that spot
+        // in the built-in IsoRim's 3D view (the wall top, building or floor this player sees, IsoRimView) and on the
+        // ground otherwise. False when it lies behind the camera.
+        public static bool TrySurfaceToUI(Map map, Vector3 v, out Vector2 ui, out float cellSize)
+        {
+            if (IsoRimView.On)
+                return IsoRimView.MapToUI(map, v, out ui, out cellSize);
+
+            if (!TryMapToUI(v, out ui))
+            {
+                cellSize = 0f;
+                return false;
+            }
+
+            cellSize = CellSizeAt(v);
+            return true;
+        }
+
         // Size in UI pixels of one map cell at v (UI.CurUICellSize in the top-down view), 0 when v is behind the camera.
         public static float CellSizeAt(Vector3 v)
         {

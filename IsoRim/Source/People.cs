@@ -727,7 +727,7 @@ namespace IsoRim
             }
             Poses.Seat seat = default(Poses.Seat);
             bool seated = lift <= 0f && Poses.Seated(pawn, ref drawLoc, out seat);
-            float yaw = aiming ? aimDrawn : pawn.Rotation.AsAngle;
+            float yaw = aiming ? aimDrawn : MpFacing.Drawn(pawn).AsAngle;   // MP: a drafted pawn's kept facing (MpFacing)
             Matrix4x4 pose = BodyAnims.Apply(pawn, drawLoc, yaw, size, Matrix4x4.identity);
             Vector3 at = new Vector3(drawLoc.x, (seated ? seat.Lift : 0f) + lift, drawLoc.z);
             Matrix4x4 whole = pose * Matrix4x4.Scale(new Vector3(size, size, size));

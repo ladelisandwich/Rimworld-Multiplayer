@@ -313,7 +313,13 @@ settle clock.
 - [ ] Extra (Oct 26, user request): IsoRim Waylith built into the mod as one 
 mod, made safe for multiplayer, Multiplayer's overlays made to work in 3D 
 (see Known gaps, IsoRim). Builds, tests pass, staged layout checked; in-game 
-check pending. Next: user-chosen IsoRim improvements.
+check pending. First two user-chosen improvements (Oct 26): idle drafted 
+pawns keep their facing in 3D in multiplayer too, drawn only (MpFacing), 
+and other players' cursors, drag boxes and pings sit on the surface the 3D 
+view shows, with a click on a player in the chat window's list jumping to 
+their cursor (MpView, IsoRimView). Checked headless on Proton (tracker 
+transpilers present, binding complete, the facing memory kept and cleared as 
+designed, 0 errors); in-game check pending.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -634,8 +640,8 @@ read of both codebases before merging. What changed and why:
   Multiplayer's Rand push/pop list (IsoRim replaces it with more Rand draws 
   on smoke and toxic spewers while the view is on; MP's prefix at 801 runs 
   before IsoRim's, its finalizer pops after). MP: guards in IsoRim: 
-  DraftedSouth keeps the game's south turn in a session (so idle drafted 
-  pawns don't keep their facing in 3D in multiplayer); Attach.DrawPos_Postfix 
+  DraftedSouth keeps the game's south turn in a session (the 3D view draws 
+  the kept facing instead, see Drafted facing below); Attach.DrawPos_Postfix 
   and Api20's skip prefix do nothing while simulating; Projectiles.Rear, 
   CollapseDebris.Snapshot and ShipFreeze's section rebuild run inside 
   Rand.PushState/PopState; the binder's turn button refuses in a session; 
@@ -661,8 +667,50 @@ read of both codebases before merging. What changed and why:
   loose PNGs. MP's patches and IsoRim's 2174-model startup run in the same 
   unordered static-constructor phase: rerun "Patch hit counts" and the 
   small-target inlining audit with IsoRim present.
+  - Drafted facing in a session (Oct 26, Source/IsoRim/MpFacing.cs): the 
+  game's south turn still runs for everyone; MpFacing remembers per 
+  thingIDNumber the rotation just before it (DraftedSouth -> BeforeSouth, 
+  recorded whether or not this player's 3D view is on, so tick code never 
+  branches on the view) and IsoRim's drawing reads MpFacing.Drawn(pawn) 
+  instead of pawn.Rotation (Animals.Advance for every 3D figure, 
+  PreRenderResults_Prefix for sprite cards and flat sprites, the carried-item 
+  offset, first person, silhouettes, attachments, mech turret and weapon 
+  tips). An entry ends when the rotation tracker turns the pawn: the six 
+  Thing.set_Rotation calls in Pawn_RotationTracker.FaceAdjacentCell (4), 
+  FaceCell and Face are transpiled to MpFacing.GameTurned (set, then forget; 
+  an error is logged if the count isn't 6 after a game update), on DeSpawn, 
+  and at the main menu. Direct south writes outside the tracker (a few comps 
+  and job drivers) aren't seen, and game state copied from the rotation stays 
+  south: a corpse of a pawn killed while idle and drafted, a jump pack 
+  flight, breath puffs, the terror halo. Another mod that sets the sprite 
+  facing to pawn.Rotation in its own PreRenderResults prefix is treated as 
+  the game's facing. FaceCell (69 bytes) and Face (61) are small enough to be 
+  inlined into a caller compiled before IsoRim patches them at startup; then 
+  an entry would outlive a real turn (visual only).
+  - Other players in 3D (Oct 26, Source/IsoRim/MpView.cs, bound by name from 
+  Source/Client/UI/IsoRimView.cs so a standalone IsoRim falls back to the 
+  flat drawing): a 3D sender sends the point its pointer shows (the nearest 
+  pawn, or the top of the thing under it, Interaction.PickUnderPointer) 
+  instead of the ground behind it, except while box-selecting; the packet is 
+  unchanged (x, z), so flat players now see that cursor or ping on the wall 
+  or building cell. Each 3D receiver puts icons, names and pings on top of 
+  what its own view draws there (IsoCellMap.TopOf with its own wall height 
+  and cut-away, stacked floors through Floors.ColumnFloor, bridge decks) and 
+  draws a ring under each cursor and the drag boxes in the world from a 
+  MapInterface.MapInterfaceUpdate postfix (DrawPlayerMarkers3D; bright where 
+  seen, faint through walls and roofs; IsoRim's own drag-box look). A 3D 
+  player's drag box was a screen rectangle in their view, so the ground 
+  rectangle between its corners is approximate. Left click on a player in 
+  the chat window's list jumps to their cursor (same faction only; switches 
+  maps; the 3D camera centres the surface point and leaves first person), and 
+  the jump-to-ping key does the same in 3D. The marker materials (BlendDef at 
+  queue 3160, OverlayDef at 3650) haven't been seen on screen yet.
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
-  idle drafted pawns, a roof collapse, a gravship landing, a join with 3D on 
-  (stays on), the other player's cursor, drag box, ping and selection in 3D, 
-  and the "Avg Frame" of the 3D player in the sync debug panel.
+  idle drafted pawns (walk one east and stop: the 3D player sees it face 
+  east, the flat player south; aim north, then stop: north in 3D), a roof 
+  collapse, a gravship landing, a join with 3D on (stays on, kept facings 
+  too), the other player's cursor on a wall top, drag box, ping and 
+  selection in 3D, clicking the other player in the chat list (also from 
+  first person and from another map), and the "Avg Frame" of the 3D player 
+  in the sync debug panel.

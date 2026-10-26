@@ -19,17 +19,12 @@ namespace Multiplayer.Client
 
             foreach (var player in Multiplayer.session.players)
             {
-                if (player.username == Multiplayer.username) continue;
-                if (player.map != curMap) continue;
-                if (player.factionId != Multiplayer.RealPlayerFaction.loadID) continue;
+                if (!ShowsCursorOf(player, curMap)) continue;
 
-                var cursorMap = Vector3.Lerp(
-                    player.lastCursor,
-                    player.cursor,
-                    (float)(Multiplayer.clock.ElapsedMillisDouble() - player.updatedAt) / 50f
-                );
-                // Behind the built-in IsoRim's perspective camera there's nothing to draw
-                if (!MapScreen.TryMapToUI(cursorMap, out var pos)) continue;
+                var cursorMap = CursorNow(player);
+                // On the wall top or building in the built-in IsoRim's 3D view; behind its perspective camera there's
+                // nothing to draw
+                if (!MapScreen.TrySurfaceToUI(Find.CurrentMap, cursorMap, out var pos, out _)) continue;
 
                 if (Multiplayer.settings.transparentPlayerCursors)
                     GUI.color = player.color * new Color(1, 1, 1, 0.5f);
@@ -51,7 +46,8 @@ namespace Multiplayer.Client
 
                 GUI.DrawTexture(iconRect, drawIcon);
 
-                if (player.dragStart != PlayerInfo.Invalid)
+                // In the built-in IsoRim's 3D view the box is drawn in the world (DrawPlayerMarkers3D)
+                if (player.dragStart != PlayerInfo.Invalid && !IsoRimView.On)
                 {
                     GUI.color = player.color * new Color(1, 1, 1, 0.2f);
                     // A rectangle on the ground, so it keeps its shape under a turned or tilted 3D camera
@@ -59,6 +55,43 @@ namespace Multiplayer.Client
                 }
 
                 GUI.color = Color.white;
+            }
+        }
+
+        internal static bool ShowsCursorOf(PlayerInfo player, int mapIndex) =>
+            player.username != Multiplayer.username &&
+            player.map == mapIndex &&
+            player.factionId == Multiplayer.RealPlayerFaction.loadID;
+
+        internal static Vector3 CursorNow(PlayerInfo player) => Vector3.Lerp(
+            player.lastCursor,
+            player.cursor,
+            (float)(Multiplayer.clock.ElapsedMillisDouble() - player.updatedAt) / 50f
+        );
+    }
+
+    // Other players' cursors and drag boxes in the built-in IsoRim's 3D view, drawn in the world: a ring on the wall
+    // top, building or ground each cursor is on, and drag boxes on the ground. World meshes have to be drawn in the
+    // Update phase (MapInterfaceUpdate, as the selection brackets); icons and names stay in DrawPlayerCursors (OnGUI).
+    [HarmonyPatch(typeof(MapInterface), nameof(MapInterface.MapInterfaceUpdate))]
+    static class DrawPlayerMarkers3D
+    {
+        static void Postfix()
+        {
+            if (Multiplayer.Client == null || !Multiplayer.settings.showCursors || TickPatch.Simulating) return;
+
+            var map = Find.CurrentMap;
+            if (map == null || !IsoRimView.On) return;
+
+            foreach (var player in Multiplayer.session.players)
+            {
+                if (!DrawPlayerCursors.ShowsCursorOf(player, map.Index)) continue;
+
+                var cursorMap = DrawPlayerCursors.CursorNow(player);
+                IsoRimView.DrawMarker(map, cursorMap, player.color);
+
+                if (player.dragStart != PlayerInfo.Invalid)
+                    IsoRimView.DrawBox(map, player.dragStart, cursorMap, player.color);
             }
         }
     }

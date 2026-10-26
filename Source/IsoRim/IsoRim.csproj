@@ -27,6 +27,8 @@
   <ItemGroup>
     <Compile Include="$(IsoRimSourceDir)**/*.cs" Exclude="$(IsoRimSourceDir)obj/**;$(IsoRimSourceDir)bin/**" />
     <Compile Include="MpBridge.cs" />
+    <Compile Include="MpFacing.cs" />
+    <Compile Include="MpView.cs" />
   </ItemGroup>
 
   <ItemGroup>

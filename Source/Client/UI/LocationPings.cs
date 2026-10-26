@@ -36,7 +36,8 @@ public class LocationPings
                         PingLocation(-1, tile, Vector3.zero);
                 }
                 else if (Find.CurrentMap != null)
-                    PingLocation(Find.CurrentMap.uniqueID, PlanetTile.Invalid, UI.MouseMapPosition());
+                    // In the built-in IsoRim's 3D view what the pointer shows, not the ground behind it
+                    PingLocation(Find.CurrentMap.uniqueID, PlanetTile.Invalid, IsoRimView.PointerMapPoint());
             }
 
         for (int i = pings.Count - 1; i >= 0; i--)
@@ -54,8 +55,13 @@ public class LocationPings
             if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                 alertHidden = true;
             else if (pings.Any())
-                // ReSharper disable once PossibleInvalidOperationException
-                CameraJumper.TryJumpAndSelect(pings[GenMath.PositiveMod(pingJumpCycle, pings.Count)].Target.Value);
+            {
+                var ping = pings[GenMath.PositiveMod(pingJumpCycle, pings.Count)];
+                // The built-in IsoRim's 3D camera centres what it shows there and leaves first person
+                if (ping.mapId == -1 || ping.mapId != Find.CurrentMap?.uniqueID || !IsoRimView.JumpTo(Find.CurrentMap, ping.mapLoc))
+                    // ReSharper disable once PossibleInvalidOperationException
+                    CameraJumper.TryJumpAndSelect(ping.Target.Value);
+            }
         }
     }
 

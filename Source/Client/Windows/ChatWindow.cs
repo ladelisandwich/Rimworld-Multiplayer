@@ -150,6 +150,8 @@ namespace Multiplayer.Client
                     if (p.simulating)
                         toolTip += "\n(Simulating)";
                     toolTip += $"\nAvg frame time: {p.frameTime:0.00}ms";
+                    if (p.id != Multiplayer.session.playerId && p.factionId == Multiplayer.RealPlayerFaction.loadID)
+                        toolTip += "\n\nClick to jump to their cursor";
 
                     TooltipHandler.TipRegion(rect, new TipSignal(toolTip, p.id));
                 },
@@ -172,6 +174,12 @@ namespace Multiplayer.Client
 
         private void ClickPlayer(PlayerInfo p)
         {
+            if (Event.current.button == 0)
+            {
+                JumpToPlayer(p);
+                return;
+            }
+
             // todo
             return;
 
@@ -182,6 +190,34 @@ namespace Multiplayer.Client
                     //new FloatMenuOption("MpSeeModList".Translate(), () => DefMismatchWindow.ShowModList(Multiplayer.session.mods))
                 }));
             }
+        }
+
+        // The camera goes to that player's cursor, on their map. The built-in IsoRim's 3D camera centres what it shows
+        // there (a wall top, a building) and leaves first person.
+        private static void JumpToPlayer(PlayerInfo p)
+        {
+            if (p.id == Multiplayer.session.playerId) return;
+
+            if (p.factionId != Multiplayer.RealPlayerFaction.loadID)
+            {
+                // Their cursor isn't shown either (DrawPlayerCursors)
+                Messages.Message($"{p.username} plays another faction", MessageTypeDefOf.RejectInput, false);
+                return;
+            }
+
+            if (p.CurrentMap is not { } map)
+            {
+                Messages.Message($"{p.username} isn't looking at a map", MessageTypeDefOf.RejectInput, false);
+                return;
+            }
+
+            // A cursor can lie off the map (the 3D view's horizon); the game's jump ignores cells outside it
+            var cell = p.cursor.ToIntVec3().ClampInsideMap(map);
+            if (map != Find.CurrentMap)
+                CameraJumper.TryJump(cell, map, CameraJumper.MovementMode.Cut);
+
+            if (map != Find.CurrentMap || !IsoRimView.JumpTo(map, p.cursor))
+                CameraJumper.TryJump(cell, map);
         }
 
         private Color GetColor(PlayerStatus status)

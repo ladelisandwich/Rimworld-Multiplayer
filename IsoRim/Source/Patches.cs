@@ -168,6 +168,8 @@ namespace IsoRim
                 Patch("skipping sprite work for 3D pawns", preRender, prefix: nameof(PreRender_Prefix));
             }
 
+            // MP: the game's own turns of a pawn end the facing kept for drawing in a multiplayer session (MpFacing)
+            MpFacing.Apply(harmony);
             // In 3D the game's turn of a drafted pawn south is skipped: it keeps the way it walked, aimed or its job faces (DraftedSouth).
             Patch("drafted pawns keep their facing", AccessTools.Method(typeof(Pawn_RotationTracker), nameof(Pawn_RotationTracker.UpdateRotation)),
                 transpiler: nameof(DraftedSouth_Transpiler));
@@ -1043,6 +1045,7 @@ namespace IsoRim
             if (Current.Game == null && !MpBridge.InSession)
             {
                 View3D.Active = View3D.LockedOn || View3D.HarnessStartsOn;
+                MpFacing.ForgetAll();   // MP: kept drafted facings end with the game
             }
         }
 
@@ -2065,6 +2068,7 @@ namespace IsoRim
 
         public static void DeSpawn_Prefix(Thing __instance)
         {
+            MpFacing.Forget(__instance);   // MP: a respawned pawn starts with the game's facing
             NoteShapeChange(__instance, __instance != null ? __instance.MapHeld : null);
         }
 
@@ -2367,7 +2371,8 @@ namespace IsoRim
         [HarmonyPriority(Priority.Last)]
         public static void PreRenderResults_Prefix(PawnRenderer __instance, ref Rot4? __1, bool __2)
         {
-            if (rotFromCaller || !View3D.Ready || !IsoRimMod.Settings.uprightPawns)
+            // MP: in a session flat sprites (uprightPawns off) still need the drafted facing kept for drawing (MpFacing)
+            if (rotFromCaller || !View3D.Ready || !IsoRimMod.Settings.uprightPawns && !MpBridge.InSession)
             {
                 return;
             }
@@ -2378,12 +2383,24 @@ namespace IsoRim
                 {
                     return;
                 }
-                Rot4 facing = __1 ?? pawn.Rotation;
+                // MP: own is the game's facing, or in a session the drafted facing kept for drawing (MpFacing). Another
+                // mod's override equal to the game's facing is taken as the game's facing.
+                Rot4 game = pawn.Rotation;
+                Rot4 own = MpFacing.Drawn(pawn);
+                if (!IsoRimMod.Settings.uprightPawns)
+                {
+                    if (own != game && (!__1.HasValue || __1.Value == game))
+                    {
+                        __1 = own;
+                    }
+                    return;
+                }
+                Rot4 facing = __1.HasValue && __1.Value != game ? __1.Value : own;
                 // Aiming, the sprite faces the way its gun points on screen (CardAim), so body and gun agree as in the game
                 // (unless another mod turned the body away from the game's facing).
                 float aimGame, aimSeen;
-                Rot4 seen = facing == pawn.Rotation && CardAim(pawn, __2, out aimGame, out aimSeen) ? Rot4.FromAngleFlat(aimSeen) : View3D.SeenFacing(facing);
-                if (seen != facing || __1.HasValue)
+                Rot4 seen = facing == own && CardAim(pawn, __2, out aimGame, out aimSeen) ? Rot4.FromAngleFlat(aimSeen) : View3D.SeenFacing(facing);
+                if (seen != game || __1.HasValue)
                 {
                     __1 = seen;
                 }
@@ -2410,7 +2427,7 @@ namespace IsoRim
             }
             try
             {
-                Rot4 seen = View3D.SeenFacing(__0.Rotation);
+                Rot4 seen = View3D.SeenFacing(MpFacing.Drawn(__0));   // MP: a drafted pawn's kept facing (MpFacing)
                 if (seen != __0.Rotation && (__2 - (__state + CarryOffset(__0, __0.Rotation))).sqrMagnitude < 1e-8f)
                 {
                     __2 = __state + CarryOffset(__0, seen);
@@ -3510,6 +3527,10 @@ namespace IsoRim
                     Probe.NoteDraftFacing(pawn as Pawn);
                 }
                 return;
+            }
+            if (MpBridge.InSession)
+            {
+                MpFacing.BeforeSouth(pawn as Pawn);   // MP: the 3D view draws the facing kept here; the game's south turn stays
             }
             pawn.Rotation = rot;
         }

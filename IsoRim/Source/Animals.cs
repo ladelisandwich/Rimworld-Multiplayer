@@ -309,7 +309,7 @@ namespace IsoRim
             Vector3 drawLoc = pawn.DrawPos;
             float lift = Carried.LiftOf(pawn, ref drawLoc) + Corpses.RestHeight(pawn);
             float flight = FlightOf(pawn, ref drawLoc);
-            float yaw = pawn.Rotation.AsAngle;
+            float yaw = MpFacing.Drawn(pawn).AsAngle;   // MP: a drafted pawn's kept facing (MpFacing)
             float phase = 0f;
             float gait = 0f;
             State st;
@@ -597,7 +597,7 @@ namespace IsoRim
         {
             int id = pawn.thingIDNumber;
             int frame = Time.frameCount;
-            float facing = face ?? pawn.Rotation.AsAngle;
+            float facing = face ?? MpFacing.Drawn(pawn).AsAngle;   // MP: a drafted pawn's kept facing (MpFacing)
             drawLoc = Moved(pawn, drawLoc);
 
             State st;

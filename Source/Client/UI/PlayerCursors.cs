@@ -44,7 +44,9 @@ public class PlayerCursors
                 !MultiplayerData.icons.Contains(icon) ? 0 : MultiplayerData.icons.IndexOf(icon);
             packet.icon = (byte)iconId;
 
-            var mapPosition = UI.MouseMapPosition();
+            // In the built-in IsoRim's 3D view the wall top, building or pawn the pointer shows, not the ground behind
+            // it; a selection drag keeps ground points, like its start
+            var mapPosition = Find.Selector.dragBox.IsValidAndActive ? UI.MouseMapPosition() : IsoRimView.PointerMapPoint();
             packet.x = mapPosition.x;
             packet.z = mapPosition.z;
 

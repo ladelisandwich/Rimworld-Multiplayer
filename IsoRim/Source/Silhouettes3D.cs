@@ -164,7 +164,7 @@ namespace IsoRim
             float inv = Find.CameraDriver.InverseFovScale.x;
             float sx = inv * (sz2.x < 2.5f ? sz2.x + SilhouetteUtility.AdjustScale(sz2.x) : sz2.x);
             float sz = inv * (sz2.y < 2.5f ? sz2.y + SilhouetteUtility.AdjustScale(sz2.y) : sz2.y);
-            bool west = (pawn != null ? View3D.SeenFacing(t.Rotation) : t.Rotation) == Rot4.West;
+            bool west = (pawn != null ? View3D.SeenFacing(MpFacing.Drawn(pawn)) : t.Rotation) == Rot4.West;   // MP: a drafted pawn's kept facing (MpFacing)
             Material src = west ? g.MatWest : g.MatEast;
             Texture tex = src != null ? src.mainTexture : null;
             if (tex == null)
