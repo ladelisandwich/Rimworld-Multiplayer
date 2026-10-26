@@ -350,8 +350,10 @@ designed, 0 errors); in-game check pending. Oct 26 afternoon: Steam moved
 the game to 1.7.4990 a minute after that build, and the user saw walls no 
 longer fold down in 3D (only doors); fixed by building IsoRim against 4990 
 (Known gaps, IsoRim, 1.7.4990). Headless Proton check on 4990: every method 
-of IsoRim and the Multiplayer dlls JIT-compiles, 0 errors; the fold itself 
-needs the in-game check.
+of IsoRim and the Multiplayer dlls JIT-compiles, 0 errors. Confirmed in game 
+by the user (Oct 26 12:46, hosted alone on 4990 with bbed3215): walls fold 
+again, Player.log 0 errors. The two-player check of the IsoRim features is 
+still pending.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
