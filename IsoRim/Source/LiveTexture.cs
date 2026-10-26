@@ -6,7 +6,7 @@ using GpuTextureAllocation = Waylith.Rendering.GpuTextureAllocation;
 using GpuTextureService = Waylith.Rendering.GpuTextureService;
 using LoadedTextureFormat = Waylith.Rendering.LoadedTextureFormat;
 using TextureLevelUpload = Waylith.Rendering.TextureLevelUpload;
-using TexturePixelData = Waylith.Rendering.TexturePixelData;
+using TexturePixelData = Waylith.Graphics.Textures.TexturePixelData;   // Port: 1.7.4990 moved it from Waylith.Rendering
 
 namespace IsoRim
 {
@@ -96,13 +96,29 @@ namespace IsoRim
                 return;
             }
             tex.SetPixels32(pixels);   // the CPU copy, kept right (the engine reloads a texture from it if it has to)
-            if (ringFailed || current < 0 || !Next())
+            // Port (1.7.4990): an engine type or member Next uses that a game update moved fails while Next is compiled,
+            // before its own catch runs (TexturePixelData left Waylith.Rendering in 1.7.4990 and froze every live
+            // texture: the walls' cut-away, the light), so the call is guarded too and falls back to plain Apply.
+            bool inPlace = false;
+            if (!ringFailed && current >= 0)
+            {
+                try
+                {
+                    inPlace = Next();
+                }
+                catch (Exception e)
+                {
+                    Fail(e);
+                }
+            }
+            if (!inPlace)
             {
                 tex.Apply(false);
                 Fallbacks++;
             }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]   // Port: see Upload
         private bool Next()
         {
             try

@@ -1,6 +1,6 @@
 # Determinism scan of Assembly-CSharp
 
-Assembly-CSharp.dll 1.7.9789.37269, scanned 2026-10-20. 
+Assembly-CSharp.dll 1.7.9795.32073, scanned 2026-10-26. 
 Every method that calls string.GetHashCode, System.HashCode, a ValueTuple or Enum GetHashCode (all differ per process on .NET), WaylithJobRuntime, Parallel, Task.Run or ThreadPool (run in parallel).
 
 | Category | Call sites | Types |

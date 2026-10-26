@@ -39,9 +39,14 @@ for cfg in "${XDG_CONFIG_HOME:-$HOME/.config}/unity3d/Ludeon Studios/RimWorld by
     [ -n "$newest" ] && cp -p "$newest" "$target" && echo "Copied IsoRim settings $(basename "$newest") to $(basename "$target") in $cfg"
 done
 
-# Keep this game build's Assembly-CSharp.dll for diffing after game updates
+# Keep this game build's Assembly-CSharp.dll, Waylith.dll and UnityStubs.dll for diffing after game updates (1.7.4990
+# moved Waylith types the built-in IsoRim uses, and no older Waylith.dll was left to compare with)
 GAME_VERSION="$(cut -d' ' -f1 "$RIMWORLD_DIR/Version.txt" 2>/dev/null)"
-if [ -n "$GAME_VERSION" ] && [ ! -f "$HOME/rw-builds/$GAME_VERSION/Assembly-CSharp.dll" ]; then
-    mkdir -p "$HOME/rw-builds/$GAME_VERSION"
-    cp "$RIMWORLD_DIR/Assembly-CSharp.dll" "$HOME/rw-builds/$GAME_VERSION/" && echo "Saved Assembly-CSharp.dll to ~/rw-builds/$GAME_VERSION/"
+if [ -n "$GAME_VERSION" ]; then
+    for dll in Assembly-CSharp.dll Waylith.dll UnityStubs.dll; do
+        if [ ! -f "$HOME/rw-builds/$GAME_VERSION/$dll" ]; then
+            mkdir -p "$HOME/rw-builds/$GAME_VERSION"
+            cp "$RIMWORLD_DIR/$dll" "$HOME/rw-builds/$GAME_VERSION/" && echo "Saved $dll to ~/rw-builds/$GAME_VERSION/"
+        fi
+    done
 fi

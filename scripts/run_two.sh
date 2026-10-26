@@ -10,7 +10,7 @@
 #     config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Logs/Player.log   <- the log
 #     Saves, MpReplays, MpDesyncs, ...                                          <- the save data
 # RimWorld 1.7 puts the log under XDG_CONFIG_HOME, not under -savedatafolder, so both are set.
-# Both instances run outside Steam (Steam features off), with -mod= limited to Harmony and this mod, and
+# Both instances run outside Steam (Steam features off), with only Harmony, the DLCs and this mod (write_modsconfig), and
 # with tiered compilation off (see CLAUDE.md).
 
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
@@ -18,29 +18,59 @@ source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 GAME_BIN="$RIMWORLD_DIR/RimWorld"
 TEST_ROOT="$HOME/.rw-mp-test"
 REAL_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config"
-MODS="brrainz.harmony,Multiplayer-1.7"
 CONNECT="127.0.0.1:30502"
 
 [ -x "$GAME_BIN" ] || { echo "Game binary not found at $GAME_BIN (set RIMWORLD_DIR)"; exit 1; }
 [ -d "$RIMWORLD_DIR/Mods/Multiplayer-1.7" ] || echo "WARNING: the mod isn't installed, run scripts/install_local.sh first"
 
+# Each instance's mod list. Since 1.7.4990, -mod= only takes mods from the game's own Mods folder
+# (ModsConfig.ApplyCommandLineModList) and Harmony comes from the Workshop, so instances get a ModsConfig.xml instead:
+# Harmony, Core, the DLCs (the game drops any that aren't installed) and rwmt.multiplayer. The game lists its Mods folder
+# before the Workshop, so this port wins over a Workshop Multiplayer with the same packageId.
+write_modsconfig() {
+    cat > "$1/ModsConfig.xml" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+  <version>$(cat "$RIMWORLD_DIR/Version.txt" 2>/dev/null)</version>
+  <activeMods>
+    <li>brrainz.harmony</li>
+    <li>ludeon.rimworld</li>
+    <li>ludeon.rimworld.royalty</li>
+    <li>ludeon.rimworld.ideology</li>
+    <li>ludeon.rimworld.biotech</li>
+    <li>ludeon.rimworld.anomaly</li>
+    <li>ludeon.rimworld.odyssey</li>
+    <li>rwmt.multiplayer</li>
+  </activeMods>
+  <knownExpansions>
+    <li>ludeon.rimworld.royalty</li>
+    <li>ludeon.rimworld.ideology</li>
+    <li>ludeon.rimworld.biotech</li>
+    <li>ludeon.rimworld.anomaly</li>
+    <li>ludeon.rimworld.odyssey</li>
+  </knownExpansions>
+</ModsConfigData>
+EOF
+}
+
 start_instance() {
     local name="$1"; shift
     local root="$TEST_ROOT/$name"
-    local config="$root/config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config"
+    local config="$root/Config"   # the game's Config folder is under -savedatafolder (GenFilePaths.ConfigFolderPath)
 
     mkdir -p "$root" "$config"
     # First run: take the real prefs (resolution, dev mode, key bindings, mod settings) so the test instance
-    # behaves like the normal game. ModsConfig.xml is left out, -mod= decides the mod list.
+    # behaves like the normal game. ModsConfig.xml is left out, write_modsconfig decides the mod list.
     if [ ! -f "$config/Prefs.xml" ] && [ -d "$REAL_CONFIG" ]; then
         find "$REAL_CONFIG" -maxdepth 1 -type f ! -name ModsConfig.xml -exec cp {} "$config/" \;
     fi
+    write_modsconfig "$config"
 
     echo "Starting $name instance (log: $root/config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Logs/Player.log)"
     (
         cd "$RIMWORLD_DIR" || exit 1
         XDG_CONFIG_HOME="$root/config" DOTNET_TieredCompilation=0 \
-            "$GAME_BIN" -savedatafolder="$root" -mod="$MODS" "$@" > "$root/stdout.log" 2>&1 &
+            "$GAME_BIN" -savedatafolder="$root" "$@" > "$root/stdout.log" 2>&1 &
         echo $! > "$root/pid"
     )
 }

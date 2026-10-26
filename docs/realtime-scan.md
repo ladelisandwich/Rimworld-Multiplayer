@@ -1,6 +1,6 @@
 # Real-time and randomness scan of Assembly-CSharp
 
-Assembly-CSharp.dll 1.7.9789.37269, scanned 2026-10-20. 
+Assembly-CSharp.dll 1.7.9795.32073, scanned 2026-10-26. 
 Every method that reads frame or wall-clock time (Time, RealTime, DateTime, Environment.TickCount, Stopwatch) or uses unseeded randomness (System.Random, Guid.NewGuid).
 
 | Category | Call sites | Types |

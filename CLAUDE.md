@@ -95,8 +95,12 @@ Parallel game code is a desync suspect.
 - Prepatcher can't work on 1.7. Don't use it, Mono.Cecil assembly rewriting, 
 or mono_* calls.
 - Launch flags: -Headless or -NoWindow (replace Unity's -batchmode -
-nographics), -mod=<packageIds> (only those mods plus Core and DLCs), -
-savedatafolder=<path>, -console.
+nographics), -mod=<packageIds> (only those mods plus Core and DLCs; since 
+1.7.4990 only mods in the game's own Mods folder, Workshop entries are 
+skipped with "-mod: '<id>' is not in the local Mods folder, ignoring", so 
+Harmony from the Workshop can't be picked that way), -
+savedatafolder=<path> (moves the whole save data folder, Config included: 
+GenFilePaths.ConfigFolderPath), -console.
 - Player.log moved into a Logs subfolder of the old log folder.
 ## This machine
 - OS: Bazzite (immutable Fedora). Never use dnf or rpm-ostree; the .NET SDK 
@@ -110,10 +114,22 @@ as GitHub user ladelisandwich.
 ilspycmd 11.1.0.9782 is a global dotnet tool in ~/.dotnet/tools.
 - RimWorld 1.7 folder: /run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/common/RimWorld 
 (Steam library on the "Big and Slow guy" drive, unstable beta branch). 
-Game version 1.7.4985 rev1269 (Steam update Oct 21 2026, before 14:55; 
-1.7.4984 rev1242 on Oct 20; 1.7.4982 rev1280, Steam build 26031547, Oct 19), 
-runtime .NET 10.0.13-waylithclr.dev. The mod builds against 1.7.4985 with 
-no errors; RwDiff 1.7.4984 -> 1.7.4985 not run yet. 
+Game version 1.7.4990 rev1069 (Steam update Oct 26 2026, 12:03; 1.7.4985 
+rev1269 on Oct 21; 1.7.4984 rev1242 on Oct 20; 1.7.4982 rev1280, Steam build 
+26031547, Oct 19), runtime .NET 10.0.13-waylithclr.dev (4990 replaced 
+coreclr, clrjit, CoreLib and ~40 BCL dlls without changing that string; the 
+hashing facts above still hold). The mod builds against 1.7.4990 with no 
+errors. 1.7.4984 -> 1.7.4985: identical IL. 1.7.4985 -> 1.7.4990 (Oct 26, 
+docs/rwdiff-1.7.4985-1.7.4990.md, Review): every lambda lookup and 
+transpiled method unchanged; a whole-assembly compare found only Waylith's 
+texture types moving from Waylith.Rendering to Waylith.Graphics.Textures 
+(TexturePixelData, BcEncodeTarget, TextureCompressionSettings, 
+ITextureCacheSource, Mipmapper to .Mips), GraphicData.uncompressed, the -mod= 
+change above and two UI details; the determinism and realtime scans list the 
+same call sites. Nothing in Multiplayer needed a change; the built-in 
+IsoRim did (Known gaps, IsoRim). install_local.sh now also keeps Waylith.dll 
+and UnityStubs.dll per version in ~/rw-builds/<version>/ (first: 1.7.4990), 
+since no older copies existed to diff this time. 
 RwDiff and DeterminismScan rerun for 1.7.4984 (Oct 20, 
 docs/rwdiff-1.7.4982-1.7.4984.md): every lambda lookup and transpiled 
 method unchanged, and a whole-assembly IL compare found only six changed 
@@ -187,7 +203,8 @@ renamed to .yml.disabled): they build the old setup and have no game DLLs.
 Source/TestsOnMono is out of the solution (Mono only).
 - Install into the game: ./scripts/install_local.sh (builds, then replaces 
 <Mods folder>/Multiplayer-1.7; warns about leftover Workshop Multiplayer and 
-Prepatcher; saves the game's Assembly-CSharp.dll to ~/rw-builds/<game version>/).
+Prepatcher; saves the game's Assembly-CSharp.dll, Waylith.dll and UnityStubs.dll to 
+~/rw-builds/<game version>/).
 - Release zip: ./scripts/build_release.sh -> Multiplayer-1.7-v<version>.zip in 
 the repo root, holding one Multiplayer-1.7 folder. Both scripts share 
 scripts/common.sh, which refuses to ship Harmony, game or .NET dlls.
@@ -217,7 +234,8 @@ IsoRim/Source/**/*.cs plus Source/IsoRim/MpBridge.cs into its own IsoRim.dll
 with the port's RimWorldDir and Lib.Harmony; upstream's csproj and its 
 tracked 1.7/Assemblies/IsoRim.dll are never built or shipped). Multiplayer 
 fixes inside the subtree are one-line guards marked "MP:" calling MpBridge 
-(port-owned, uses only 0MultiplayerAPI). After every pull, re-check each new 
+(port-owned, uses only 0MultiplayerAPI); fixes for game updates or port 
+robustness are marked "Port". After every pull, re-check each new 
 IsoRim hook that can run in a tick, command or load: no branch on the 3D 
 view or IsoRim settings, no game-state writes, no Rand outside 
 PushState/PopState. scripts/common.sh stage_isorim lays it out: 
@@ -233,16 +251,25 @@ IsoRim commit: "0.11.5.17 (<port commit>, IsoRim 3fff2ec)".
 - Two instances on this PC: ./scripts/run_two.sh (host, then Enter, then a 
 client that auto-joins 127.0.0.1:30502 with -connect=). Each instance has 
 its own XDG_CONFIG_HOME and -savedatafolder under ~/.rw-mp-test/<host|client>; 
-the log is <that>/config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Logs/Player.log. 
-They run outside Steam, so Steam features are off.
+the log is <that>/config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Logs/Player.log 
+and the Config folder <that>/Config. The mod list is a ModsConfig.xml the 
+script writes there on every start (Harmony, Core, DLCs, rwmt.multiplayer; 
+the game's Mods folder is listed before the Workshop, so this port wins 
+over the Workshop Multiplayer), not -mod= (Workshop mods refused since 
+4990). They run outside Steam, so Steam features are off. The same 
+ModsConfig works for headless Proton runs: write it into the prefix's 
+.../LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config and drop -mod= 
+(checked Oct 26: Harmony from the Workshop, Multiplayer from 
+Mods/Multiplayer-1.7).
 - Arbiter: the "Run arbiter" checkbox in the host window only exists in debug 
 builds (HostWindow, MpVersion.IsDebug); release builds host without it. On 
 1.7 HostUtil skips StartArbiter with a warning even when the setting is on.
-- Test launch: Steam launch options 
-"DOTNET_TieredCompilation=0 %command% -mod=brrainz.harmony,Multiplayer-1.7". 
-1.7 matches -mod entries by packageId, then by folder name; the folder name 
-picks this port even while the Workshop Multiplayer (same packageId) is 
-installed. The log then has "Running with command line mod list: ...".
+- Test launch: Steam launch options "DOTNET_TieredCompilation=0 %command%" 
+with the mod list set in game (Harmony, Multiplayer). The old 
+"-mod=brrainz.harmony,Multiplayer-1.7" stopped working with 1.7.4990: -mod= 
+now skips Workshop mods, so Harmony would be dropped. The user's Steam launch 
+doesn't pass -mod= (no "Running with command line mod list" line in the 
+Oct 26 log).
 ## Rules
 - Work on branch port-1.7. Commit after each task with a message saying what 
 changed and why. Push only to origin (my fork). Never push to rwmt or open 
@@ -319,7 +346,12 @@ and other players' cursors, drag boxes and pings sit on the surface the 3D
 view shows, with a click on a player in the chat window's list jumping to 
 their cursor (MpView, IsoRimView). Checked headless on Proton (tracker 
 transpilers present, binding complete, the facing memory kept and cleared as 
-designed, 0 errors); in-game check pending.
+designed, 0 errors); in-game check pending. Oct 26 afternoon: Steam moved 
+the game to 1.7.4990 a minute after that build, and the user saw walls no 
+longer fold down in 3D (only doors); fixed by building IsoRim against 4990 
+(Known gaps, IsoRim, 1.7.4990). Headless Proton check on 4990: every method 
+of IsoRim and the Multiplayer dlls JIT-compiles, 0 errors; the fold itself 
+needs the in-game check.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -705,6 +737,40 @@ read of both codebases before merging. What changed and why:
   maps; the 3D camera centres the surface point and leaves first person), and 
   the jump-to-ping key does the same in 3D. The marker materials (BlendDef at 
   queue 3160, OverlayDef at 3650) haven't been seen on screen yet.
+  - 1.7.4990 (Oct 26): Waylith moved TexturePixelData from Waylith.Rendering to 
+  Waylith.Graphics.Textures. The IsoRim.dll built against 4985 (and the 
+  Workshop IsoRim, byte-identical to upstream's) then fails to JIT 
+  LiveTexture.Next and SpritePixels.LevelOf. LiveTexture is how IsoRim updates 
+  its per-map GPU textures in place every frame: the cell texture the vertex 
+  shader cuts walls with (Cells.cs b channel, ShaderCut, IsoRim.vert.glsl 
+  CutAway), the glow map (_IsoSky, lamp light on 3D faces) and the roof clip. 
+  The first upload of each worked (it doesn't call Next), every later one threw 
+  past Next's own catch (a JIT-time TypeLoadException), so those textures froze 
+  on the first 3D frame: walls never folded near the pointer or colonists, 3D 
+  lighting stopped following day, night and lamps, while doors still dropped 
+  (Doors.Draw lowers them on the CPU from WallBoxes.CellCut). Log: one "[IsoRim] 
+  Handing the map's cell data to the shaders failed" (ErrorOnce). Fixes: the 
+  three references now name Waylith.Graphics.Textures (LiveTexture.cs:9, 
+  SpritePixels.cs:266/285); Upload calls Next (now NoInlining) inside a 
+  try/catch, so a later engine move falls back to plain Texture2D.Apply with 
+  one "Texture update in place turned off" warning instead of freezing (types 
+  used by Upload itself, GpuTextureAllocation in the ring field, would still 
+  fail the whole class); IsoRim's "Hooks missing" summary is a Log.Warning even 
+  without dev mode (ModLog.Warn is dev-only, so a dropped hook was invisible in 
+  a normal Player.log; the per-hook lines stay dev-only). Subtree edits marked 
+  "Port". Audited for 4990 (four agents plus adversarial verify): all 588 
+  IsoRim reflection lookups resolve, its 153 hooks install and every 
+  transpiler matches; the Waylith texture calls IsoRim makes keep their 
+  meaning (parameter order, row order, formats, lifetimes). Not covered by 
+  RwDiff: scripts/mp_targets.py reads only Source/Client and 
+  Source/MultiplayerLoader, so IsoRim's transpilers and name lookups are 
+  checked only by a whole-assembly compare after a game update. Every player 
+  needs 1.7.4990 (the join check compares the full version) and a build from 
+  after this fix, with the Workshop IsoRim off. Two engine-side races noted by 
+  the audit, not seen in game: a ring image swapped in while the render thread 
+  records the map pass can show one stale frame, and SpritePixels releasing 
+  reloaded CPU levels while the render thread uploads them (on-demand texture 
+  residency) could leave a texture short of mip levels.
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
   idle drafted pawns (walk one east and stop: the 3D player sees it face 

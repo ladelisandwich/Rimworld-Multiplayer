@@ -650,7 +650,8 @@ namespace IsoRim
             ModLog.Note("[IsoRim] Hooks applied (" + hooked.Count + "): " + string.Join("; ", hooked));
             if (missed.Count > 0)
             {
-                ModLog.Warn("[IsoRim] Hooks missing (" + missed.Count + "): " + string.Join("; ", missed));
+                // Port: logged without dev mode too, so a game update that drops a hook shows in any Player.log
+                Log.Warning("[IsoRim] Hooks missing (" + missed.Count + "): " + string.Join("; ", missed));
             }
         }
 
