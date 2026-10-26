@@ -1,0 +1,40 @@
+# IsoRim coverage buildings batch 6 (2026-10-16): fixed colours sampled from the vanilla sprites (lifted ~1.2x
+# like the other building colours to make up for the 3D shading).
+newmtl b6_wreck
+Kd 0.42 0.46 0.43
+map_Kd IsoRim/Swatches/Metal
+newmtl b6_wreck_dark
+Kd 0.27 0.29 0.28
+map_Kd IsoRim/Swatches/Metal
+newmtl b6_wreck_pale
+Kd 0.66 0.65 0.66
+map_Kd IsoRim/Swatches/Metal
+newmtl b6_wreck_joint
+Kd 0.50 0.47 0.45
+map_Kd IsoRim/Swatches/Metal
+newmtl b6_rust
+Kd 0.40 0.27 0.23
+map_Kd IsoRim/Swatches/Metal
+newmtl b6_hole
+Kd 0.11 0.11 0.11
+newmtl b6_strut
+Kd 0.38 0.26 0.14
+newmtl b6_mech_olive
+Kd 0.36 0.38 0.29
+map_Kd IsoRim/Swatches/Metal
+newmtl b6_core_off
+Kd 0.17 0.18 0.17
+newmtl b6_brain_ivory
+Kd 0.82 0.83 0.75
+map_Kd IsoRim/Swatches/Metal
+newmtl b6_brain_deep
+Kd 0.30 0.29 0.27
+newmtl b6_brain_cable
+Kd 0.56 0.57 0.56
+map_Kd IsoRim/Swatches/Metal
+newmtl glow_b6_brain
+Kd 0.62 0.12 0.09
+map_Kd IsoRim/Swatches/Glow
+newmtl b6_cable
+Kd 0.42 0.43 0.42
+map_Kd IsoRim/Swatches/Metal

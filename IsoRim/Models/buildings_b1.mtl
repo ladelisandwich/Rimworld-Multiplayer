@@ -1,0 +1,41 @@
+# IsoRim coverage buildings batch 1 (2026-10-15): fixed colours sampled from the vanilla sprites.
+newmtl b1_white
+Kd 0.82 0.82 0.82
+newmtl b1_light
+Kd 0.66 0.66 0.67
+newmtl b1_mid
+Kd 0.48 0.49 0.50
+newmtl b1_dark
+Kd 0.29 0.30 0.31
+newmtl b1_black
+Kd 0.16 0.16 0.17
+newmtl b1_dome
+Kd 0.60 0.62 0.65
+newmtl b1_red
+Kd 0.42 0.17 0.17
+newmtl b1_teal
+Kd 0.27 0.37 0.35
+newmtl b1_olive
+Kd 0.42 0.44 0.32
+newmtl b1_tan
+Kd 0.60 0.54 0.48
+newmtl b1_tan_dark
+Kd 0.42 0.37 0.33
+newmtl b1_trapred
+Kd 0.78 0.28 0.26
+newmtl b1_khaki
+Kd 0.62 0.60 0.47
+newmtl b1_glass
+Kd 0.80 0.80 0.82
+newmtl b1_shard
+Kd 0.23 0.22 0.22
+newmtl b1_shardred
+Kd 0.74 0.20 0.20
+newmtl b1_bioferrite
+Kd 0.33 0.25 0.23
+newmtl b1_copper
+Kd 0.46 0.32 0.25
+newmtl b1_pipe
+Kd 0.27 0.20 0.18
+newmtl glow_b1_core
+Kd 0.05 0.75 1.00

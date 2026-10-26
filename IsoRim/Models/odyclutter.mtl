@@ -1,0 +1,102 @@
+# IsoRim Odyssey ancient interior fittings (O2, 2026-10-17): fixed colours sampled from the vanilla sprites
+# (Odyssey Things/Building/Ancient, Core Things/Building/Ruins), lifted ~1.1x for the 3D shading. Stuffless defs.
+newmtl oc_olive
+Kd 0.36 0.43 0.36
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_olive_dark
+Kd 0.24 0.28 0.24
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_locker
+Kd 0.37 0.40 0.36
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_locker_dark
+Kd 0.26 0.29 0.26
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_grey_light
+Kd 0.66 0.66 0.64
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_grey
+Kd 0.56 0.56 0.55
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_grey_mid
+Kd 0.43 0.43 0.43
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_grey_dark
+Kd 0.29 0.29 0.29
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_dark
+Kd 0.14 0.14 0.15
+newmtl oc_screen
+Kd 0.33 0.31 0.37
+newmtl oc_concrete
+Kd 0.64 0.63 0.60
+map_Kd IsoRim/Swatches/Stone
+newmtl oc_concrete_dark
+Kd 0.45 0.44 0.42
+map_Kd IsoRim/Swatches/Stone
+newmtl oc_rubble
+Kd 0.42 0.33 0.27
+map_Kd IsoRim/Swatches/Stone
+newmtl oc_rust
+Kd 0.46 0.30 0.28
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_drum
+Kd 0.50 0.29 0.27
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_drum_dark
+Kd 0.29 0.16 0.15
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_red
+Kd 0.52 0.27 0.25
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_red_dark
+Kd 0.38 0.20 0.19
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_warn
+Kd 0.86 0.30 0.27
+newmtl oc_cage
+Kd 0.52 0.52 0.45
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_card
+Kd 0.65 0.57 0.49
+newmtl oc_card_dark
+Kd 0.50 0.43 0.36
+newmtl oc_wood
+Kd 0.37 0.30 0.27
+map_Kd IsoRim/Swatches/Wood
+newmtl oc_wood_dark
+Kd 0.21 0.17 0.16
+map_Kd IsoRim/Swatches/Wood
+newmtl oc_white
+Kd 0.87 0.87 0.86
+newmtl oc_white_shade
+Kd 0.68 0.68 0.67
+newmtl oc_cream
+Kd 0.82 0.81 0.74
+map_Kd IsoRim/Swatches/Fabric
+newmtl oc_cream_shade
+Kd 0.64 0.63 0.57
+map_Kd IsoRim/Swatches/Fabric
+newmtl oc_blanket
+Kd 0.55 0.55 0.54
+map_Kd IsoRim/Swatches/Fabric
+newmtl oc_pillow
+Kd 0.76 0.75 0.69
+map_Kd IsoRim/Swatches/Fabric
+newmtl oc_soil
+Kd 0.55 0.42 0.33
+map_Kd IsoRim/Swatches/Soil
+newmtl oc_brass
+Kd 0.76 0.68 0.42
+map_Kd IsoRim/Swatches/Metal
+newmtl oc_star
+Kd 0.86 0.86 0.84
+newmtl glow_oc_red
+Kd 1.00 0.42 0.38
+map_Kd IsoRim/Swatches/Glow
+newmtl glow_oc_blue
+Kd 0.84 0.86 1.00
+map_Kd IsoRim/Swatches/Glow
+newmtl glow_oc_green
+Kd 0.92 0.94 0.46
+map_Kd IsoRim/Swatches/Glow

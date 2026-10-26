@@ -1,0 +1,56 @@
+# IsoRim space-edge kit. sedge_* = fixed platform colours (sampled from the vanilla floor / edge art);
+# stuff_sedge_* = greyscale, multiplied by the terrain's edge colour (overrideColor ?? TerrainDef.color) like the vanilla edge art.
+newmtl sedge_mech_lip
+Kd 0.585 0.587 0.530
+
+newmtl sedge_mech_face
+Kd 0.665 0.665 0.605
+
+newmtl sedge_mech_block
+Kd 0.590 0.588 0.530
+
+newmtl sedge_mech_shade
+Kd 0.500 0.498 0.450
+
+newmtl sedge_mech_low
+Kd 0.350 0.350 0.318
+
+newmtl sedge_mech_recess
+Kd 0.300 0.300 0.276
+
+newmtl sedge_mech_dark
+Kd 0.165 0.165 0.152
+
+newmtl sedge_mech_pipe
+Kd 0.500 0.500 0.480
+
+newmtl sedge_orb_lip
+Kd 0.430 0.442 0.472
+
+newmtl sedge_orb_face
+Kd 0.420 0.432 0.466
+
+newmtl sedge_orb_trace
+Kd 0.520 0.530 0.565
+
+newmtl sedge_orb_shade
+Kd 0.330 0.338 0.362
+
+newmtl sedge_orb_low
+Kd 0.250 0.255 0.272
+
+newmtl sedge_orb_recess
+Kd 0.165 0.168 0.182
+
+newmtl sedge_orb_dark
+Kd 0.120 0.122 0.132
+
+newmtl stuff_sedge_rim
+Kd 1.000 1.000 1.000
+
+newmtl stuff_sedge_rock
+Kd 0.850 0.850 0.850
+
+newmtl stuff_sedge_deep
+Kd 0.580 0.580 0.580
+

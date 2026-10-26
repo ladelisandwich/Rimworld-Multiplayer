@@ -1,0 +1,65 @@
+# IsoRim surface junk clusters (2026-10-17): fixed colours sampled from the vanilla sprites (Core
+# Things/Building/Ruins), lifted ~1.1x for the 3D shading. Stuffless defs: no stuff* materials.
+newmtl junk_white
+Kd 0.74 0.74 0.72
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_white_shade
+Kd 0.55 0.55 0.54
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_sink
+Kd 0.86 0.86 0.84
+newmtl junk_grey
+Kd 0.56 0.56 0.54
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_grey_dark
+Kd 0.36 0.36 0.36
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_dark
+Kd 0.13 0.13 0.13
+newmtl junk_glass
+Kd 0.34 0.36 0.38
+newmtl junk_rust
+Kd 0.44 0.31 0.26
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_olive
+Kd 0.31 0.34 0.29
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_olive_dark
+Kd 0.22 0.23 0.20
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_engine_light
+Kd 0.62 0.62 0.60
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_nozzle
+Kd 0.55 0.40 0.36
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_pod
+Kd 0.68 0.73 0.88
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_pod_shade
+Kd 0.42 0.44 0.58
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_post
+Kd 0.46 0.28 0.27
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_post_light
+Kd 0.62 0.40 0.39
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_container
+Kd 0.22 0.22 0.22
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_container_rib
+Kd 0.32 0.32 0.32
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_container_bar
+Kd 0.42 0.27 0.12
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_wheel
+Kd 0.68 0.68 0.67
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_wheel_dark
+Kd 0.42 0.42 0.42
+map_Kd IsoRim/Swatches/Metal
+newmtl junk_cart
+Kd 0.66 0.64 0.64
+map_Kd IsoRim/Swatches/Metal

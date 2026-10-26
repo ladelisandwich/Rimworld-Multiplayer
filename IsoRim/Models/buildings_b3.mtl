@@ -1,0 +1,29 @@
+# IsoRim coverage buildings batch 3 (2026-10-15): fixed colours sampled from the vanilla sprites.
+newmtl b3_log
+Kd 0.46 0.32 0.13
+map_Kd IsoRim/Swatches/Wood
+newmtl b3_log_end
+Kd 0.58 0.44 0.22
+map_Kd IsoRim/Swatches/Wood
+newmtl b3_darklog
+Kd 0.33 0.22 0.17
+map_Kd IsoRim/Swatches/Wood
+newmtl b3_darklog_end
+Kd 0.24 0.16 0.17
+map_Kd IsoRim/Swatches/Wood
+newmtl b3_dtorch
+Kd 0.24 0.16 0.15
+map_Kd IsoRim/Swatches/Wood
+newmtl b3_dtorch_head
+Kd 0.55 0.40 0.34
+map_Kd IsoRim/Swatches/Wood
+newmtl b3_dtorch_band
+Kd 0.33 0.33 0.33
+newmtl flame_dark
+Kd 0.30 0.55 1.00
+newmtl flame_dark_core
+Kd 0.62 0.52 1.00
+newmtl b3_snow
+Kd 0.86 0.87 0.89
+newmtl b3_coal
+Kd 0.10 0.10 0.10

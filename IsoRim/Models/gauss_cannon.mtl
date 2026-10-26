@@ -1,0 +1,15 @@
+newmtl gauss_light
+Kd 0.627 0.643 0.667
+
+newmtl gauss_mid
+Kd 0.357 0.369 0.388
+
+newmtl gauss_main
+Kd 0.475 0.490 0.518
+
+newmtl gauss_dark
+Kd 0.275 0.286 0.310
+
+newmtl gauss_black
+Kd 0.161 0.165 0.173
+

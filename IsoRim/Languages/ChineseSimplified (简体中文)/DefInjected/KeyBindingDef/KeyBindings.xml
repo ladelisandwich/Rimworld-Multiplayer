@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <R3D_ToggleView.label>3D 视图开关</R3D_ToggleView.label>
+  <R3D_Isometric.label>等距视角开关</R3D_Isometric.label>
+  <R3D_TurnLeft.label>视角左转</R3D_TurnLeft.label>
+  <R3D_TurnRight.label>视角右转</R3D_TurnRight.label>
+  <R3D_TiltUp.label>镜头抬高（更俯视）</R3D_TiltUp.label>
+  <R3D_TiltDown.label>镜头放低</R3D_TiltDown.label>
+  <R3D_ToggleRoofs.label>显示屋顶开关</R3D_ToggleRoofs.label>
+  <R3D_ResetCamera.label>重置镜头（自由视角）</R3D_ResetCamera.label>
+  <R3D_LookModifier.label>自由视角：按住键</R3D_LookModifier.label>
+  <R3D_FirstPerson.label>以所选角色第一人称开关</R3D_FirstPerson.label>
+</LanguageData>

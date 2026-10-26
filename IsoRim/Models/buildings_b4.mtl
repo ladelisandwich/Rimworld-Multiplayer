@@ -1,0 +1,29 @@
+# IsoRim coverage buildings batch 4 (2026-10-15): fixed colours sampled from the vanilla sprites (lifted ~1.2x
+# like the other building colours to make up for the 3D shading).
+newmtl b4_thr_body
+Kd 0.78 0.78 0.78
+map_Kd IsoRim/Swatches/Metal
+newmtl b4_thr_panel
+Kd 0.62 0.62 0.63
+map_Kd IsoRim/Swatches/Metal
+newmtl b4_thr_dark
+Kd 0.24 0.25 0.26
+newmtl b4_thr_gold
+Kd 0.58 0.48 0.31
+map_Kd IsoRim/Swatches/Metal
+newmtl b4_tank
+Kd 0.60 0.58 0.56
+map_Kd IsoRim/Swatches/Metal
+newmtl b4_tank_dark
+Kd 0.36 0.37 0.34
+map_Kd IsoRim/Swatches/Metal
+newmtl b4_cb_tan
+Kd 0.66 0.60 0.55
+map_Kd IsoRim/Swatches/Metal
+newmtl b4_cb_dark
+Kd 0.28 0.26 0.24
+newmtl b4_inf_body
+Kd 0.60 0.53 0.46
+map_Kd IsoRim/Swatches/Metal
+newmtl b4_inf_band
+Kd 0.40 0.34 0.29

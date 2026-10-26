@@ -1,0 +1,110 @@
+# IsoRim plant batch "plants_ody" (2026-10-15): fixed colours from the vanilla sprites (lifted like the existing
+# grass / bush colours, which sit about 1.3x over their sprites to make up for the 3D shading).
+newmtl ody_ygrass_a
+Kd 0.680 0.610 0.420
+newmtl ody_ygrass_b
+Kd 0.600 0.530 0.370
+newmtl ody_ygrass_c
+Kd 0.750 0.680 0.470
+newmtl ody_night_a
+Kd 0.380 0.430 0.450
+newmtl ody_night_b
+Kd 0.310 0.360 0.380
+newmtl ody_night_c
+Kd 0.460 0.500 0.520
+newmtl ody_reed_stem
+Kd 0.470 0.540 0.330
+newmtl ody_reed_plume
+Kd 0.640 0.570 0.500
+newmtl ody_bulrush_leaf
+Kd 0.460 0.590 0.320
+newmtl ody_bulrush_leaf_dk
+Kd 0.330 0.400 0.240
+newmtl ody_bulrush_head
+Kd 0.560 0.340 0.250
+newmtl ody_lotus_petal
+Kd 0.930 0.910 0.990
+newmtl ody_lotus_inner
+Kd 0.930 0.720 0.900
+newmtl ody_lotus_core
+Kd 0.950 0.480 0.640
+newmtl ody_lotus_pad
+Kd 0.500 0.590 0.400
+newmtl ody_lily
+Kd 0.340 0.440 0.270
+newmtl ody_lily_lt
+Kd 0.420 0.550 0.340
+newmtl ody_thorn
+Kd 0.380 0.300 0.280
+newmtl ody_thorn_dk
+Kd 0.300 0.240 0.220
+newmtl ody_fireweed_pink
+Kd 0.980 0.660 0.970
+newmtl ody_fireweed_dk
+Kd 0.850 0.500 0.840
+newmtl ody_fireweed_leaf
+Kd 0.320 0.600 0.420
+newmtl ody_fireweed_leaf_dk
+Kd 0.270 0.460 0.330
+newmtl ody_magma_body
+Kd 0.460 0.430 0.330
+newmtl ody_magma_dk
+Kd 0.360 0.340 0.270
+newmtl ody_magma_tip
+Kd 0.640 0.450 0.280
+newmtl ody_raff_petal
+Kd 0.540 0.400 0.620
+newmtl ody_raff_rim
+Kd 0.660 0.520 0.720
+newmtl ody_raff_hole
+Kd 0.240 0.170 0.270
+newmtl ody_raff_knob
+Kd 0.560 0.330 0.230
+newmtl ody_bush_bare
+Kd 0.430 0.350 0.240
+newmtl ody_bush_bare_dk
+Kd 0.310 0.250 0.180
+newmtl ody_berry_bare
+Kd 0.370 0.300 0.210
+newmtl ody_berry_bare_dk
+Kd 0.270 0.220 0.160
+newmtl ody_bramble_bare
+Kd 0.400 0.320 0.200
+newmtl ody_bramble_bare_dk
+Kd 0.290 0.230 0.150
+newmtl ody_bramble_tip
+Kd 0.500 0.430 0.310
+newmtl ody_tinct_cyan
+Kd 0.600 0.890 0.960
+newmtl ody_tinct_salmon
+Kd 0.870 0.590 0.490
+newmtl ody_tinct_yellow
+Kd 0.910 0.830 0.290
+newmtl ody_tinct_leaf
+Kd 0.250 0.600 0.210
+newmtl ody_tinct_leaf_dk
+Kd 0.220 0.470 0.170
+newmtl ody_fiber_cob
+Kd 0.470 0.360 0.180
+newmtl ody_fiber_cob_dk
+Kd 0.320 0.290 0.160
+newmtl ody_fiber_leaf
+Kd 0.400 0.580 0.250
+newmtl ody_fiber_leaf_dk
+Kd 0.300 0.430 0.160
+newmtl ody_snag_bark
+Kd 0.340 0.310 0.280
+newmtl ody_snag_dk
+Kd 0.260 0.240 0.210
+newmtl ody_archean_bark
+Kd 0.520 0.440 0.250
+newmtl ody_archean_bark_dk
+Kd 0.400 0.330 0.180
+newmtl ody_archean_root
+Kd 0.720 0.700 0.440
+newmtl leaf_archean
+Kd 0.820 0.860 0.520
+newmtl leaf_archean_lt
+Kd 0.900 0.930 0.600
+newmtl twig_archean
+Kd 0.470 0.400 0.220

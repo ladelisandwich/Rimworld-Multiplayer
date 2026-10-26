@@ -1,0 +1,166 @@
+# ancient_machinery.mtl - fixed colours (no stuff_); glow_ = emissive in IsoRim
+newmtl anc_dark
+Kd 0.180 0.180 0.180
+
+newmtl anc_olive
+Kd 0.330 0.370 0.300
+
+newmtl anc_olive_dk
+Kd 0.230 0.260 0.210
+
+newmtl anc_rust
+Kd 0.440 0.310 0.260
+
+newmtl anc_steel
+Kd 0.460 0.470 0.450
+
+newmtl anc_steel_dk
+Kd 0.300 0.310 0.300
+
+newmtl beacon_body
+Kd 0.400 0.420 0.400
+
+newmtl beacon_lt
+Kd 0.600 0.620 0.600
+
+newmtl cont_bar
+Kd 0.420 0.270 0.120
+
+newmtl cont_grey
+Kd 0.240 0.260 0.250
+
+newmtl cont_grey_rib
+Kd 0.330 0.350 0.340
+
+newmtl cont_inside
+Kd 0.120 0.120 0.120
+
+newmtl cont_red
+Kd 0.260 0.210 0.200
+
+newmtl cont_red_rib
+Kd 0.360 0.290 0.270
+
+newmtl crane_steel
+Kd 0.580 0.520 0.410
+
+newmtl crane_steel_dk
+Kd 0.400 0.360 0.290
+
+newmtl excav_body
+Kd 0.460 0.400 0.350
+
+newmtl excav_cab
+Kd 0.520 0.530 0.520
+
+newmtl excav_track
+Kd 0.200 0.200 0.200
+
+newmtl excav_yellow
+Kd 0.620 0.540 0.360
+
+newmtl fork_body
+Kd 0.560 0.490 0.430
+
+newmtl fork_shade
+Kd 0.420 0.360 0.320
+
+newmtl genx_body
+Kd 0.400 0.420 0.460
+
+newmtl genx_light
+Kd 0.560 0.580 0.630
+
+newmtl glow_gravengine
+Kd 0.300 0.850 1.000
+
+newmtl glow_gravreactor
+Kd 1.000 0.620 0.350
+
+newmtl glow_uplink
+Kd 0.940 0.520 0.200
+
+newmtl grav_base
+Kd 0.360 0.400 0.350
+
+newmtl grav_dome
+Kd 0.620 0.590 0.580
+
+newmtl grav_panel
+Kd 0.500 0.500 0.480
+
+newmtl grav_ring
+Kd 0.660 0.660 0.650
+
+newmtl grav_vent
+Kd 0.220 0.230 0.220
+
+newmtl open_floor
+Kd 0.300 0.310 0.290
+
+newmtl open_rock
+Kd 0.420 0.400 0.350
+
+newmtl open_rock_dk
+Kd 0.300 0.280 0.250
+
+newmtl open_scrap
+Kd 0.500 0.360 0.270
+
+newmtl pod_body
+Kd 0.470 0.470 0.470
+
+newmtl pod_lt
+Kd 0.600 0.600 0.600
+
+newmtl shippart_dark
+Kd 0.240 0.250 0.210
+
+newmtl shippart_hull
+Kd 0.420 0.440 0.360
+
+newmtl shippart_hull_lt
+Kd 0.560 0.580 0.450
+
+newmtl shippart_inner
+Kd 0.140 0.150 0.120
+
+newmtl shippart_mark
+Kd 0.800 0.720 0.260
+
+newmtl shippart_rod
+Kd 0.620 0.500 0.300
+
+newmtl terra_blue
+Kd 0.300 0.500 0.750
+
+newmtl terra_body
+Kd 0.470 0.460 0.440
+
+newmtl terra_dark
+Kd 0.280 0.280 0.270
+
+newmtl terra_snow
+Kd 0.900 0.920 0.940
+
+newmtl tunnel_armour
+Kd 0.620 0.660 0.550
+
+newmtl tunnel_hole
+Kd 0.140 0.140 0.130
+
+newmtl tunnel_shade
+Kd 0.480 0.510 0.430
+
+newmtl turb_body
+Kd 0.420 0.430 0.400
+
+newmtl turb_lt
+Kd 0.580 0.580 0.560
+
+newmtl uplink_body
+Kd 0.550 0.540 0.530
+
+newmtl uplink_dish
+Kd 0.720 0.720 0.710
+

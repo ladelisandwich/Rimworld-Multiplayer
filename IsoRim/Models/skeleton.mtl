@@ -1,0 +1,6 @@
+# IsoRim skeleton (dried-out humanlike corpses), fixed colours after vanilla's Dessicated sprites.
+newmtl bone
+Kd 0.800 0.785 0.745
+
+newmtl bone_shade
+Kd 0.520 0.505 0.480

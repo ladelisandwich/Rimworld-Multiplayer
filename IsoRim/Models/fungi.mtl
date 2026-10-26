@@ -1,0 +1,49 @@
+# IsoRim plant batch "fungi" (2026-10-15): fixed colours sampled from the vanilla sprites.
+newmtl fungi_timber_cap
+Kd 0.680 0.540 0.360
+newmtl fungi_timber_gill
+Kd 0.840 0.780 0.660
+newmtl fungi_timber_stem
+Kd 0.340 0.250 0.130
+newmtl fungi_timber_ring
+Kd 0.720 0.570 0.360
+newmtl fungi_timber_spot
+Kd 0.840 0.740 0.570
+newmtl fungi_agari_cap
+Kd 0.560 0.490 0.470
+newmtl fungi_agari_under
+Kd 0.400 0.350 0.340
+newmtl fungi_agari_stem
+Kd 0.760 0.760 0.780
+newmtl glow_fungi_agari_dot
+Kd 0.880 0.800 0.980
+newmtl glow_fungi_agari_drop
+Kd 0.780 0.480 1.000
+newmtl fungi_bryo
+Kd 0.400 0.460 0.500
+newmtl fungi_bryo_dk
+Kd 0.310 0.370 0.420
+newmtl fungi_nutri_cap
+Kd 0.900 0.680 0.500
+newmtl fungi_nutri_spot
+Kd 0.800 0.560 0.400
+newmtl fungi_nutri_stem
+Kd 0.780 0.700 0.550
+newmtl fungi_boom_body
+Kd 0.660 0.560 0.380
+newmtl fungi_boom_cap
+Kd 0.660 0.320 0.300
+newmtl glow_fungi_boom_sac
+Kd 0.980 0.880 0.480
+newmtl fungi_psilo_cap
+Kd 0.640 0.470 0.820
+newmtl fungi_psilo_dk
+Kd 0.460 0.280 0.660
+newmtl fungi_polux_bark
+Kd 0.330 0.260 0.220
+newmtl fungi_polux_vine
+Kd 0.560 0.430 0.600
+newmtl leaf_polux
+Kd 0.380 0.420 0.320
+newmtl leaf_polux_dk
+Kd 0.300 0.330 0.260

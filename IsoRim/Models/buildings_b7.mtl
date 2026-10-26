@@ -1,0 +1,85 @@
+# IsoRim coverage buildings batch 7 (2026-10-16): Anomaly map objects. Fixed colours sampled from the vanilla
+# sprites (lifted ~1.2x like the other building colours). Flesh uses anomaly_entities.mtl (entity_*).
+newmtl b7_pit_dirt
+Kd 0.62 0.50 0.42
+map_Kd IsoRim/Swatches/Soil
+newmtl b7_pit_wall
+Kd 0.33 0.25 0.21
+map_Kd IsoRim/Swatches/Rock
+newmtl b7_pit_deep
+Kd 0.05 0.04 0.04
+newmtl b7_pit_wall_deep
+Kd 0.17 0.13 0.11
+map_Kd IsoRim/Swatches/Rock
+newmtl b7_pit_apron
+Kd 0.44 0.36 0.29
+newmtl b7_pit_shaft
+Kd 0.20 0.15 0.13
+newmtl b7_stone
+Kd 0.52 0.52 0.54
+map_Kd IsoRim/Swatches/Stone
+newmtl b7_mono
+Kd 0.42 0.42 0.44
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_mono_dark
+Kd 0.24 0.24 0.26
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_mono_deep
+Kd 0.14 0.14 0.15
+newmtl b7_mono_cable
+Kd 0.62 0.62 0.64
+newmtl glow_b7_void
+Kd 0.92 0.22 0.20
+map_Kd IsoRim/Swatches/Glow
+newmtl glow_b7_void_dim
+Kd 0.55 0.12 0.11
+map_Kd IsoRim/Swatches/Glow
+newmtl b7_obelisk
+Kd 0.31 0.31 0.33
+map_Kd IsoRim/Swatches/Stone
+newmtl b7_obelisk_dark
+Kd 0.21 0.21 0.23
+map_Kd IsoRim/Swatches/Stone
+newmtl b7_obelisk_edge
+Kd 0.36 0.36 0.38
+map_Kd IsoRim/Swatches/Stone
+newmtl b7_rune
+Kd 0.30 0.21 0.21
+newmtl b7_flesh_mauve
+Kd 0.66 0.48 0.58
+newmtl b7_nerve
+Kd 0.27 0.55 0.24
+newmtl glow_b7_bulb
+Kd 1.00 0.93 0.66
+map_Kd IsoRim/Swatches/Glow
+newmtl b7_graybox
+Kd 0.47 0.46 0.46
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_graybox_dark
+Kd 0.26 0.26 0.26
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_voidmetal
+Kd 0.15 0.15 0.16
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_voidmetal_edge
+Kd 0.33 0.33 0.35
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_void_shell
+Kd 0.44 0.43 0.44
+map_Kd IsoRim/Swatches/Stone
+newmtl b7_horn
+Kd 0.34 0.26 0.29
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_horn_band
+Kd 0.60 0.54 0.57
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_horn_tip
+Kd 0.88 0.78 0.80
+newmtl b7_turret
+Kd 0.64 0.64 0.66
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_turret_dark
+Kd 0.30 0.30 0.32
+map_Kd IsoRim/Swatches/Metal
+newmtl b7_turret_stock
+Kd 0.55 0.42 0.27

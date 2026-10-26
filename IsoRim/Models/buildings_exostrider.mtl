@@ -1,0 +1,33 @@
+# IsoRim ancient exostrider remains (2026-10-16): fixed colours sampled from the vanilla sprites (Biotech
+# Things/Building/Ruins/AncientExostrider), lifted ~1.1x for the 3D shading.
+newmtl exo_armour
+Kd 0.70 0.72 0.63
+map_Kd IsoRim/Swatches/Metal
+newmtl exo_armour_shade
+Kd 0.55 0.56 0.49
+map_Kd IsoRim/Swatches/Metal
+newmtl exo_joint
+Kd 0.44 0.44 0.45
+map_Kd IsoRim/Swatches/Metal
+newmtl exo_joint_cap
+Kd 0.58 0.58 0.59
+map_Kd IsoRim/Swatches/Metal
+newmtl exo_dark
+Kd 0.22 0.22 0.22
+map_Kd IsoRim/Swatches/Metal
+newmtl exo_hole
+Kd 0.10 0.10 0.10
+newmtl exo_lens
+Kd 0.34 0.34 0.35
+newmtl exo_cannon
+Kd 0.66 0.58 0.50
+map_Kd IsoRim/Swatches/Metal
+newmtl exo_cannon_dark
+Kd 0.48 0.42 0.40
+map_Kd IsoRim/Swatches/Metal
+newmtl exo_barrel
+Kd 0.56 0.57 0.60
+map_Kd IsoRim/Swatches/Metal
+newmtl glow_exo_red
+Kd 0.92 0.16 0.12
+map_Kd IsoRim/Swatches/Glow
