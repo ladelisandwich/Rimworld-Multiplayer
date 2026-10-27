@@ -95,7 +95,12 @@ namespace Multiplayer.Client
 
         public Queue<ScheduledCommand> cmds = new();
 
-        public int CurrentPlayerCount { get; private set; }
+        // Players viewing this map, changed only by PlayerCount commands. Saved since Oct 27: every join point
+        // reloads every client from a save, and an unsaved count went back to 0 on each of them (so the map ran
+        // at rate 15 for everyone) while a joiner loaded 0 next to others that kept theirs (different rates on
+        // different clients, a desync source).
+        private int playerCount;
+        public int CurrentPlayerCount => playerCount;
         public int VTR => CurrentPlayerCount > 0 ? VTRSync.MinimumVtr : VTRSync.MaximumVtr;
 
         public AsyncTimeComp(Map map, int gameStartAbsTick = 0)
@@ -212,12 +217,17 @@ namespace Multiplayer.Client
             Scribe_Values.Look(ref gameStartAbsTickMap, "gameStartAbsTickMap");
 
             Scribe_Custom.LookULong(ref randState, "randState", 1);
+
+            // Old saves have no node and load 0
+            Scribe_Values.Look(ref playerCount, "playerCount");
         }
 
-        public int IncreasePlayerCount() => CurrentPlayerCount += 1;
+        public int IncreasePlayerCount() => ++playerCount;
         // This should never go below 0, this is just defensive programming. Hopefully not needed anymore, but
         // nevertheless still left.
-        public int DecreasePlayerCount() => CurrentPlayerCount = Math.Max(0, CurrentPlayerCount - 1);
+        public int DecreasePlayerCount() => playerCount = Math.Max(0, playerCount - 1);
+        // Hosting starts every count at 0 (HostUtil.PrepareGame)
+        public void ResetPlayerCount() => playerCount = 0;
 
         public void FinalizeInit()
         {

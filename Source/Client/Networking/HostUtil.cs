@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Multiplayer.Client.AsyncTime;
 using Multiplayer.Client.Comp;
 using Multiplayer.Client.Networking;
+using Multiplayer.Client.Patches;
 using Multiplayer.Client.Util;
 using Multiplayer.Common;
 using RimWorld;
@@ -79,6 +80,15 @@ namespace Multiplayer.Client
         {
             foreach (var tickable in TickPatch.AllTickables)
                 tickable.Cmds.Clear();
+
+            // A new session starts with nobody counted on any map: the player counts are saved (Oct 27), so a
+            // replay or an MP save being hosted brings the counts of its old session along. Runs before
+            // CreateGameData, so the zeros go into the host's reload and the snapshot joiners load. The host is
+            // then counted by its own first report (VTRSync.UpdateViewedMap), which starts from no map.
+            Multiplayer.AsyncWorldTime.ResetPlayerCount();
+            foreach (var map in Find.Maps)
+                map.AsyncTime().ResetPlayerCount();
+            VTRSync.Reset();
 
             Multiplayer.game.ChangeRealPlayerFaction(Faction.OfPlayer);
             Multiplayer.session.ReapplyPrefs();

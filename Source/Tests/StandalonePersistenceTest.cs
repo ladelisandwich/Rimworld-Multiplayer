@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using Multiplayer.Common;
 
 namespace Tests;
@@ -60,7 +61,8 @@ public class StandalonePersistenceTest
         Assert.That(reloadedServer.worldData.savedGame, Is.EqualTo(new byte[] { 1, 2, 3 }));
         Assert.That(reloadedServer.worldData.sessionData, Is.EqualTo(new byte[] { 4, 5, 6 }));
         Assert.That(reloadedServer.worldData.mapData[7], Is.EqualTo(new byte[] { 7, 8, 9 }));
-        Assert.That(reloadedServer.worldData.mapCmds[ScheduledCommand.Global], Has.Count.EqualTo(1));
+        // The persisted world command, then the player count reset LoadInto adds (LoadInto_EndsWorldCommandsWithPlayerCountReset)
+        Assert.That(reloadedServer.worldData.mapCmds[ScheduledCommand.Global], Has.Count.EqualTo(2));
         Assert.That(reloadedServer.worldData.mapCmds[7], Has.Count.EqualTo(1));
 
         var reloadedWorldCmd = ScheduledCommand.Deserialize(new ByteReader(reloadedServer.worldData.mapCmds[ScheduledCommand.Global][0]));
@@ -100,5 +102,94 @@ public class StandalonePersistenceTest
 
         Assert.That(server.gameTimer, Is.EqualTo(999));
         Assert.That(server.startingTimer, Is.EqualTo(999));
+    }
+
+    // The loaded game carries the player counts of the session that saved it, which this server's fresh player
+    // records can never take back down, so LoadInto zeroes them with a command after the loaded ones (Oct 27)
+    [Test]
+    public void LoadInto_EndsWorldCommandsWithPlayerCountReset()
+    {
+        var server = MultiplayerServer.instance = new MultiplayerServer(new ServerSettings())
+        {
+            IsStandaloneServer = true,
+            persistence = new StandalonePersistence(tempDir),
+        };
+
+        server.worldData.savedGame = [1, 2, 3];
+        server.worldData.sessionData = [];
+        server.worldData.mapData[3] = [7, 8, 9];
+
+        // A report of the old session after its last join point
+        var oldReport = ScheduledCommand.Serialize(new ScheduledCommand(CommandType.PlayerCount, 1200, ScheduledCommand.NoFaction,
+            ScheduledCommand.Global, 5, ByteWriter.GetBytes(-1, 3)));
+        server.worldData.mapCmds[ScheduledCommand.Global] = [oldReport];
+        server.persistence.WriteJoinPoint(server.worldData, 1234);
+
+        var reloadedServer = MultiplayerServer.instance = new MultiplayerServer(new ServerSettings())
+        {
+            IsStandaloneServer = true,
+            persistence = new StandalonePersistence(tempDir),
+        };
+
+        reloadedServer.persistence.LoadInto(reloadedServer);
+
+        var worldCmds = reloadedServer.worldData.mapCmds[ScheduledCommand.Global];
+        Assert.That(worldCmds, Has.Count.EqualTo(2));
+        Assert.That(worldCmds[0], Is.EqualTo(oldReport));
+        AssertPlayerCountReset(worldCmds[1], 1234);
+        Assert.That(reloadedServer.worldData.mapCmds[3], Is.Empty);
+    }
+
+    [Test]
+    public void LoadInto_AfterSeedingFromSaveZip_EndsWorldCommandsWithPlayerCountReset()
+    {
+        var zipPath = Path.Combine(tempDir, "save.zip");
+        using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+        {
+            WriteEntry(zip, "world/000_save", [1, 2, 3]);
+            WriteEntry(zip, "world/000_cmds", ScheduledCommand.SerializeCmds([
+                new ScheduledCommand(CommandType.PlayerCount, 400, ScheduledCommand.NoFaction, ScheduledCommand.Global, 0,
+                    ByteWriter.GetBytes(-1, 0))
+            ]));
+            WriteEntry(zip, "maps/000_0_save", [4, 5, 6]);
+            WriteEntry(zip, "maps/000_0_cmds", ScheduledCommand.SerializeCmds([]));
+            WriteEntry(zip, "info", ReplayInfo.Write(new ReplayInfo { sections = [new(100, 500)] }));
+        }
+
+        var persistence = new StandalonePersistence(tempDir);
+        persistence.SeedFromSaveZip(zipPath);
+
+        var server = MultiplayerServer.instance = new MultiplayerServer(new ServerSettings())
+        {
+            IsStandaloneServer = true,
+            persistence = persistence,
+        };
+
+        persistence.LoadInto(server);
+
+        var worldCmds = server.worldData.mapCmds[ScheduledCommand.Global];
+        Assert.That(worldCmds, Has.Count.EqualTo(2));
+        Assert.That(ScheduledCommand.Deserialize(new ByteReader(worldCmds[0])).ticks, Is.EqualTo(400));
+        AssertPlayerCountReset(worldCmds[1], 500);
+    }
+
+    private static void AssertPlayerCountReset(byte[] raw, int tick)
+    {
+        var cmd = ScheduledCommand.Deserialize(new ByteReader(raw));
+        Assert.That(cmd.type, Is.EqualTo(CommandType.PlayerCount));
+        Assert.That(cmd.ticks, Is.EqualTo(tick));
+        Assert.That(cmd.mapId, Is.EqualTo(ScheduledCommand.Global));
+        Assert.That(cmd.factionId, Is.EqualTo(ScheduledCommand.NoFaction));
+        Assert.That(cmd.playerId, Is.EqualTo(ScheduledCommand.NoPlayer));
+
+        var data = new ByteReader(cmd.data);
+        Assert.That(data.ReadInt32(), Is.EqualTo(ScheduledCommand.PlayerCountResetAll));
+        Assert.That(data.ReadInt32(), Is.EqualTo(ScheduledCommand.PlayerCountResetAll));
+    }
+
+    private static void WriteEntry(ZipArchive zip, string name, byte[] bytes)
+    {
+        using var stream = zip.CreateEntry(name).Open();
+        stream.Write(bytes, 0, bytes.Length);
     }
 }

@@ -36,6 +36,15 @@ namespace Multiplayer.Client
             Multiplayer.session.Update();
             SyncFieldUtil.UpdateSync();
 
+            // Player count report for the variable tick rate (VTRSync.UpdateViewedMap, Oct 27): only once this
+            // client plays the live game (not during loads, reloads or the joiner's catch-up, not after a desync,
+            // not in replays or on the arbiter, which is never counted)
+            if (!Multiplayer.arbiterInstance && !Multiplayer.IsReplay && !Multiplayer.reloading &&
+                Current.ProgramState == ProgramState.Playing && !LongEventHandler.AnyEventNowOrWaiting &&
+                Multiplayer.session.client.State == ConnectionStateEnum.ClientPlaying &&
+                !TickPatch.Simulating && !Multiplayer.session.desynced)
+                VTRSync.UpdateViewedMap();
+
             if (PerformanceRecorder.IsRecording)
             {
                 PerformanceRecorder.RecordFrame();

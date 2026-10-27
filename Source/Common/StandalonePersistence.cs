@@ -168,6 +168,16 @@ public class StandalonePersistence
             };
         }
 
+        // The player counts behind the variable tick rate are saved in the game since Oct 27, so the loaded join
+        // point (or the save.zip it was seeded from) carries the counts of the session that wrote it, and its world
+        // commands can hold that session's PlayerCount reports. This server's players all start on no map
+        // (ServerPlayer.currentMapId -1) and no disconnect of the old ones will ever be sent, so those counts would
+        // never go back down: a map nobody views would tick at rate 1 for good, and every later join point would
+        // save that again. A reset after the loaded commands, at the loaded tick, zeroes them on every client
+        // before any player's first report, and the next join point saves the zeros.
+        server.commands.Send(CommandType.PlayerCount, ScheduledCommand.NoFaction, ScheduledCommand.Global,
+            ByteWriter.GetBytes(ScheduledCommand.PlayerCountResetAll, ScheduledCommand.PlayerCountResetAll));
+
         ServerLog.Log($"Loaded state from Saved/ directory ({server.worldData.mapData.Count} maps) at tick {loadedTick}");
         return info;
     }

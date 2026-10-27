@@ -58,8 +58,16 @@ public class AsyncWorldTimeComp : IExposable, ITickable
     public Queue<ScheduledCommand> Cmds => cmds;
     public Queue<ScheduledCommand> cmds = new();
 
-    public int CurrentPlayerCount { get; private set; }
+    // Players viewing the world map, changed only by PlayerCount commands and saved, like the map counts
+    // (AsyncTimeComp.playerCount)
+    private int playerCount;
+    public int CurrentPlayerCount => playerCount;
     public int VTR => CurrentPlayerCount > 0 ? VTRSync.MinimumVtr : VTRSync.MaximumVtr;
+
+    public int IncreasePlayerCount() => ++playerCount;
+    // Clamped like the map count: it used to be a plain -= 1 and could go negative, which a save would now keep
+    public int DecreasePlayerCount() => playerCount = Math.Max(0, playerCount - 1);
+    public void ResetPlayerCount() => playerCount = 0;
 
     public int TickableId => -1;
 
@@ -85,6 +93,9 @@ public class AsyncWorldTimeComp : IExposable, ITickable
 
         Scribe_Values.Look(ref timeSpeedInt, "timeSpeed");
         Scribe_Custom.LookULong(ref randState, "randState", 2);
+
+        // Shares the mpWorldComp node with MultiplayerWorldComp's keys below; old saves load 0
+        Scribe_Values.Look(ref playerCount, "playerCount");
 
         TimeSpeed timeSpeed = Find.TickManager.CurTimeSpeed;
         Scribe_Values.Look(ref timeSpeed, "timeSpeed");
@@ -235,17 +246,29 @@ public class AsyncWorldTimeComp : IExposable, ITickable
                 int newMapId = data.ReadInt32();
                 int mapCount = Find.Maps.Count;
 
+                // A standalone server zeroes every count after loading its saved state, whose counts came from the
+                // session that saved it (StandalonePersistence.LoadInto, Oct 27)
+                if (previousMapId == ScheduledCommand.PlayerCountResetAll)
+                {
+                    Multiplayer.AsyncWorldTime.ResetPlayerCount();
+                    foreach (var map in Find.Maps)
+                        map.AsyncTime().ResetPlayerCount();
+
+                    MpLog.Log($"Player counts of the world and {mapCount} maps reset by the server");
+                    return;
+                }
+
                 var prev = -1;
                 if (previousMapId >= 0)
                     prev = Find.Maps.FirstOrDefault(x => x.uniqueID == previousMapId)?.AsyncTime()?.DecreasePlayerCount() ?? -1;
                 else if (previousMapId == VTRSync.WorldMapId)
-                    prev = Multiplayer.AsyncWorldTime.CurrentPlayerCount -= 1;
+                    prev = Multiplayer.AsyncWorldTime.DecreasePlayerCount();
 
                 var curr = -1;
                 if (newMapId >= 0)
                     curr = Find.Maps.FirstOrDefault(x => x.uniqueID == newMapId)?.AsyncTime()?.IncreasePlayerCount() ?? -1;
                 else if (newMapId == VTRSync.WorldMapId)
-                    curr = Multiplayer.AsyncWorldTime.CurrentPlayerCount += 1;
+                    curr = Multiplayer.AsyncWorldTime.IncreasePlayerCount();
 
                 MpLog.Debug($"[{worldTicks}|{Multiplayer.session.remoteTickUntil}] Player count change: previousMapId={previousMapId} ({prev}), newMapId={newMapId} ({curr}), mapCount={mapCount}");
             }

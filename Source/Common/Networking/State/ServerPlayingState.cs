@@ -37,14 +37,36 @@ namespace Multiplayer.Common
 
             if (packet.type == CommandType.PlayerCount)
             {
+                // The server's record of the player's map is the previous map that gets counted, not the one the
+                // client claims. The counts are saved in the game (Oct 27), so every client already counts this
+                // player where the server says it is: after a rejoin (same ServerPlayer, same currentMapId) or a
+                // report the client repeats, trusting the client's previous map would count the player twice.
+                // Every change of currentMapId sends exactly one PlayerCount, so the counts equal the number of
+                // players on each map at that command's place in the order.
                 ByteReader reader = new ByteReader(packet.data);
-                var prevMapId = reader.ReadInt32();
+                var claimedPrevMapId = reader.ReadInt32();
                 var newMapId = reader.ReadInt32();
-                if (Player.currentMapId != prevMapId)
-                    ServerLog.Error($"Inconsistent player {Player.Username} map. Last known map: {Player.currentMapId}, " +
-                                    $"however received command with transition: {prevMapId} -> {newMapId}");
-                Player.currentMapId = newMapId;
+
+                // The reset value is the server's alone (StandalonePersistence.LoadInto): kept as the player's map, it
+                // would go out as the previous map of its next report and zero every count on every client
+                if (newMapId == ScheduledCommand.PlayerCountResetAll)
+                {
+                    ServerLog.Error($"Player {Player.Username} reported the player count reset value as its map, ignored");
+                    return;
+                }
+
+                var prevMapId = Player.currentMapId;
+                if (claimedPrevMapId != prevMapId)
+                    ServerLog.Detail($"Player {Player.Username} reported map transition {claimedPrevMapId} -> {newMapId}, " +
+                                     $"server's last known map is {prevMapId}");
                 Player.hasReportedCurrentMap = true;
+
+                // A repeat report (a rejoin onto the map the player was on): nothing changes
+                if (prevMapId == newMapId)
+                    return;
+
+                Player.currentMapId = newMapId;
+                packet.data = ByteWriter.GetBytes(prevMapId, newMapId);
 
                 if (Server.CanUseStandaloneMapStreaming(newMapId))
                     mapToResync = newMapId;

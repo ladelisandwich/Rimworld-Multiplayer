@@ -362,7 +362,11 @@ had a hediff with hediffGivers (ToxicBuildup, DrugOverdose,
 HeartArteryBlockage, NuclearStomach or a stage of one) that the host's 
 didn't, with every earlier random call identical. A per-tick pawn state 
 digest (PawnStateTrace) now rides the trace hash list so the next report 
-names the pawn and field that first differ.)
+names the pawn and field that first differ. Oct 27: the per-map player 
+counts behind the variable tick rate were never right (Known gaps, Variable 
+tick rate, Oct 27): a joiner or rejoiner could run a counted map at 15 while 
+the others ran it at 1, a plausible cause of the post-rejoin desyncs above; 
+fixed and checked with a two-instance join, no desync.)
 - [ ] 11 Release zip
 - [ ] Extra (Oct 19, user request): multifaction fixes. Custom and fluid 
 ideoligions for new factions (Page_ConfigureIdeo_Multifaction), quest raids 
@@ -413,8 +417,8 @@ animal skeletons); checked in a windowed test copy (36 species, 0 errors);
 the user's own look is pending. Oct 27 (user request): a one-press reset to 
 the normal isometric view (Backspace / Keypad 5) and the right-button free 
 look as an option (Known gaps, IsoRim, camera reset and right-button look); 
-all 8 scripted input checks pass in the windowed test copy, the user's own 
-feel check is pending.
+all 8 scripted input checks pass in the windowed test copy; the user: "this 
+feels good" (Oct 27).
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -552,9 +556,10 @@ replays in ~/.rw-mp-test/host/MpReplays):
   null. The duplicate connection itself came from the client's -connect= 
   retry; the second attempt joined fine.
   - "Inconsistent player <host> map. Last known map: -1, however received 
-  command with transition: 0 -> 1" (server, once): VTRSync only reports the 
-  viewed map on change, so the server learns the host's first map late. 
-  Upstream behaviour, harmless (commands still reach the host).
+  command with transition: 0 -> 1" (server, once): VTRSync only reported the 
+  viewed map on change, so the server learned the host's first map late. Not 
+  harmless after all: see Variable tick rate, Oct 27 (fixed; the message is a 
+  Detail log now).
   - "Tried to double-add designation" on both sides: the client designated 
   the same wall twice before the first command executed. Upstream behaviour, 
   the second designate throws and is skipped on every client alike.
@@ -627,6 +632,45 @@ calls base non-virtually, hence its own patch). Hit counters
 "Pawn.UpdateRateTicks synced" show which fire. Confirmed Oct 19 18:04: 
 GetCameraUpdateRate 0 on host and client, the getters in the millions. 
 Upstream's patch is dead on .NET; this will be the first thing to tell them.
+  Oct 27 (user: bullets only show 2 to 5 frames of flight, "for a long time", 
+  suspected Proton; measured in a test copy: solo 22 distinct positions per 
+  bullet, hosted 3): the synced rate (AsyncTimeComp.VTR = 1 while a player is 
+  counted on the map, else 15) was 15 on every map all session. Counts came 
+  only from PlayerCount commands sent by MapSwitchPatch on map-to-map switches 
+  (and WorldRenderModePatch only after a map had been reported); the hosting 
+  reload and join loads never reported, counts weren't saved, and every join 
+  point (joins, desyncs, autosaves) reloads every client, so they went back to 
+  0. Projectiles move in TickInterval, so they jumped every 15 ticks; work 
+  progress bars, attack timing and world objects stepped too. Once a map 
+  switch had counted someone, a joiner loaded 0 while the others kept 1: a 
+  desync source. Fix: AsyncTimeComp/AsyncWorldTimeComp save playerCount 
+  (Scribe "playerCount", old saves 0; both clamp at 0, the world one used to 
+  go negative); HostUtil.PrepareGame zeroes every count and VTRSync before the 
+  snapshot; the server counts from its own ServerPlayer.currentMapId 
+  (ServerPlayingState: forwards PlayerCount(server's prev, new), drops a 
+  repeat such as a rejoin onto the same map, logs a claimed-prev mismatch at 
+  Detail, so the old "Inconsistent player <host> map" error is gone); clients 
+  report by polling (VTRSync.UpdateViewedMap from OnMainThread.Update: world 
+  or current map vs the last report, only while ClientPlaying, Playing, not 
+  reloading, not catching up, not desynced, no replay or arbiter); 
+  MapSwitchPatch is gone and WorldRenderModePatch only keeps its standalone 
+  world-travel join-point request; a standalone server sends PlayerCount 
+  (PlayerCountResetAll, PlayerCountResetAll) after StandalonePersistence 
+  LoadInto, because counts saved in Saved/ or save.zip belong to the old 
+  session (clients log "Player counts of the world and N maps reset by the 
+  server" once); spawned projectiles always tick at 1 in a session (constant, 
+  so deterministic; smooth during the command round trip after a map switch). 
+  Unit tests: PlayerCountTest (11) and StandalonePersistenceTest. Checked in 
+  test copies: hosted bullets 26 positions (was 3), the host counted from its 
+  first frame and after a world trip; a second Proton prefix joined with 
+  -connect -username: both sides logged the same counts at the same ticks 
+  (1 -> 2 on join, world trip 1/1 then back to 2, 1 after the client left), 
+  no desync, 0 errors. Cost: viewed maps now run every non-animal thing's 
+  TickInterval every tick (vanilla does that only for in-view things at the 
+  closest zoom), times up to 12x at Superfast; watch the sync debug panel's 
+  Avg Frame and TPS on a large colony. A newly viewed map keeps its old rate 
+  for one command round trip. A multifaction joiner with no map yet is 
+  counted on the world.
 - PawnStateTrace (slow tracing only): each map tick adds a desync log item 
 whose text is a digest of every spawned pawn (position, tickDelta, pather 
 cell and cost, job and toil, stance, age ticks, food/rest/joy/mood, each 

@@ -8,6 +8,12 @@ namespace Multiplayer.Common
         public const int Global = -1;
         public const int NoPlayer = -1;
 
+        // PlayerCount data (previous map, new map) that sets every map's and the world's player count to 0 instead of
+        // moving one player (AsyncWorldTimeComp.ExecuteCmd). Sent by a standalone server after loading its saved
+        // state (StandalonePersistence.LoadInto). Not (-1, -1), which older builds could send as a report and old
+        // replays may hold.
+        public const int PlayerCountResetAll = int.MinValue;
+
         public readonly CommandType type = type;
         public readonly int ticks = ticks;
         public readonly int factionId = factionId;
