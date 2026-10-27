@@ -63,7 +63,9 @@ namespace Multiplayer.Client
             yield return AccessTools.Method(typeof(FloatMenuOption), nameof(FloatMenuOption.SetSizeMode));
             yield return AccessTools.Method(typeof(Section), nameof(Section.RegenerateAllLayers));
             yield return AccessTools.Method(typeof(Section), nameof(Section.RegenerateDirtyLayers));
-            yield return AccessTools.Method(typeof(SectionLayer), nameof(SectionLayer.DrawLayer));
+            // Through its declaring type: looked up through SectionLayer, Harmony 3 keeps it as a separate patch record,
+            // whose detour replaced IsoRim's hooks on the same method (HarmonyPatchWatchdog.CheckSplitPatches)
+            yield return AccessTools.DeclaredMethod(typeof(MapDrawLayer), nameof(MapDrawLayer.DrawLayer));
             yield return AccessTools.Method(typeof(Map), nameof(Map.MapUpdate));
             yield return AccessTools.Method(typeof(GUIStyle), nameof(GUIStyle.CalcSize));
         }

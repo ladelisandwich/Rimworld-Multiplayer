@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 
@@ -64,6 +66,33 @@ public static class HarmonyPatchWatchdog
     }
 
     // Relaunches the game the way the mod-config restart does, with tiering off for the new process
+    // Harmony 3 (0Harmony 3.0.0-rc.3) keeps its patch records by MethodBase, and a MethodInfo looked up through a
+    // subclass (AccessTools.Method(typeof(Derived), "InheritedMethod")) isn't equal to the declaring type's. Two mods
+    // patching one method those two ways get two records and two detours on the same code, and whichever detour went in
+    // last silently replaces the other's patches. Found Oct 26: Multiplayer's arbiter patch on SectionLayer.DrawLayer
+    // hid every IsoRim hook on MapDrawLayer.DrawLayer (no 3D lighting, night darkness or fog lid). Run once after the
+    // mods' startup patching; logs an error per split method.
+    public static void CheckSplitPatches()
+    {
+        try
+        {
+            var splits = Harmony.GetAllPatchedMethods().GroupBy(m => m.MethodHandle.Value).Where(g => g.Count() > 1).ToList();
+            foreach (var g in splits)
+            {
+                var first = g.First();
+                string records = string.Join(" | ", g.Select(m =>
+                    "through " + m.ReflectedType?.Name + " by " + string.Join(", ", Harmony.GetPatchInfo(m)?.Owners ?? Enumerable.Empty<string>())));
+                Log.Error($"Multiplayer: {first.DeclaringType?.FullName}.{first.Name} has Harmony patches under {g.Count()} separate " +
+                          $"records ({records}). Only one record's detour is active, so the other patches never run. Every mod " +
+                          $"has to patch it through its declaring type, {first.DeclaringType?.Name}.");
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Error("Multiplayer: checking the Harmony patches for split records failed: " + e);
+        }
+    }
+
     public static void RestartWithTieringOff()
     {
         Environment.SetEnvironmentVariable(TieringVariable, "0");

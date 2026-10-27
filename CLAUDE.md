@@ -80,6 +80,16 @@ suspicion. Audit: list patch targets, read IL body sizes with
 System.Reflection.Metadata, look at anything under ~40 bytes.
 - Harmony 3 verifies generated IL. Returning a struct needs 
 Ldloca/Initobj/Ldloc, not just Initobj (SyncTemplates, fixed in task 6).
+- Harmony 3 (0Harmony 3.0.0-rc.3) keys its patch records by MethodBase, and a 
+MethodInfo looked up through a subclass (AccessTools.Method(typeof(Derived), 
+"InheritedMethod"), or a [HarmonyPatch(typeof(Derived), ...)] annotation) 
+isn't Equal to the declaring type's (different ReflectedType, same 
+MethodHandle). Two patchers using the two forms get two records and two 
+detours on the same code; the last detour wins and the other record's 
+patches never run, with nothing logged. Always patch through the declaring 
+type (AccessTools.DeclaredMethod on DeclaringType). 
+HarmonyPatchWatchdog.CheckSplitPatches logs an error per split method once 
+after load (found Oct 26, see Known gaps, IsoRim, night).
 - Harmony 3 rejects __instance when the target is a lambda on a <>c 
 display class (PatchGravshipPreLaunchCancel, fixed in task 6).
 - ConstructorInfo.Invoke on a type initializer (TypeInitializer.Invoke) re-ran 
@@ -906,6 +916,30 @@ read of both codebases before merging. What changed and why:
   sky off or no planet below, the game's exterior lighting ring 
   (MapDrawLayer_ExteriorLightingOverlay, not a SectionLayer) stays undimmed 
   around a darker map at night.
+  The real cause, found with a windowed test copy (Oct 26 evening, user's 
+  screenshots: 3D ground as dark as flat but walls, rock and furniture 
+  daylight-bright): none of IsoRim's MapDrawLayer.DrawLayer hooks ever ran 
+  in the merged mod. Multiplayer's CancelForArbiter patched 
+  AccessTools.Method(typeof(SectionLayer), "DrawLayer") and IsoRim patched 
+  the declared MapDrawLayer.DrawLayer; Harmony 3 kept two records (see 
+  Facts) and Multiplayer's detour replaced IsoRim's. So IsoRim's lighting 
+  fix (the light pass marks on 3D faces, the pulled and now night-dimmed 
+  ground overlay), the fog lid over unexplored areas and the 3D damage marks 
+  were all off, and only the game's flat overlay darkened the ground: 
+  pixel-identical output with the lighting fix on or off, rock caps (50, 50, 
+  50) at noon and midnight, a counter prefix on DrawLayer saw 0 calls. Fixed 
+  by targeting the declaring type in CancelForArbiter; checked in the test 
+  window: ~1650 DrawLayer calls per layer per 30 frames, IsoRim's overlay 
+  carries the dimmed colour, 3D midnight dark (faces, rock, walls; lighting 
+  fix off brings the old bright look back), unexplored mountains under the 
+  fog lid (ore no longer shows through), 0 split methods in an audit of 
+  1740 patched methods. Side effects now visible for the first time in the 
+  merged mod: IsoRim's indoor darkness on 3D faces under roofs by day, the 
+  fog lid, the 3D damage marks. The windowed test copy: the Proton test 
+  prefix with Prefs fullscreen False and devMode True, launched without 
+  -Headless with -quicktest -isorim3d, ScreenCapture.CaptureScreenshot into 
+  <save data>/renders/; it opens a 1280x720 window, so only while the user 
+  isn't playing.
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
   idle drafted pawns (walk one east and stop: the 3D player sees it face 

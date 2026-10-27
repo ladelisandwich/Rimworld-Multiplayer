@@ -116,6 +116,8 @@ namespace Multiplayer.Client
             {
                 Log.Message($"Multiplayer: running on {RuntimeInformation.FrameworkDescription}, Mono-only features off");
                 HarmonyPatchWatchdog.CheckTieredCompilation();
+                // After the load, so every mod's startup patches (static constructors) are in
+                LongEventHandler.ExecuteWhenFinished(HarmonyPatchWatchdog.CheckSplitPatches);
                 // The JIT event listener only runs with slow desync tracing on (the setting also starts it)
                 if (settings?.desyncTracingMode == DesyncTracingMode.Slow)
                     JittedMethods.Init();
