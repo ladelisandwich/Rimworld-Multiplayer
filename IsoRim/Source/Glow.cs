@@ -331,7 +331,7 @@ namespace IsoRim
             {
                 return gameMat;
             }
-            overlay.color = gameMat.color;
+            overlay.color = gameMat == MatBases.LightOverlay ? Dimmed(gameMat.color, NightDim(Find.CurrentMap)) : gameMat.color;   // Port: NightDim
             return overlay;
         }
 
@@ -346,13 +346,39 @@ namespace IsoRim
             }
             if (map == Find.CurrentMap)
             {
-                return MatBases.LightOverlay.color;
+                return Dimmed(MatBases.LightOverlay.color, NightDim(map));   // Port: NightDim
             }
             if (map.Biome != null && map.Biome.disableSkyLighting)
             {
                 return Color.white;
             }
-            return map.skyManager.CurSky.colors.sky;
+            return Dimmed(map.skyManager.CurSky.colors.sky, NightDim(map));   // Port: NightDim
+        }
+
+        // Port: night darkness (IsoRimSettings.nightDarkness). The game's clear night only takes the picture down to about
+        // 0.6 of the day's (sky (0.48, 0.60, 0.68)), which in the 3D view, with the moon shading every face, hardly reads as
+        // night. So the 3D view scales the sky light by up to 1 - nightDarkness, by how far the map's sky glow is into the
+        // game's own twilight band (night colours below glow 0.1, day above 0.6, GenCelestial.IsDaytime): unchanged by day
+        // (a winter morning or a high latitude, whose glow never reaches 1, included), easing in through dusk, darkest at
+        // night and in an eclipse. It reaches the faces (_IsoSky), the ground (the pulled overlay, OverlayFor) and the
+        // halos, only with the lighting fix on (without it the game draws its own overlay). Lamps and fires keep their light
+        // (the glow texture is the game's), so lit rooms stand out at night. Visual only: it reads SkyManager.CurSkyGlow (a
+        // plain field) and writes nothing.
+        public static float NightDim(Map map)
+        {
+            IsoRimSettings st = IsoRimMod.Settings;
+            if (!st.lightingFix || map == null || map.skyManager == null || map.Biome != null && map.Biome.disableSkyLighting)
+            {
+                return 1f;
+            }
+            float dark = Mathf.Clamp(st.nightDarkness, 0f, 0.95f);
+            float day = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.1f, 0.6f, Mathf.Clamp01(map.skyManager.CurSkyGlow)));
+            return 1f - dark * (1f - day);
+        }
+
+        private static Color Dimmed(Color c, float dim)
+        {
+            return new Color(c.r * dim, c.g * dim, c.b * dim, c.a);
         }
 
         // Before the map's meshes are drawn (after the game rebuilt the dirty blocks of its own

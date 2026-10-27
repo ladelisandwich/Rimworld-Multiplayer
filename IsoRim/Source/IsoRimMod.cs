@@ -142,6 +142,7 @@ namespace IsoRim
         public int roofStyle = 0;        // slate, terracotta, thatch, tin, flat roof in steel, marble, granite (SectionLayer_IsoRimRoofs.StyleNames)
         public bool sunMoves = true;
         public bool sunShade = true;     // Port: the sun shade follows roofs, weather and the time of day (R3DMaterials.SetSunShade)
+        public float nightDarkness = 0.5f; // Port: how much darker than the game nights are in 3D (IsoGlow.NightDim)
         public bool lampHalos = true;    // Port: a soft glow round lit lamps and fires at night (Halos)
         public float haloStrength = 1f;  // Port: how bright those glows are (0.25-2)
         public bool cutFrontOnly = false;        // only walls between the camera and the pointer are lowered
@@ -292,6 +293,7 @@ namespace IsoRim
             Scribe_Values.Look(ref roofStyle, "roofStyle", 0);
             Scribe_Values.Look(ref sunMoves, "sunMoves", true);
             Scribe_Values.Look(ref sunShade, "sunShade", true);   // Port
+            Scribe_Values.Look(ref nightDarkness, "nightDarkness", 0.5f);   // Port
             Scribe_Values.Look(ref lampHalos, "lampHalos", true);   // Port
             Scribe_Values.Look(ref haloStrength, "haloStrength", 1f);   // Port
             Scribe_Values.Look(ref cutFrontOnly, "cutFrontOnly", false);
@@ -1051,6 +1053,9 @@ namespace IsoRim
                 Check(r, "R3D_Settings_LightingFix".Translate(), ref st.lightingFix);
                 if (st.lightingFix)
                 {
+                    // Port: night darkness (IsoGlow.NightDim); it works on the sky light the fix brings to faces and ground
+                    st.nightDarkness = Slider(r, "R3D_Settings_NightDarkness".Translate(), st.nightDarkness, 0f, 0.9f, st.nightDarkness.ToStringPercent(),
+                        "R3D_Settings_NightDarknessTip".Translate());
                     // Port: lamps light faces by direction (IsoLamps); it works on the lamp light the fix brings to the faces
                     Check(r, "R3D_Settings_LampFacing".Translate(), ref st.lampFacing, "R3D_Settings_LampFacingTip".Translate());
                     if (st.lampFacing)

@@ -34,6 +34,8 @@
   <R3D_Settings_IsometricTip>镜头转 45 度并压低，类似等距视角游戏。关闭：北方朝上。</R3D_Settings_IsometricTip>
   <!-- Port: smoothTurn and middleLooks (the Multiplayer port's camera defaults) -->
   <R3D_Settings_SmoothTurn>按住 Q 或 E 时平滑转动</R3D_Settings_SmoothTurn>
+  <R3D_Settings_NightDarkness>夜晚暗度</R3D_Settings_NightDarkness>
+  <R3D_Settings_NightDarknessTip>3D 视图中夜晚比游戏本身暗多少：夜里地面和 3D 物体上的天光按此比例变暗，黎明和黄昏时较少，白天不变。灯、火和有灯光的房间保持原有亮度。0%：游戏自己的夜晚。</R3D_Settings_NightDarknessTip>
   <R3D_Settings_InvertTurn>反转 Q 和 E</R3D_Settings_InvertTurn>
   <R3D_Settings_InvertTurnTip>Q 向右转动镜头，E 向左。</R3D_Settings_InvertTurnTip>
   <R3D_Settings_PanSpeed>镜头平移速度</R3D_Settings_PanSpeed>

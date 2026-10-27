@@ -889,6 +889,23 @@ read of both codebases before merging. What changed and why:
   screen at any zoom: the game's speed zoomed out, about 4.5x slower at the 
   closest zoom) and invertTurn (Q/E swapped, smooth and stepped). 3D view 
   only; the middle-button map drag isn't scaled.
+  - Night darkness (Oct 26, user: "can't tell the difference between day 
+  and night"). Nothing was broken: the game's clear night only multiplies 
+  the picture by its sky colour (0.48, 0.60, 0.68), about 0.6, and in 3D, 
+  with the moon shading faces like the sun, that hardly reads as night. 
+  IsoRimSettings.nightDarkness (slider 0-90%, default 50%, shown with the 
+  lighting fix on; off without it) scales the sky light by 1 - dark x (1 - 
+  smoothstep over the game's twilight band of CurSkyGlow, 0.1 to 0.6): 
+  daytime exactly the game's (also low-sun days at high latitude), easing in 
+  through dusk, full at night and in eclipses. IsoGlow.NightDim, applied in 
+  SkyFor (_IsoSky for faces and roofs, halos, the space backdrop) and 
+  OverlayFor (the pulled ground overlay). Lamps keep their glow, so lit rooms 
+  stand out. Reads CurSkyGlow only (a plain field), inside Map.MapUpdate. Not 
+  dimmed: the game's fog and rain sheets (queues 3169/3201, drawn after the 
+  overlay in the weather's overlay colour), and on space maps with IsoRim's 
+  sky off or no planet below, the game's exterior lighting ring 
+  (MapDrawLayer_ExteriorLightingOverlay, not a SectionLayer) stays undimmed 
+  around a darker map at night.
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
   idle drafted pawns (walk one east and stop: the 3D player sees it face 

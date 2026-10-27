@@ -34,6 +34,8 @@
   <R3D_Settings_IsometricTip>The camera turned 45 degrees and lowered, as in isometric games. Off: north is up.</R3D_Settings_IsometricTip>
   <!-- Port: smoothTurn and middleLooks (the Multiplayer port's camera defaults) -->
   <R3D_Settings_SmoothTurn>Turn smoothly while Q or E is held</R3D_Settings_SmoothTurn>
+  <R3D_Settings_NightDarkness>Night darkness</R3D_Settings_NightDarkness>
+  <R3D_Settings_NightDarknessTip>How much darker than the game the 3D view makes the night: the sky's light on the ground and on 3D things is dimmed by this much at night, less at dawn and dusk, not at all by day. Lamps, fires and lit rooms keep their light. 0%: the game's own night.</R3D_Settings_NightDarknessTip>
   <R3D_Settings_InvertTurn>Invert Q and E</R3D_Settings_InvertTurn>
   <R3D_Settings_InvertTurnTip>Q turns the camera right and E left.</R3D_Settings_InvertTurnTip>
   <R3D_Settings_PanSpeed>Camera pan speed</R3D_Settings_PanSpeed>
