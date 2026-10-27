@@ -15,6 +15,8 @@ namespace IsoRim
     // the ground it covers. Asleep it settles onto its belly with its legs folded away; downed
     // or dead it lies on its side (dead insects, deadBellyUp: on their backs, legs up and curled in).
     // Flying (birds) it rises over its cell with its legs tucked away; wings (wingModel, Api 14) open and beat.
+    // Port: dried to bones, its skeleton (or dried husk) models stand in for the body, leg and wing models, in every pose
+    // (Corpses.AnimalBones, ModelEntry.bones).
     public static class Animals
     {
         // What has to be remembered about one animal from frame to frame.
@@ -94,7 +96,8 @@ namespace IsoRim
                 return false;
             }
             ModelDef def = entry.def;
-            Model body = Corpses.Body(pawn, entry.Pick(pawn));
+            bool bones = Corpses.AnimalBones(pawn, entry);   // Port: dried to bones, its skeleton (or husk) models
+            Model body = bones ? entry.bones : Corpses.Body(pawn, entry.Pick(pawn));
             if (body == null)
             {
                 return false;
@@ -179,8 +182,9 @@ namespace IsoRim
             }
             else if (onSide)
             {
-                // Rolled over about the middle of its trunk, which then rests on the ground.
-                bodyPose = Matrix4x4.Translate(new Vector3(0f, def.bodyHalfWidth * size, 0f))
+                // Rolled over about the middle of its trunk, which then rests on the ground (Port: a skeleton on its
+                // bones, which reach less far out than the living trunk).
+                bodyPose = Matrix4x4.Translate(new Vector3(0f, (bones ? entry.bonesRest : def.bodyHalfWidth) * size, 0f))
                     * Matrix4x4.Rotate(Quaternion.AngleAxis(90f, Vector3.forward))
                     * Matrix4x4.Translate(new Vector3(0f, -def.bodyCentre * size, 0f));
                 legPose = bodyPose;
@@ -227,7 +231,8 @@ namespace IsoRim
                 GroundShadows.Blob(position, yaw, def.bodyHalfWidth * size * 1.5f * spread, def.bodyHalfLength * size * 1.25f * spread);
             }
 
-            if (drawLegs && entry.leg != null && def.legs != null)
+            Model leg = bones ? entry.bonesLeg : Corpses.Body(pawn, entry.leg);   // Port: no bones leg, no legs (not living ones)
+            if (drawLegs && leg != null && def.legs != null)
             {
                 Matrix4x4 drop = Matrix4x4.Translate(new Vector3(0f, -def.legLength, 0f));
                 for (int i = 0; i < def.legs.Count; i++)
@@ -266,13 +271,13 @@ namespace IsoRim
                         Quaternion turn = Quaternion.AngleAxis(splay, Vector3.forward) * Quaternion.AngleAxis(swing, Vector3.right);
                         local = legPose * sized * Matrix4x4.Translate(hip) * Matrix4x4.Rotate(turn) * drop;
                     }
-                    DynamicModels.DrawLocal(Corpses.Body(pawn, entry.leg), position, yaw, local, Color.white, null);
+                    DynamicModels.DrawLocal(leg, position, yaw, local, Color.white, null);
                 }
             }
 
-            if (entry.wing != null)
+            if (bones ? entry.bonesWing != null : entry.wing != null)
             {
-                DrawWings(pawn, entry, def, position, yaw, bodyPose * sized, air);
+                DrawWings(pawn, entry, def, position, yaw, bodyPose * sized, air, bones);
             }
 
             if (!lying && pawn.carryTracker != null && pawn.carryTracker.CarriedThing != null)
@@ -298,7 +303,7 @@ namespace IsoRim
                 return false;
             }
             ModelDef def = entry.def;
-            Model body = Corpses.Body(pawn, entry.Pick(pawn));
+            Model body = Corpses.AnimalBones(pawn, entry) ? entry.bones : Corpses.Body(pawn, entry.Pick(pawn));   // Port: as Draw
             if (body == null)
             {
                 return false;
@@ -451,7 +456,7 @@ namespace IsoRim
         // far up the animal is (the game's PositionOffsetFactor, 0..1): the wings open as it leaves the ground and close
         // just before it lands, in step with the legs tucking away. The beat counts game ticks (frozen when paused, faster
         // at higher speeds, like the game's own flying frames), each animal at its own point in the beat.
-        private static void DrawWings(Pawn pawn, ModelEntry entry, ModelDef def, Vector3 position, float yaw, Matrix4x4 body, float air)
+        private static void DrawWings(Pawn pawn, ModelEntry entry, ModelDef def, Vector3 position, float yaw, Matrix4x4 body, float air, bool bones)
         {
             if (def.wings == null)
             {
@@ -470,8 +475,8 @@ namespace IsoRim
             // mirror image, drawn from the mirrored model with the mirrored turn (still a plain rotation).
             Matrix4x4 turn = Matrix4x4.Rotate(Quaternion.AngleAxis(fold, Vector3.up) * Quaternion.AngleAxis(lift, Vector3.forward));
             Matrix4x4 turnLeft = Mirror * turn * Mirror;
-            Model right = Corpses.Body(pawn, entry.wing);
-            Model left = Corpses.Body(pawn, entry.wingMirror ?? entry.wing);
+            Model right = bones ? entry.bonesWing : Corpses.Body(pawn, entry.wing);   // Port: dried to bones, its bones wings
+            Model left = bones ? entry.bonesWingMirror ?? entry.bonesWing : Corpses.Body(pawn, entry.wingMirror ?? entry.wing);
             for (int i = 0; i < def.wings.Count; i++)
             {
                 Vector3 hinge = def.wings[i];

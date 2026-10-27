@@ -289,6 +289,9 @@
   <R3D_Settings_CreaturesEffects>生物与特效</R3D_Settings_CreaturesEffects>
   <R3D_Settings_Pawns3D>殖民者和其他人</R3D_Settings_Pawns3D>
   <R3D_Settings_Animals3D>动物</R3D_Settings_Animals3D>
+  <!-- Port: animalBones (dried animals as 3D skeletons, Models/*_bones.obj) -->
+  <R3D_Settings_AnimalBones>  干枯的动物尸体显示为 3D 骨架</R3D_Settings_AnimalBones>
+  <R3D_Settings_AnimalBonesTip>干枯成白骨的动物尸体显示为 3D 骨架（昆虫、蟹类和树精显示为干枯的外壳），而不是游戏的平面骨架贴图。关闭：与以前一样使用平面贴图。</R3D_Settings_AnimalBonesTip>
   <R3D_Settings_Mechs3D>机械族</R3D_Settings_Mechs3D>
   <R3D_Settings_HeldWeapons3D>手持武器</R3D_Settings_HeldWeapons3D>
   <R3D_Settings_WorkAnimations>使用工具的工作动画</R3D_Settings_WorkAnimations>

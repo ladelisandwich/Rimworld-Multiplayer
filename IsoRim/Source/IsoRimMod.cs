@@ -130,6 +130,7 @@ namespace IsoRim
         public float lookStrength = 1f;
         public string lutFile = "";      // a LUT file picked by name instead of a look's own
         public bool animals3D = true;
+        public bool animalBones = true;  // Port: an animal dried to bones drawn as its 3D skeleton or dried husk (Corpses.AnimalBones)
         public bool mechs3D = true;
         public bool heldWeapons3D = true;
         public bool doors3D = true;
@@ -281,6 +282,7 @@ namespace IsoRim
             Scribe_Values.Look(ref lookStrength, "lookStrength", 1f);
             Scribe_Values.Look(ref lutFile, "lutFile", "");
             Scribe_Values.Look(ref animals3D, "animals3D", true);
+            Scribe_Values.Look(ref animalBones, "animalBones", true);   // Port
             Scribe_Values.Look(ref mechs3D, "mechs3D", true);
             Scribe_Values.Look(ref heldWeapons3D, "heldWeapons3D", true);
             Scribe_Values.Look(ref doors3D, "doors3D", true);
@@ -1178,6 +1180,10 @@ namespace IsoRim
                     }
                 }
                 Check(r, "R3D_Settings_Animals3D".Translate(), ref st.animals3D);
+                if (st.animals3D)
+                {
+                    Check(r, "R3D_Settings_AnimalBones".Translate(), ref st.animalBones, "R3D_Settings_AnimalBonesTip".Translate());   // Port
+                }
                 Check(r, "R3D_Settings_Mechs3D".Translate(), ref st.mechs3D);
                 Check(r, "R3D_Settings_HeldWeapons3D".Translate(), ref st.heldWeapons3D);
                 Check(r, "R3D_Settings_WorkAnimations".Translate(), ref st.workAnimations, "R3D_Settings_WorkAnimationsTip".Translate());

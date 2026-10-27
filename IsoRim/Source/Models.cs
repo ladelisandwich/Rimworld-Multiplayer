@@ -652,6 +652,15 @@ namespace IsoRim
         public Model leg;   // animals only
         public Model wing;        // animals with wings only (wingModel), the right wing
         public Model wingMirror;  // the same, mirrored: the left wing
+        // Port: an animal dried to bones (Corpses.AnimalBones): its 3D skeleton, or a dried husk for animals without
+        // bones, drawn in place of the body, leg and wing models above. Each comes from <file>_bones.obj next to the
+        // living model's file (MakeEntry), built in the same space, so every pose of Animals.Draw fits it; null if there
+        // is none (no bones body: the game's sprite; no bones leg or wing: none drawn).
+        public Model bones;
+        public Model bonesLeg;
+        public Model bonesWing;
+        public Model bonesWingMirror;
+        public float bonesRest;   // Port: how far the bones body reaches sideways at its trunk: lying on its side, it rests on that
         public Model top;   // turrets only
         public Model empty;       // emptyModel, or null
         public Model doorLeaf;    // wide doors, and one-cell doors with their own models (Doors.DrawOne)
@@ -1115,6 +1124,80 @@ namespace IsoRim
             return all.Count > 1 ? ObjLoader.Merge(all) : main;
         }
 
+        // Port: the dried-to-bones model of one of an animal's model files: <file>_bones.obj beside it
+        // (Models/animal_wildboar.obj -> Models/animal_wildboar_bones.obj), loaded once like any model file. Null if
+        // there is none, with nothing logged (an animal from another mod's pack usually has none); a file that is there
+        // but can't be read gets one warning (the reason is in the dev-mode log, LoadFile).
+        private static Model BonesFile(string root, string file)
+        {
+            if (file.NullOrEmpty())
+            {
+                return null;
+            }
+            string path = Path.Combine(root, file);
+            if (path.EndsWith(".obj", StringComparison.OrdinalIgnoreCase))
+            {
+                path = path.Substring(0, path.Length - 4);
+            }
+            path += "_bones.obj";
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+            bool tried = byPath.ContainsKey(path);   // (one warning per file, also when two animals share it)
+            Model m = LoadFile(path);
+            if (m == null && !tried)
+            {
+                Log.Warning("[IsoRim] Could not read the dried-to-bones model " + path
+                    + ", so it is left out (a body: the animal keeps the game's sprite when dried; a leg or wing: none is drawn).");
+            }
+            return m;
+        }
+
+        // Port: how far an animal's bones body reaches sideways (ModelEntry.bonesRest), model units: the largest |x| of its
+        // corners between its rear and front hips, the body turned as it is drawn (ModelDef.rotation; hips are given facing
+        // north). Without legs, or with every hip at one depth (birds), the middle 60% of the body's length instead. The
+        // def's bodyHalfWidth if there is no bones body or no corner in that stretch. Lying on its side, the bones body
+        // rests on this (Animals.Draw), so a skeleton narrower than the living trunk lies on the ground, not over it.
+        private static float BonesRest(ModelDef md, Model bones)
+        {
+            if (bones == null || bones.positions == null || bones.positions.Length == 0)
+            {
+                return md.bodyHalfWidth;
+            }
+            Quaternion turn = Quaternion.AngleAxis(md.rotation, Vector3.up);
+            float from = float.MaxValue;
+            float to = float.MinValue;
+            for (int i = 0; md.legs != null && i < md.legs.Count; i++)
+            {
+                from = Mathf.Min(from, md.legs[i].z);
+                to = Mathf.Max(to, md.legs[i].z);
+            }
+            if (to - from < 0.01f)
+            {
+                float lo = float.MaxValue;
+                float hi = float.MinValue;
+                for (int i = 0; i < bones.positions.Length; i++)
+                {
+                    float z = (turn * bones.positions[i]).z;
+                    lo = Mathf.Min(lo, z);
+                    hi = Mathf.Max(hi, z);
+                }
+                from = lo + (hi - lo) * 0.2f;
+                to = hi - (hi - lo) * 0.2f;
+            }
+            float reach = 0f;
+            for (int i = 0; i < bones.positions.Length; i++)
+            {
+                Vector3 p = turn * bones.positions[i];
+                if (p.z >= from && p.z <= to)
+                {
+                    reach = Mathf.Max(reach, Mathf.Abs(p.x));
+                }
+            }
+            return reach > 0f ? reach : md.bodyHalfWidth;
+        }
+
         private static ModelEntry MakeEntry(ModelDef md)
         {
             List<string> files = new List<string>();
@@ -1236,6 +1319,15 @@ namespace IsoRim
             {
                 entry.wing = LoadFile(Path.Combine(md.modContentPack.RootDir, md.wingModel));
                 entry.wingMirror = entry.wing != null ? ObjLoader.Mirrored(entry.wing) : null;
+            }
+            if (md.animal && md.modContentPack != null)
+            {
+                // Port: dried to bones, a skeleton (or husk) for the body, leg and wing, where the files are there.
+                entry.bones = BonesFile(md.modContentPack.RootDir, md.model);
+                entry.bonesLeg = BonesFile(md.modContentPack.RootDir, md.legModel);
+                entry.bonesWing = entry.wing != null ? BonesFile(md.modContentPack.RootDir, md.wingModel) : null;
+                entry.bonesWingMirror = entry.bonesWing != null ? ObjLoader.Mirrored(entry.bonesWing) : null;
+                entry.bonesRest = BonesRest(md, entry.bones);
             }
             if (!md.topModel.NullOrEmpty() && md.modContentPack != null)
             {

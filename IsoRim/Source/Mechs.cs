@@ -739,7 +739,7 @@ namespace IsoRim
 
         // An entity is drawn as its model unless the game shows it some other way: held on a holding platform
         // that is not drawn as its model (the sprite lies on the flat platform). A corpse dried to bones keeps
-        // the game's sprite too, as every pawn but people does (Corpses.ShownAsModel).
+        // the game's sprite too, as every pawn but people and animals with a bones model does (Corpses.ShownAsModel).
         private static bool EntityShown(Pawn pawn)
         {
             if (pawn.ParentHolder is Building_HoldingPlatform platform)

@@ -289,6 +289,9 @@
   <R3D_Settings_CreaturesEffects>Creatures and effects</R3D_Settings_CreaturesEffects>
   <R3D_Settings_Pawns3D>Colonists and other people</R3D_Settings_Pawns3D>
   <R3D_Settings_Animals3D>Animals</R3D_Settings_Animals3D>
+  <!-- Port: animalBones (dried animals as 3D skeletons, Models/*_bones.obj) -->
+  <R3D_Settings_AnimalBones>  Dried animal corpses as 3D skeletons</R3D_Settings_AnimalBones>
+  <R3D_Settings_AnimalBonesTip>An animal corpse dried to bones is drawn as a 3D skeleton (insects, crabs and dryads as a dried shell) instead of the game's flat skeleton sprite. Off: the flat sprite, as before.</R3D_Settings_AnimalBonesTip>
   <R3D_Settings_Mechs3D>Mechanoids</R3D_Settings_Mechs3D>
   <R3D_Settings_HeldWeapons3D>Weapons in hand</R3D_Settings_HeldWeapons3D>
   <R3D_Settings_WorkAnimations>Work animations with tools</R3D_Settings_WorkAnimations>

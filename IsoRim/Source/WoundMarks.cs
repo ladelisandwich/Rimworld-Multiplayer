@@ -372,7 +372,9 @@ namespace IsoRim
         // (pose and size, DrawLocal's local without turn); size: the animal's drawn size (cells per model unit).
         internal static void DrawAnimal(Pawn pawn, Model body, Vector3 at, float yaw, Matrix4x4 local, Matrix4x4 turn, float size)
         {
-            if (!Enabled || FigureScope.Measuring || body == null || size <= 0f || (pawn.Dead && pawn.Corpse != null && pawn.Corpse.GetRotStage() == RotStage.Dessicated))
+            // Port: no wounds on bones, as the game's rule (PawnRenderNodeWorker_OverlayWounds: not while drawn Dessicated),
+            // which also covers a living dried shambler drawn as its 3D skeleton (Corpses.AnimalBones), not just a dried corpse
+            if (!Enabled || FigureScope.Measuring || body == null || size <= 0f || Corpses.Bones(pawn))
             {
                 return;
             }

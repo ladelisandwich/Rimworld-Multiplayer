@@ -80,6 +80,21 @@ Everything else in the `.mtl` is ignored. Write the `.mtl` by hand: Blender writ
 Names like `stuffing` or `glowing_rock` are caught by the prefixes too. Things not made of stuff: prefer fixed colours;
 their `stuff*` faces take the colour of the main material in their cost list (steel grey, wood brown).
 
+### Animals dried to bones: `_bones.obj`
+
+(The IsoRim built into the Multiplayer port only; a standalone IsoRim ignores these files.) An animal dried to bones (the
+game's dessicated stage) is drawn from a second set of files when they exist: for each of an animal ModelDef's `model`,
+`legModel` and `wingModel`, IsoRim looks for the same name with `_bones` added, in the same folder
+(`Models/my_boar.obj` -> `Models/my_boar_bones.obj`, `Models/my_boar_leg.obj` -> `Models/my_boar_leg_bones.obj`), and
+draws it in place of the living one while the option "Dried animal corpses as 3D skeletons" is on. The file name is the
+whole binding: no ModelDef field. Build each one in exactly the same space as the living file it replaces (same origin,
+size and facing, -z in the file; a leg with its hip at `legLength` and its foot at y = 0), so every pose fits it: on its
+side, on its back, carried, on a shelf. Keep the bones inside the living silhouette; lying on its side, the skeleton rests
+on its widest point between the hips instead of `bodyHalfWidth`. Use fixed colours (`bone`, `bone_shade` from IsoRim's
+`skeleton.mtl`, or per-vertex colours), not `stuff*`. Without a bones body the animal keeps the game's flat skeleton
+sprite; with a body but no bones leg or wing, it is drawn without legs or wings. A file that is there but can't be read
+is logged once as a warning. IsoRim's own animals have them, made by the port's `scripts/make_animal_skeletons.py`.
+
 ## Binding: `IsoRim.ModelDef`
 
 ```xml

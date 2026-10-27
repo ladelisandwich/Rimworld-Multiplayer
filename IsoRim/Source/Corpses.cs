@@ -10,8 +10,12 @@ namespace IsoRim
     // (people, animals, mechs, entities):
     //   - dried to bones (Dessicated), the game draws its skeleton sprite (Bodies/Dessicated, the Skull head):
     //     a person's figure becomes a 3D skeleton (People: Bones, the parts no garment covers; apparel and
-    //     headgear stay, as the game draws them); every other pawn keeps the sprite then (ShownAsModel false),
-    //     drawn the way any lying sprite is (flat on the ground, on the gibbet cage's floor, or in the carrier's hands);
+    //     headgear stay, as the game draws them); so does an animal whose kind has a bones model (Port:
+    //     ModelEntry.bones, Models/<body>_bones.obj beside its living model, made by the Multiplayer port's
+    //     scripts/make_animal_skeletons.py), or a dried husk for insects, crabs and dryads, posed and placed as its
+    //     living model would be (Animals.Draw: AnimalBones), while the option animalBones is on; every other pawn
+    //     keeps the sprite then (ShownAsModel false), drawn the way any lying sprite is (flat on the ground, on the
+    //     gibbet cage's floor, or in the carrier's hands);
     //   - rotting, the game lays its rotten colour (PawnRenderUtility.GetRottenColor) over the skin and over an
     //     animal's whole body; hair and the clothes worn take it themselves (HairColor, Apparel.DrawColor).
     public static class Corpses
@@ -25,11 +29,31 @@ namespace IsoRim
             return r != null ? r.CurRotDrawMode : RotDrawMode.Fresh;
         }
 
-        // False while the game draws the pawn as bones and it has no 3D skeleton (all but people): it is not
-        // drawn as its model then.
+        // False while the game draws the pawn as bones and it has no 3D skeleton (all but people, and animals with
+        // a bones model): it is not drawn as its model then.
         public static bool ShownAsModel(Pawn pawn)
         {
-            return !Bones(pawn) || AlienFigures.BonesAsModel(pawn);   // (people and Human-figure races, Api 25)
+            return !Bones(pawn) || AlienFigures.BonesAsModel(pawn)   // (people and Human-figure races, Api 25)
+                || AnimalBonesShown(pawn);                           // Port: animals with a bones model
+        }
+
+        // Port: true while an animal (its kind's entry given) is drawn as its 3D skeleton or dried husk: the game
+        // draws it as bones, its kind has a bones body (ModelEntry.bones) and the option animalBones is on.
+        public static bool AnimalBones(Pawn pawn, ModelEntry entry)
+        {
+            IsoRimSettings st = IsoRimMod.Settings;
+            return entry != null && entry.def.animal && entry.bones != null && st != null && st.animalBones && Bones(pawn);
+        }
+
+        // Port: the animal half of ShownAsModel (the game already draws the pawn as bones). ShownAsModel also runs on
+        // the game's parallel pre-render workers (for people only, Patches.PreRender_Prefix): this only reads what the
+        // library loaded at startup, and people are turned away before the lookup.
+        private static bool AnimalBonesShown(Pawn pawn)
+        {
+            IsoRimSettings st = IsoRimMod.Settings;
+            ModelEntry entry;
+            return st != null && st.animalBones && pawn.def != null && pawn.RaceProps != null && !pawn.RaceProps.Humanlike
+                && ModelLibrary.TryGet(pawn.def, out entry) && entry.def.animal && entry.bones != null;
         }
 
         // True while the game draws the pawn as bones.

@@ -279,6 +279,16 @@ the startup prewarm logs the first failure per file as "WARN [Vulkan]
 ShaderPrewarm: failed to warm '<file>': ...", and annotation errors as 
 "ERROR [Vulkan] Shader '<file>' ..." (the whole def magenta). -WatchShaders 
 hot-reloads *.glsl of Mods-folder mods: edit the installed copy.
+- Animal skeletons (IsoRim, Oct 27): python3 scripts/make_animal_skeletons.py 
+[--only Cow,Chicken] [--check] [--out DIR] regenerates IsoRim/Models/*_bones.obj 
+from the living animal OBJs and Defs/Models.xml (numpy, scipy, scikit-image: 
+apt python3-numpy python3-scipy python3-skimage in the container; byte-identical 
+output on every run). Plans in scripts/animal_bones/plans/ (quadruped, birds, 
+legless, husk; API in plans/__init__.py), checks in validate.py. Review renders: 
+python3 scripts/animal_bones/preview.py --only X,Y|--all|--plan birds 
+[--out DIR] (living vs bones, standing and dead, side and 3/4; the orange line is 
+the living silhouette). Rerun both after IsoRim's living animal models change 
+(a subtree pull touching Models/animal_*.obj or their ModelDefs).
 - Two instances on this PC: ./scripts/run_two.sh (host, then Enter, then a 
 client that auto-joins 127.0.0.1:30502 with -connect=). Each instance has 
 its own XDG_CONFIG_HOME and -savedatafolder under ~/.rw-mp-test/<host|client>; 
@@ -397,7 +407,10 @@ cause, the split DrawLayer patch record that had kept IsoRim's lighting
 hooks off since the merge (Known gaps, IsoRim, night darkness). Confirmed 
 in game by the user (Oct 27 06:45-06:55, hosted alone from a replay on 
 0e4c9a83): "day night looks much better", Player.log 0 errors, no 
-split-record error, tiered compilation off.
+split-record error, tiered compilation off. Oct 27 (user request): dried 
+animal corpses as 3D skeletons, like the people's (Known gaps, IsoRim, 
+animal skeletons); checked in a windowed test copy (36 species, 0 errors); 
+the user's own look is pending.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -946,6 +959,47 @@ read of both codebases before merging. What changed and why:
   -Headless with -quicktest -isorim3d, ScreenCapture.CaptureScreenshot into 
   <save data>/renders/; it opens a 1280x720 window, so only while the user 
   isn't playing. Confirmed in game by the user on Oct 27 (see Progress).
+  - Animal skeletons (Oct 27, user request: "the human bones are 3d and the 
+  animal ones are not"). A dried animal (RotDrawMode.Dessicated) used to fall 
+  back to the game's flat skeleton sprite (Corpses.ShownAsModel was true only 
+  for people). Now every one of the 105 modelled animals has 
+  Models/<living file>_bones.obj for its body, leg (97) and wing (Locust): a 
+  skeleton fitted to its own living model (skull with sockets and jaw, horns, 
+  antlers and tusks kept, neck, spine, ribbed ribcage, pelvis and scapulae 
+  reaching the hips, tail, bone legs with the same hip and legLength), a bird 
+  build (keel, wing plates, beak), a coil of ribs for the Cobra, flipper fans 
+  for pinnipeds and the SeaTurtle, or a recoloured husk of the living model 
+  (insects pale chitin, crabs bleached, LavaSnail its shell only, dryads 
+  withered with no glow left; Tortoise, SeaTurtle and Armadillo keep a bleached 
+  shell over bones). Made offline by scripts/make_animal_skeletons.py (see 
+  Build and install), not shipped. Runtime (IsoRim/Source, marked Port): 
+  ModelEntry.bones/bonesLeg/bonesWing/bonesWingMirror loaded in MakeEntry for 
+  animal defs when the file exists (no log when absent, one warning when 
+  unreadable), bonesRest (the bones' reach sideways between the hips, middle 
+  60% of the length for birds and legless) lifts the on-side dead pose instead 
+  of bodyHalfWidth; Corpses.AnimalBones / ShownAsModel let a dried animal 
+  through to Animals.Draw, which swaps body, legs and wings (no bones leg: no 
+  legs) and keeps every pose (on its side, belly-up insects, carried, on a 
+  shelf); IsoRimSettings.animalBones (on; Objects tab under Animals, English 
+  and Chinese strings) turns it off. WoundMarks now skips any pawn drawn as 
+  bones (Corpses.Bones, the game's own rule) so a living dried shambler animal 
+  (Anomaly, walks as its skeleton) gets no wound decals. Draw only, no Rand, 
+  nothing in ticks; the join check doesn't cover Models/, so differing bones 
+  files can't desync. Built and reviewed by agents (five research readers, 
+  six builders, two visual critics over all 105 previews, an adversarial 
+  review of the C# change, three fixers). Checked in the windowed test copy 
+  (Oct 27): 105 bodies, 97 legs and 1 wing loaded, 36 species spawned as 
+  dried corpses all drawn in 3D on their sides with bone legs, the option off 
+  brings the flat sprites back, 0 errors; headless boot 0 errors, tests pass. 
+  Not seen in game: a dried shambler animal (no Anomaly here), a skeleton 
+  carried or on a shelf. Known weak spots: the 0.03 outline still dominates 
+  the smallest skeletons (rodents, fowl, frogs) at close zoom; the Toxalope's 
+  two small horns are unnamed pieces of its body mesh and are left out; Hare 
+  and Snowhare read as generic small rodents; the Penguin is the darkest bird; 
+  a standing dried Moose (shambler only) carries its antlers upright. The 
+  windowed test hung twice in setup (killing 36 animals in one frame, and 
+  clearing a stage by destroying rocks and moving pawns), not in drawing: 
+  spawn one per frame on an open patch.
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
   idle drafted pawns (walk one east and stop: the 3D player sees it face 
