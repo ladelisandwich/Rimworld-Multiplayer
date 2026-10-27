@@ -391,7 +391,13 @@ turns and tilts, Q/E turn smoothly; Known gaps, IsoRim, camera); checked
 headless (hooks install, settings load), the feel needs the in-game check. 
 Oct 26 (user request): IsoRim lighting options 1-4 of docs/isorim-lighting.md 
 (sun shade, lamps by direction, halos, sun shadows and one sun; Known gaps, 
-IsoRim, lighting); in-game check pending.
+IsoRim, lighting); in-game check pending. Oct 26-27 (user request): 3D 
+nights looked like day; fixed by a night darkness setting and, the real 
+cause, the split DrawLayer patch record that had kept IsoRim's lighting 
+hooks off since the merge (Known gaps, IsoRim, night darkness). Confirmed 
+in game by the user (Oct 27 06:45-06:55, hosted alone from a replay on 
+0e4c9a83): "day night looks much better", Player.log 0 errors, no 
+split-record error, tiered compilation off.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -939,7 +945,7 @@ read of both codebases before merging. What changed and why:
   prefix with Prefs fullscreen False and devMode True, launched without 
   -Headless with -quicktest -isorim3d, ScreenCapture.CaptureScreenshot into 
   <save data>/renders/; it opens a 1280x720 window, so only while the user 
-  isn't playing.
+  isn't playing. Confirmed in game by the user on Oct 27 (see Progress).
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
   idle drafted pawns (walk one east and stop: the 3D player sees it face 
