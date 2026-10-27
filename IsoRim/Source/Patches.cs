@@ -69,6 +69,22 @@ namespace IsoRim
                 }
             }
             Patch("map dragging", AccessTools.Method(typeof(CameraDriver), "Update"), prefix: nameof(CameraUpdate_Prefix));
+            // Port: the right-button free look (IsoRimSettings.lookMode 1): a right press that reaches the map's own clicks is
+            // held back until it is let go, then turns the view (dragged) or is given to the game as a click (View3D, right-
+            // button look). Through the declaring types (Multiplayer patches both methods too: one Harmony record each).
+            // The finalizer that puts the real event back after a replayed click goes in first, and the press is only held
+            // back with it in place: without it the replayed press would stay Event.current for the rest of the pass, so the
+            // right button is then left to the game (and the option turns nothing).
+            if (Patch("right-button free look", AccessTools.DeclaredMethod(typeof(UIRoot_Play), nameof(UIRoot_Play.UIRootOnGUI)),
+                finalizer: nameof(UIRootOnGUI_Finalizer)))
+            {
+                Patch("right-button free look", AccessTools.DeclaredMethod(typeof(MapInterface), nameof(MapInterface.HandleMapClicks)),
+                    prefix: nameof(HandleMapClicks_Prefix));
+            }
+            else
+            {
+                missed.Add("MapInterface.HandleMapClicks (right-button free look, needs the UIRoot_Play.UIRootOnGUI hook)");
+            }
 
             // Dragging a selection box, and the name labels under colonists.
             Type selection = AccessTools.TypeByName("RimWorld.ThingSelectionUtility");
@@ -1067,6 +1083,26 @@ namespace IsoRim
         public static void GameCtor_Postfix()
         {
             View3D.NewGame();
+        }
+
+        // Port: the right-button free look (View3D.RightButtonMapEvent). Runs for every event of UIRoot_Play.UIRootOnGUI,
+        // and leaves the game's handling of anything but a right press or release on the map as it is.
+        public static void HandleMapClicks_Prefix()
+        {
+            try
+            {
+                View3D.RightButtonMapEvent();
+            }
+            catch (Exception e)
+            {
+                Log.ErrorOnce("[IsoRim] The right-button free look failed: " + e, 93611990);
+            }
+        }
+
+        // Port: the real event back after a press the right-button free look gave the game on release (View3D.EndRightReplay).
+        public static void UIRootOnGUI_Finalizer()
+        {
+            View3D.EndRightReplay();
         }
 
         public static void RootUpdate_Postfix()

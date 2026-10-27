@@ -7,7 +7,7 @@
   <R3D_TiltUp.label>镜头抬高（更俯视）</R3D_TiltUp.label>
   <R3D_TiltDown.label>镜头放低</R3D_TiltDown.label>
   <R3D_ToggleRoofs.label>显示屋顶开关</R3D_ToggleRoofs.label>
-  <R3D_ResetCamera.label>重置镜头（自由视角）</R3D_ResetCamera.label>
-  <R3D_LookModifier.label>中键组合键（拖动地图或自由视角）</R3D_LookModifier.label>
+  <R3D_ResetCamera.label>镜头重置为普通等距视角</R3D_ResetCamera.label>
+  <R3D_LookModifier.label>中键组合键（拖动地图或自由视角），或游戏原本的右键</R3D_LookModifier.label>
   <R3D_FirstPerson.label>以所选角色第一人称开关</R3D_FirstPerson.label>
 </LanguageData>

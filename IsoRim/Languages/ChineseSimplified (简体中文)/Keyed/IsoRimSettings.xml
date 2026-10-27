@@ -53,12 +53,14 @@
   <R3D_Settings_InstantTurn>视角秒切</R3D_Settings_InstantTurn>
   <R3D_Settings_InstantTurnTip>镜头立即跟随 Q 和 E，没有缓动过渡。转动视角会头晕时可以打开。</R3D_Settings_InstantTurnTip>
   <R3D_Settings_FreeLook>自由视角</R3D_Settings_FreeLook>
-  <R3D_Settings_FreeLookTip>用鼠标拖动可将镜头任意旋转和俯仰（5° 至 89°）。关闭平滑转动时，Q 和 E 转到下一档。重置键（默认未设置）在游戏的按键设置中。</R3D_Settings_FreeLookTip>
+  <R3D_Settings_FreeLookTip>用鼠标拖动可将镜头任意旋转和俯仰（5° 至 89°）。关闭平滑转动时，Q 和 E 转到下一档。重置键（默认为退格键，在游戏的按键设置中）可将镜头恢复为普通等距视角。</R3D_Settings_FreeLookTip>
   <R3D_Settings_LookMiddle>自由视角：鼠标中键</R3D_Settings_LookMiddle>
   <R3D_Settings_LookMiddleTip>按住 {0} 并拖动。按住键可在游戏的按键设置中修改。</R3D_Settings_LookMiddleTip>
   <R3D_Settings_LookMiddleTipNoKey>按住键可在游戏的按键设置中修改。</R3D_Settings_LookMiddleTipNoKey>
-  <R3D_Settings_LookRight>自由视角：鼠标右键</R3D_Settings_LookRight>
-  <R3D_Settings_LookRightTip>未选中任何东西时拖动。</R3D_Settings_LookRightTip>
+  <!-- Port: the right button is held back from the game until let go (View3D, right-button look) -->
+  <R3D_Settings_LookRight>自由视角：鼠标右键拖动</R3D_Settings_LookRight>
+  <R3D_Settings_LookRightTip>按住鼠标右键并拖动即可转动和俯仰镜头。单纯的右键点击仍会在松开按键时下达命令、取消工具等。按下右键时按住 {0} 则使用游戏原本的右键功能（将多名征召的人排成一列）。</R3D_Settings_LookRightTip>
+  <R3D_Settings_LookRightTipNoKey>按住鼠标右键并拖动即可转动和俯仰镜头。单纯的右键点击仍会在松开按键时下达命令、取消工具等。可在游戏的按键设置中设置一个按住键，以使用游戏原本的右键功能。</R3D_Settings_LookRightTipNoKey>
   <R3D_Settings_LookSpeed>自由视角速度</R3D_Settings_LookSpeed>
   <R3D_Settings_InvertY>反转上下</R3D_Settings_InvertY>
   <R3D_Settings_InvertYTip>向上拖动时镜头转向俯视。</R3D_Settings_InvertYTip>
@@ -107,9 +109,11 @@
   <R3D_Settings_KeyTurnRight>镜头右转</R3D_Settings_KeyTurnRight>
   <R3D_Settings_KeyTiltDown>放低镜头</R3D_Settings_KeyTiltDown>
   <R3D_Settings_KeyTiltUp>抬高镜头</R3D_Settings_KeyTiltUp>
+  <R3D_Settings_KeyResetCamera>恢复为普通等距视角</R3D_Settings_KeyResetCamera>
   <R3D_Settings_KeyToggleRoofs>开关屋顶</R3D_Settings_KeyToggleRoofs>
   <R3D_Settings_FreeLookKeys>自由视角：{0}。</R3D_Settings_FreeLookKeys>
-  <R3D_Settings_LookKeysRight>未选中任何东西时用鼠标右键拖动</R3D_Settings_LookKeysRight>
+  <R3D_Settings_LookKeysRight>用鼠标右键拖动（单纯的右键点击仍会下达命令）</R3D_Settings_LookKeysRight>
+  <R3D_Settings_LookKeysRightHold>用鼠标右键拖动（单纯的右键点击仍会下达命令；按下右键时按住 {0} 则为游戏原本的右键）</R3D_Settings_LookKeysRightHold>
   <R3D_Settings_LookKeysDrag>用{0}拖动</R3D_Settings_LookKeysDrag>
   <R3D_Settings_LookKeysHoldDrag>按住 {0} 并用{1}拖动</R3D_Settings_LookKeysHoldDrag>
   <R3D_Settings_CornerButtonsNote>屏幕右下角游戏自带按钮旁也有 3D 视图和屋顶的按钮。</R3D_Settings_CornerButtonsNote>

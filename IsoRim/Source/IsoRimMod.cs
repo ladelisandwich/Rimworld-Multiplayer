@@ -77,6 +77,7 @@ namespace IsoRim
         public bool instantTurn = false; // Q and E (and the free-look snap) jump straight to the new angle, with no swing
         public bool smoothTurn = true;   // Port: Q and E turn the view smoothly while held; off: steps (snap45)
         public bool middleLooks = true;  // Port: the middle button turns the view with no hold key; with it, it drags the map
+        public bool resetKeyDefaulted;   // Port: the camera reset key's new default keys were given once (IsoRimStartup.DefaultResetKey)
         public bool invertTurn = false;  // Port: Q turns the view right and E left
         public float panSpeed = 1f;      // Port: keyboard and screen-edge panning speed in 3D (Patches.PanScale)
         public bool panZoom = true;      // Port: panning speed follows the zoom (the same speed across the screen; slower close up)
@@ -117,7 +118,7 @@ namespace IsoRim
         public float tiltCentre = 0.5f;      // sharp band centre, fraction of the screen height from the top (0.3..0.7)
         public float tiltWidth = 0.3f;       // sharp band width, fraction of the screen height (0.1..0.6)
         public bool tiltPop = false;         // slightly richer colours with tilt-shift (TiltShift.PopAmount)
-        public int lookMode = 0;         // free look drag button: 0 = middle button (Port: alone with middleLooks, else with R3D_LookModifier, Ctrl), 1 = right button with nothing selected
+        public int lookMode = 0;         // free look drag button: 0 = middle button (Port: alone with middleLooks, else with R3D_LookModifier, Ctrl), 1 = right button (Port: dragged; a plain click still gives orders, View3D right-button look)
         public bool pawns3D = true;
         public bool hairUnderHats = false;   // hair shown, tucked in, under headgear that covers only the upper head (People.HairUnderHat)
         public List<string> keepPaper = new List<string>();   // races (ThingDef defNames) kept as cards although an alien pack makes them 3D (Api 25, AlienFigures)
@@ -218,6 +219,7 @@ namespace IsoRim
             Scribe_Values.Look(ref instantTurn, "instantTurn", false);
             Scribe_Values.Look(ref smoothTurn, "smoothTurn", true);   // Port
             Scribe_Values.Look(ref middleLooks, "middleLooks", true);   // Port
+            Scribe_Values.Look(ref resetKeyDefaulted, "resetKeyDefaulted", false);   // Port
             Scribe_Values.Look(ref invertTurn, "invertTurn", false);   // Port
             Scribe_Values.Look(ref panSpeed, "panSpeed", 1f);   // Port
             Scribe_Values.Look(ref panZoom, "panZoom", true);   // Port
@@ -674,12 +676,17 @@ namespace IsoRim
 
         // Free look's own keys: "drag with the middle button (hold Ctrl to drag the map)" (Port: middleLooks), "hold Ctrl
         // and drag with the middle button" (without the hold key if it is unbound), or
-        // "drag with the right button while nothing is selected".
+        // "drag with the right button (a plain right click still gives orders; hold Ctrl as you press it for the game's own
+        // right button)" (Port, without the hold key if it is unbound).
         private static string LookKeysLabel(IsoRimSettings st)
         {
             if (st.lookMode == 1)
             {
-                return "R3D_Settings_LookKeysRight".Translate();
+                // Port: the hold key gives the game its right press at once (View3D, right-button look)
+                KeyBindingDef hold = R3DKeyDefOf.R3D_LookModifier;
+                return hold == null || hold.MainKey == KeyCode.None
+                    ? "R3D_Settings_LookKeysRight".Translate()
+                    : "R3D_Settings_LookKeysRightHold".Translate(hold.MainKeyLabel);
             }
             KeyBindingDef mod = R3DKeyDefOf.R3D_LookModifier;
             if (mod == null || mod.MainKey == KeyCode.None)
@@ -767,7 +774,11 @@ namespace IsoRim
                         Check(l, "R3D_Settings_MiddleLooks".Translate(hold.MainKeyLabel), ref st.middleLooks, "R3D_Settings_MiddleLooksTip".Translate(hold.MainKeyLabel));
                         l.Outdent(24f);
                     }
-                    if (l.RadioButton("R3D_Settings_LookRight".Translate(), st.lookMode == 1, 12f, "R3D_Settings_LookRightTip".Translate()))
+                    // Port: dragged with the right button held; a plain click still reaches the game (View3D, right-button look)
+                    string rightTip = hold == null || hold.MainKey == KeyCode.None
+                        ? "R3D_Settings_LookRightTipNoKey".Translate()
+                        : "R3D_Settings_LookRightTip".Translate(hold.MainKeyLabel);
+                    if (l.RadioButton("R3D_Settings_LookRight".Translate(), st.lookMode == 1, 12f, rightTip))
                     {
                         st.lookMode = 1;
                     }
@@ -846,6 +857,7 @@ namespace IsoRim
                 KeyRow(r, R3DKeyDefOf.R3D_TurnRight, "R3D_Settings_KeyTurnRight".Translate());
                 KeyRow(r, R3DKeyDefOf.R3D_TiltDown, "R3D_Settings_KeyTiltDown".Translate());
                 KeyRow(r, R3DKeyDefOf.R3D_TiltUp, "R3D_Settings_KeyTiltUp".Translate());
+                KeyRow(r, R3DKeyDefOf.R3D_ResetCamera, "R3D_Settings_KeyResetCamera".Translate());   // Port
                 KeyRow(r, R3DKeyDefOf.R3D_ToggleRoofs, "R3D_Settings_KeyToggleRoofs".Translate());
                 if (st.freeLook)
                 {
@@ -1317,6 +1329,61 @@ namespace IsoRim
             {
                 Log.Error("[IsoRim] Could not load models: " + e);
             }
+
+            DefaultResetKey();
+        }
+
+        // Port: the camera reset key (R3D_ResetCamera) had no default key until the port gave it Backspace and Keypad 5.
+        // A KeyPrefs.xml saved since IsoRim came in (the keyboard options were opened once) holds None in both slots,
+        // and the game only adds defaults for bindings missing from the file (KeyPrefsData.AddMissingDefaultBindings),
+        // so such a player would never get them. Once per settings file, a reset key bound to nothing takes its default
+        // keys, each only if no other binding uses that key; unbinding it later sticks.
+        private static void DefaultResetKey()
+        {
+            IsoRimSettings st = IsoRimMod.Settings;
+            KeyBindingDef def = R3DKeyDefOf.R3D_ResetCamera;
+            if (st == null || st.resetKeyDefaulted || def == null || KeyPrefs.KeyPrefsData == null)
+            {
+                return;
+            }
+            try
+            {
+                st.resetKeyDefaulted = true;
+                KeyPrefsData data = KeyPrefs.KeyPrefsData;
+                if (data.GetBoundKeyCode(def, KeyPrefs.BindingSlot.A) == KeyCode.None && data.GetBoundKeyCode(def, KeyPrefs.BindingSlot.B) == KeyCode.None)
+                {
+                    bool a = TakeKey(data, def, KeyPrefs.BindingSlot.A, def.defaultKeyCodeA);
+                    bool b = TakeKey(data, def, KeyPrefs.BindingSlot.B, def.defaultKeyCodeB);
+                    if (a || b)
+                    {
+                        KeyPrefs.Save();
+                        Log.Message("[IsoRim] The camera reset key was unbound; it now has its default keys ("
+                            + data.GetBoundKeyCode(def, KeyPrefs.BindingSlot.A).ToStringReadable() + ", "
+                            + data.GetBoundKeyCode(def, KeyPrefs.BindingSlot.B).ToStringReadable() + ").");
+                    }
+                }
+                IsoRimMod.Save();
+            }
+            catch (Exception e)
+            {
+                Log.Error("[IsoRim] Could not give the camera reset key its default keys: " + e);
+            }
+        }
+
+        private static bool TakeKey(KeyPrefsData data, KeyBindingDef def, KeyPrefs.BindingSlot slot, KeyCode key)
+        {
+            if (key == KeyCode.None)
+            {
+                return false;
+            }
+            foreach (KeyValuePair<KeyBindingDef, KeyBindingData> kv in data.keyPrefs)
+            {
+                if (kv.Key != def && kv.Value != null && (kv.Value.keyBindingA == key || kv.Value.keyBindingB == key))
+                {
+                    return false;   // the player uses that key for something else
+                }
+            }
+            return data.SetBinding(def, slot, key);
         }
     }
 }

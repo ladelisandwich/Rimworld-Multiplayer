@@ -57,13 +57,18 @@
 
   <KeyBindingDef>
     <defName>R3D_ResetCamera</defName>
-    <label>reset the camera (free look)</label>
+    <label>reset the camera to the normal isometric view</label>   <!-- Port: also from the flat view and first person -->
     <category>IsoRim</category>
+    <defaultKeyCodeA>Backspace</defaultKeyCodeA>   <!-- Port: Backspace and keypad 5 are unbound in the game and Multiplayer -->
+    <defaultKeyCodeB>Keypad5</defaultKeyCodeB>
   </KeyBindingDef>
 
   <KeyBindingDef>
     <defName>R3D_LookModifier</defName>
-    <label>hold key for the middle button (drag the map, or free look)</label>   <!-- Port: middleLooks swaps the two -->
+    <label>hold key for the middle button, or the game's own right button</label>   <!-- Port: middleLooks swaps what it
+      does with the middle button (drag the map, or free look); with the right-button look, held as the right button goes
+      down, the game gets that press at once (View3D, right-button look). Kept short: the keyboard options draw the
+      binding buttons over a long label. -->
     <category>IsoRim</category>
     <defaultKeyCodeA>LeftControl</defaultKeyCodeA>
     <defaultKeyCodeB>RightControl</defaultKeyCodeB>

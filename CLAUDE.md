@@ -410,7 +410,11 @@ in game by the user (Oct 27 06:45-06:55, hosted alone from a replay on
 split-record error, tiered compilation off. Oct 27 (user request): dried 
 animal corpses as 3D skeletons, like the people's (Known gaps, IsoRim, 
 animal skeletons); checked in a windowed test copy (36 species, 0 errors); 
-the user's own look is pending.
+the user's own look is pending. Oct 27 (user request): a one-press reset to 
+the normal isometric view (Backspace / Keypad 5) and the right-button free 
+look as an option (Known gaps, IsoRim, camera reset and right-button look); 
+all 8 scripted input checks pass in the windowed test copy, the user's own 
+feel check is pending.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -858,6 +862,42 @@ read of both codebases before merging. What changed and why:
   Mouse3) and MpInput's middle-click detection use Input.GetKey*(KeyCode.MouseN), 
   which UnityStubs answers only for keyboard keys, so those mouse bindings 
   never fire on 1.7 (the keyboard ping key works).
+  - Camera reset and right-button look (Oct 27, user request: "one button 
+  press to reset the view to a normal iso view" and "right click and hold" to 
+  change the camera angles). Reset: the existing R3D_ResetCamera binding (it 
+  had no default key) now defaults to Backspace and Keypad5, and 
+  View3D.ResetLook leaves first person, turns the 3D view and isometric on and 
+  sets turn 0, freeYaw 0, isoPitch 35.3 (yaw eases back to 45); zoom and 
+  everything else stay. It works from the flat view, not while typing, on the 
+  world map, under a camera-holding window or in a gravship cutscene. A 
+  KeyPrefs.xml saved since IsoRim came in holds None for it and the game only 
+  adds defaults for missing bindings, so IsoRimStartup.DefaultResetKey gives 
+  the defaults once per settings file (resetKeyDefaulted) when both slots are 
+  None and no other binding uses the key. Right button: lookMode 1 (the 
+  existing "right button" radio under free look, default still the middle 
+  button) used to look only with nothing selected, and the game still acted 
+  on every press (Architect tab, orders). The game acts on a right press as it 
+  goes down, inside UIRoot_Play.UIRootOnGUI, before CameraDriver.Update, so a 
+  prefix on MapInterface.HandleMapClicks (View3D.RightButtonMapEvent) holds a 
+  map right press back (Use), a drag past 6 px x UIScale turns and tilts like 
+  the middle-button look (first person: looks), and a release without moving 
+  replays the press (a copy of the release as MouseDown, button 1) for the rest 
+  of UIRootOnGUI, so orders, float menus, designator and targeter cancels and 
+  the Architect toggle happen on release; a UIRoot_Play.UIRootOnGUI finalizer 
+  puts the real event back (the prefix is installed only if the finalizer 
+  was). The look modifier (Ctrl) held at the press gives the game's own press 
+  at once (vanilla's formation drag of several drafted pawns). Focus loss 
+  (no MouseUp on 1.7), a release over a window, a fast double click and a 
+  flick within one frame are handled. Input only; the replayed click runs the 
+  same UI code, so Multiplayer syncs its orders as before. Checked in the 
+  windowed test copy with input queued through the engine's own InputSystem 
+  (the calls GlfwInputBridge makes, injected in a prefix on 
+  RimWorldWaylith.Imgui.ImguiDispatch.DispatchInput, one input step per frame; 
+  nothing reaches the desktop): right drag turns with nothing or a drafted 
+  pawn selected and gives no order, a plain click gives the Architect toggle 
+  and a drafted move order, Ctrl + press orders at once, Backspace and Keypad5 
+  reset (also from the flat view), lookMode 0 unchanged; 0 errors. Reviewed by 
+  two adversarial agents (7 low findings, all fixed).
   - Lighting research (Oct 26, user request, nothing built yet): 
   docs/isorim-lighting.md. Waylith does no lighting of its own (8-bit gamma 
   map target, no readable depth, no HDR, shadow-map hooks unused); all light 

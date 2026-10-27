@@ -432,6 +432,7 @@ namespace IsoRim
 
         private static void HandleKeys()
         {
+            TrackRightPress();   // Port: before anything below returns early, so a held-back right press never stays stuck
             // Keys are ignored while a text box has focus, so typing a 0 does not flip the view.
             bool typing = GUIUtility.keyboardControl != 0;
             if (ControlsLocked)
@@ -469,6 +470,14 @@ namespace IsoRim
                 FirstPerson.Toggle();
             }
 
+            // Port: the reset key goes back to the normal isometric view from anywhere, the flat view and first person
+            // included, so it is read before the 3D view check below. Not on the world map or under a window that holds the
+            // camera (CameraBlocked), as the turn and tilt keys.
+            if (!typing && !CameraBlocked && R3DKeyDefOf.R3D_ResetCamera != null && R3DKeyDefOf.R3D_ResetCamera.JustPressed)
+            {
+                ResetLook();
+            }
+
             if (!Active)
             {
                 lookDragging = false;
@@ -483,17 +492,6 @@ namespace IsoRim
             {
                 heldTurning = false;
                 return;
-            }
-            if (R3DKeyDefOf.R3D_ResetCamera != null && R3DKeyDefOf.R3D_ResetCamera.JustPressed)
-            {
-                if (FirstPerson.On)
-                {
-                    FirstPerson.ResetLook();
-                }
-                else
-                {
-                    ResetLook();
-                }
             }
 
             // Q and E turn the view an eighth or a quarter turn (see the options). The game uses the
@@ -602,8 +600,9 @@ namespace IsoRim
 
         // Whether the mouse buttons and keys for free look are held now (see IsoRimSettings.lookMode):
         // 0 = the middle button with the look modifier (Ctrl by default, a key binding in the game's keyboard options; none
-        // if unbound), or Port: alone with middleLooks, the modifier then dragging the map; 1 = right button while nothing
-        // is selected and no building is being placed. The drag button is a
+        // if unbound), or Port: alone with middleLooks, the modifier then dragging the map; 1 = Port: the right button once
+        // its held-back press has been dragged (RightLooking, see the right-button look below), whatever is selected or
+        // being placed. The drag button is a
         // mod setting, not a key binding: the game's keyboard options can't take a mouse button.
         public static bool LookHeld()
         {
@@ -623,8 +622,9 @@ namespace IsoRim
             }
             if (FirstPerson.On && Active)
             {
-                // Nothing to drag the map for in first person: the drag button alone looks round.
-                return Input.GetMouseButton(st.lookMode == 1 ? 1 : 2);
+                // Nothing to drag the map for in first person: the drag button alone looks round. Port: the right button
+                // through its held-back press, as on the map, so a right click there still gives orders.
+                return st.lookMode == 1 ? RightLooking : Input.GetMouseButton(2);
             }
             if (!st.freeLook || !Active)
             {
@@ -632,9 +632,9 @@ namespace IsoRim
             }
             if (st.lookMode == 1)
             {
-                return Input.GetMouseButton(1)
-                    && (Find.DesignatorManager == null || Find.DesignatorManager.SelectedDesignator == null)
-                    && (Find.Selector == null || Find.Selector.NumSelected == 0);
+                // Port: only a right press held back from the game and dragged (before: the right button while nothing was
+                // selected and nothing placed, with the game still acting on the press: the Architect menu toggled).
+                return RightLooking;
             }
             // The modifier is a key binding of its own (Ctrl by default: Alt is the game's cell inspector).
             if (st.middleLooks)
@@ -676,6 +676,186 @@ namespace IsoRim
             return k != KeyCode.None && Input.GetKey(k);
         }
 
+        // ---------------------------------------------------------------- Port: right-button look
+
+        // The right-button look (lookMode 1): dragged with the right button held, the view turns and tilts; a plain right
+        // click still does what it does in the game (orders for the selected people, cancelling a building being placed
+        // or a targeter, the Architect menu with nothing selected). The game acts on a right press as it goes down, in the
+        // OnGUI pass of that press (UIRoot_Play.UIRootOnGUI), a frame before the camera's Update could tell a drag from a
+        // click. So a right press that reaches the map's own clicks (no window, button or portrait took it) is held back
+        // there (RightButtonMapEvent, from the MapInterface.HandleMapClicks prefix) and decided later:
+        // - moved more than RightDragPixels with the button held: it turns the view (Looking, TrackRightPress) until let go;
+        //   moved that far and let go within one frame (a flick, before a frame's Update saw it move): it turns the view
+        //   by the whole drag at the release, as a look would have;
+        // - let go before that: the press is given to the game then, as a plain right press at the release point, and runs
+        //   through the rest of UIRoot_Play.UIRootOnGUI as one (Pending, replayed; EndRightReplay puts the real event back);
+        // - the button no longer held although no release reached the map (the window lost focus, which drops the buttons
+        //   with no release; or the release went to a window), or the look can no longer go on: dropped, no order given.
+        // With the look modifier (Ctrl) held as the button goes down the press isn't held back: the game's own right
+        // button, such as the formation drag of several drafted people. Draw and input only: nothing here writes game state;
+        // the replayed press runs the game's own UI code, which gives (and in Multiplayer syncs) orders as a click always did.
+        private enum RightPress { None, Pending, Looking }
+        private static RightPress rightPress;
+        private static Vector3 rightPressMouse;   // the pointer at the press (Input.mousePosition)
+        private static Map rightPressMap;         // (null again whenever the press ends: no old game's map kept alive)
+        private static Event replayFrom;          // the real event while a replayed press runs through UIRoot_Play.UIRootOnGUI
+        private static bool rightHookLogged;
+        private const float RightDragPixels = 6f;   // UI pixels (times the UI scale on screen)
+        // A quick double click at a low frame rate can let go of one press and make the next in the same frame. The game's
+        // input passes run the presses before the releases (ImguiDispatch.DispatchInput), so the press pass keeps the
+        // press before it here for the release pass that follows in that frame, which ends it and leaves the new one.
+        private static RightPress earlierPress;
+        private static Vector3 earlierPressMouse;
+        private static int earlierPressFrame = -1;   // Time.frameCount of that press pass
+
+        // The held-back right press has been dragged and the button is still down: the view turns (LookHeld).
+        private static bool RightLooking
+        {
+            get { return rightPress == RightPress.Looking && Input.GetMouseButton(1); }
+        }
+
+        // Whether a right press on the map is held back for the right-button look now: the option on (free look, or first
+        // person, which always looks with its drag button), the 3D view on, the map shown and nothing holding the camera.
+        private static bool RightLookOn()
+        {
+            IsoRimSettings st = IsoRimMod.Settings;
+            return st.lookMode == 1 && (st.freeLook || FirstPerson.On) && Active && !ControlsLocked && !CameraBlocked
+                && Find.CurrentMap != null && RimWorld.Planet.WorldRendererUtility.DrawingMap;
+        }
+
+        // MapInterface.HandleMapClicks prefix (Patches): every OnGUI event the map's own clicks get, in UIRoot_Play.UIRootOnGUI
+        // after the windows, the colonist bar and the main buttons have had it. Only right-button presses and releases count.
+        public static void RightButtonMapEvent()
+        {
+            replayFrom = null;   // (a replay is put back by EndRightReplay in the same pass; none is left from an earlier one)
+            Event e = Event.current;
+            if (e == null || e.button != 1)
+            {
+                return;
+            }
+            EventType type = e.type;
+            if (type == EventType.MouseDown)
+            {
+                // A release in this frame as well comes after this pass and ends the press before this one (kept for it).
+                earlierPress = Input.GetMouseButtonUp(1) && rightPressMap == Find.CurrentMap ? rightPress : RightPress.None;
+                earlierPressMouse = rightPressMouse;
+                earlierPressFrame = Time.frameCount;
+                if (!RightLookOn() || BindingHeld(R3DKeyDefOf.R3D_LookModifier, false))
+                {
+                    EndRightPress();   // the game's own right press, at once (with the modifier: no look from it)
+                    return;
+                }
+                rightPress = RightPress.Pending;
+                rightPressMouse = Input.mousePosition;
+                rightPressMap = Find.CurrentMap;
+                e.Use();   // nothing after this in UIRoot_Play.UIRootOnGUI sees the press
+                if (!rightHookLogged && Prefs.DevMode)
+                {
+                    rightHookLogged = true;
+                    Log.Message("[IsoRim] Right-button free look: a right press on the map was held back (MapInterface.HandleMapClicks hook runs).");
+                }
+                return;
+            }
+            if (type != EventType.MouseUp)
+            {
+                return;
+            }
+            RightPress was;
+            Vector3 from;
+            Map map;
+            if (earlierPressFrame == Time.frameCount && Input.GetMouseButton(1))
+            {
+                // The button went down again in this frame (its press pass ran first): this release ends the press before
+                // that one, kept by the press pass, and the new press stays as that pass left it.
+                was = earlierPress;
+                from = earlierPressMouse;
+                map = Find.CurrentMap;
+            }
+            else
+            {
+                was = rightPress;
+                from = rightPressMouse;
+                map = rightPressMap;
+                EndRightPress();
+            }
+            earlierPress = RightPress.None;
+            earlierPressFrame = -1;
+            if (was != RightPress.Pending || !RightLookOn() || Find.CurrentMap != map)
+            {
+                // A look ends (the release goes on to the game, which has nothing to do with it), or the view or the map
+                // changed under the press.
+                return;
+            }
+            if (RightPressMoved(from))
+            {
+                // A flick: dragged past the threshold and let go within one frame, before an Update could see it move
+                // (TrackRightPress). The view turns by the whole drag, as a look would have; no order.
+                LookBy(Input.mousePosition - from);
+                return;
+            }
+            if (Find.WindowStack != null && Find.WindowStack.GetWindowAt(UI.MousePositionOnUIInverted) != null)
+            {
+                return;   // nothing to give the press to: a window over the pointer
+            }
+            // A click: the game gets its right press now, at the release point (the press point give or take the drag
+            // threshold; orders aim at UI.MouseMapPosition, the pointer now). The release itself is used, as the game's
+            // Selector uses every map release, and comes back as Event.current when UIRoot_Play.UIRootOnGUI ends.
+            Event press = new Event(e);
+            press.type = EventType.MouseDown;
+            press.rawType = EventType.MouseDown;
+            press.button = 1;
+            press.clickCount = 1;
+            e.Use();
+            replayFrom = e;
+            Event.current = press;
+        }
+
+        // UIRoot_Play.UIRootOnGUI finalizer (Patches): the real event back after a replayed press, for what reads it after
+        // the UI root in the same pass (CameraDriver.CameraDriverOnGUI, the windows' contents).
+        public static void EndRightReplay()
+        {
+            if (replayFrom != null)
+            {
+                Event.current = replayFrom;
+                replayFrom = null;
+            }
+        }
+
+        // Once a frame (HandleKeys): a held-back press dropped when the button is no longer down although no release reached
+        // the map, or when the look can't go on (the option or the 3D view off, another map or the world shown, a window
+        // holding the camera, a gravship cutscene); a press dragged past RightDragPixels turns the view from now on.
+        private static void TrackRightPress()
+        {
+            if (rightPress == RightPress.None)
+            {
+                return;
+            }
+            if (!Input.GetMouseButton(1) || !RightLookOn() || Find.CurrentMap != rightPressMap)
+            {
+                EndRightPress();
+                return;
+            }
+            if (rightPress == RightPress.Pending && RightPressMoved(rightPressMouse))
+            {
+                rightPress = RightPress.Looking;
+            }
+        }
+
+        // No right press held back any more.
+        private static void EndRightPress()
+        {
+            rightPress = RightPress.None;
+            rightPressMap = null;
+        }
+
+        // The pointer has moved further than a click from where the right button went down. Input.mousePosition counts
+        // screen pixels, so the threshold grows with the UI scale (a 4K screen at scale 2: 12 pixels).
+        private static bool RightPressMoved(Vector3 from)
+        {
+            float limit = RightDragPixels * Prefs.UIScale;
+            return ((Vector2)(Input.mousePosition - from)).sqrMagnitude > limit * limit;
+        }
+
         // Dragging turns the camera round (left and right) and tilts it (up and down). A drag only
         // starts with the pointer over the map, not over a window.
         private static void HandleLook()
@@ -688,13 +868,23 @@ namespace IsoRim
             Vector3 mouse = Input.mousePosition;
             if (!lookDragging)
             {
-                if (Find.WindowStack != null && Find.WindowStack.GetWindowAt(UI.MousePositionOnUIInverted) != null)
+                if (rightPress == RightPress.Looking)
                 {
+                    // Port: the right-button look began on the map at the press (no window took it), and turns from there:
+                    // the few pixels moved before it counted as a drag turn the view too, so it doesn't lag the pointer.
+                    lookDragging = true;
+                    lookLastMouse = rightPressMouse;
+                }
+                else
+                {
+                    if (Find.WindowStack != null && Find.WindowStack.GetWindowAt(UI.MousePositionOnUIInverted) != null)
+                    {
+                        return;
+                    }
+                    lookDragging = true;
+                    lookLastMouse = mouse;
                     return;
                 }
-                lookDragging = true;
-                lookLastMouse = mouse;
-                return;
             }
             Vector3 d = mouse - lookLastMouse;
             lookLastMouse = mouse;
@@ -702,6 +892,12 @@ namespace IsoRim
             {
                 return;
             }
+            LookBy(d);   // Port: also for a flicked right press (RightButtonMapEvent)
+        }
+
+        // Port: the view turned and tilted (or, in first person, looked round) by a pointer movement in screen pixels.
+        private static void LookBy(Vector3 d)
+        {
             IsoRimSettings st = IsoRimMod.Settings;
             float sens = Mathf.Clamp(st.lookSensitivity, 0.02f, 2f);
             if (FirstPerson.On)
@@ -733,20 +929,19 @@ namespace IsoRim
             st.freeYaw = 0f;
         }
 
-        // The reset key: the starting direction and angle.
+        // The reset key: the starting direction and angle. Port: of the normal isometric view, from wherever the camera is:
+        // out of first person (as its own key leaves it, the camera put over the person, without its message), the 3D view
+        // on and isometric (as the isometric key turns it on from the flat game), no turn, the true isometric angle. The yaw
+        // eases back (TurnCamera); zoom, perspective and every other option stay as they are.
         public static void ResetLook()
         {
+            FirstPerson.Leave(null);   // Port
             IsoRimSettings st = IsoRimMod.Settings;
             st.freeYaw = 0f;
             st.turn = 0;
-            if (st.isometric)
-            {
-                st.isoPitch = 35.3f;
-            }
-            else
-            {
-                st.pitch = 55f;
-            }
+            st.isometric = true;   // Port: was the angle of the current mode only (straight-on: pitch 55)
+            st.isoPitch = 35.3f;
+            Active = true;   // Port
             Messages.Message("R3D_Msg_CameraReset".Translate(), MessageTypeDefOf.SilentInput, false);
         }
 
@@ -976,6 +1171,7 @@ namespace IsoRim
             // MP: Multiplayer reloads the game while a session goes on (hosting, a player joining, a resync), so the
             // player's 3D view is kept through those reloads instead of switching off each time.
             Active = LockedOn || HarnessStartsOn || Active && MpBridge.InSession;
+            EndRightPress();   // Port: no right press held back from the last game (nor its map kept)
             lastActive = false;
             appliedSig = 0;
             pendingSig = 0;

@@ -53,12 +53,14 @@
   <R3D_Settings_InstantTurn>Instant camera turns</R3D_Settings_InstantTurn>
   <R3D_Settings_InstantTurnTip>The camera follows Q and E at once, with no easing swing. Can help if turning the view makes you dizzy.</R3D_Settings_InstantTurnTip>
   <R3D_Settings_FreeLook>Free look</R3D_Settings_FreeLook>
-  <R3D_Settings_FreeLookTip>Drag with the mouse to turn the camera all the way round and tilt it (5° to 89°). With smooth turning off, Q and E snap to the next step. The reset key (unbound at first) is in the game's keyboard options.</R3D_Settings_FreeLookTip>
+  <R3D_Settings_FreeLookTip>Drag with the mouse to turn the camera all the way round and tilt it (5° to 89°). With smooth turning off, Q and E snap to the next step. The reset key (Backspace at first, in the game's keyboard options) puts the camera back to the normal isometric view.</R3D_Settings_FreeLookTip>
   <R3D_Settings_LookMiddle>Free look: middle button</R3D_Settings_LookMiddle>
   <R3D_Settings_LookMiddleTip>Hold {0} and drag. The hold key is in the game's keyboard options.</R3D_Settings_LookMiddleTip>
   <R3D_Settings_LookMiddleTipNoKey>The hold key is in the game's keyboard options.</R3D_Settings_LookMiddleTipNoKey>
-  <R3D_Settings_LookRight>Free look: right button</R3D_Settings_LookRight>
-  <R3D_Settings_LookRightTip>Drag while nothing is selected.</R3D_Settings_LookRightTip>
+  <!-- Port: the right button is held back from the game until let go (View3D, right-button look) -->
+  <R3D_Settings_LookRight>Free look: drag with the right button</R3D_Settings_LookRight>
+  <R3D_Settings_LookRightTip>Hold the right button and drag to turn and tilt the camera. A plain right click still gives orders, cancels a tool and so on, when the button is let go. Hold {0} as you press the button for the game's own right button (spreading several drafted people into a line).</R3D_Settings_LookRightTip>
+  <R3D_Settings_LookRightTipNoKey>Hold the right button and drag to turn and tilt the camera. A plain right click still gives orders, cancels a tool and so on, when the button is let go. A hold key for the game's own right button can be set in the game's keyboard options.</R3D_Settings_LookRightTipNoKey>
   <R3D_Settings_LookSpeed>Free look speed</R3D_Settings_LookSpeed>
   <R3D_Settings_InvertY>Invert up and down</R3D_Settings_InvertY>
   <R3D_Settings_InvertYTip>Dragging up tilts the camera toward top-down.</R3D_Settings_InvertYTip>
@@ -107,9 +109,11 @@
   <R3D_Settings_KeyTurnRight>turn the camera right</R3D_Settings_KeyTurnRight>
   <R3D_Settings_KeyTiltDown>lower the camera</R3D_Settings_KeyTiltDown>
   <R3D_Settings_KeyTiltUp>raise the camera</R3D_Settings_KeyTiltUp>
+  <R3D_Settings_KeyResetCamera>back to the normal isometric view</R3D_Settings_KeyResetCamera>
   <R3D_Settings_KeyToggleRoofs>roofs on and off</R3D_Settings_KeyToggleRoofs>
   <R3D_Settings_FreeLookKeys>Free look: {0}.</R3D_Settings_FreeLookKeys>
-  <R3D_Settings_LookKeysRight>drag with the right button while nothing is selected</R3D_Settings_LookKeysRight>
+  <R3D_Settings_LookKeysRight>drag with the right button (a plain right click still gives orders)</R3D_Settings_LookKeysRight>
+  <R3D_Settings_LookKeysRightHold>drag with the right button (a plain right click still gives orders; hold {0} as you press it for the game's own right button)</R3D_Settings_LookKeysRightHold>
   <R3D_Settings_LookKeysDrag>drag with {0}</R3D_Settings_LookKeysDrag>
   <R3D_Settings_LookKeysHoldDrag>hold {0} and drag with {1}</R3D_Settings_LookKeysHoldDrag>
   <R3D_Settings_CornerButtonsNote>The 3D view and the roofs also have buttons in the bottom right corner of the screen, next to the game's own.</R3D_Settings_CornerButtonsNote>
