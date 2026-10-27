@@ -1114,8 +1114,32 @@ namespace IsoRim
             }
             if (View3D.Ready && __result != Vector2.zero)
             {
-                __result = View3D.ScreenMoveToGround(__result, false);
+                __result = View3D.ScreenMoveToGround(__result, false) * PanScale(__instance);   // Port: PanScale
             }
+        }
+
+        // Port: the 3D panning speed (keys and the screen edge; the middle-button drag keeps the grabbed ground under the
+        // pointer and is not scaled): IsoRimSettings.panSpeed, and with panZoom the zoom. The game itself slows panning a
+        // little close up (CameraDriver.Update multiplies this vector by 0.3 to 1 across the zoom range); with panZoom the
+        // speed goes with the view's size instead, so it moves across the screen at the same speed at any zoom: the same as
+        // the game's when zoomed all the way out, several times slower close up.
+        private static float PanScale(CameraDriver driver)
+        {
+            IsoRimSettings st = IsoRimMod.Settings;
+            float scale = Mathf.Clamp(st.panSpeed, 0.1f, 5f);
+            CameraMapConfig config = driver != null ? driver.config : null;
+            if (st.panZoom && config != null)
+            {
+                float min = config.sizeRange.min;
+                float max = config.sizeRange.max;
+                if (max > min + 0.01f)
+                {
+                    float size = Mathf.Clamp(driver.RootSize, min, max);
+                    float game = (size - min) / (max - min) * 0.7f + 0.3f;   // the game's own factor, taken back out
+                    scale *= Mathf.Max(0.02f, size / max) / game;
+                }
+            }
+            return scale;
         }
 
         // Dragging the map with the middle mouse button. The game's own drag moves the camera

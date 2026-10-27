@@ -34,6 +34,12 @@
   <R3D_Settings_IsometricTip>The camera turned 45 degrees and lowered, as in isometric games. Off: north is up.</R3D_Settings_IsometricTip>
   <!-- Port: smoothTurn and middleLooks (the Multiplayer port's camera defaults) -->
   <R3D_Settings_SmoothTurn>Turn smoothly while Q or E is held</R3D_Settings_SmoothTurn>
+  <R3D_Settings_InvertTurn>Invert Q and E</R3D_Settings_InvertTurn>
+  <R3D_Settings_InvertTurnTip>Q turns the camera right and E left.</R3D_Settings_InvertTurnTip>
+  <R3D_Settings_PanSpeed>Camera pan speed</R3D_Settings_PanSpeed>
+  <R3D_Settings_PanSpeedTip>How fast the movement keys and the screen edge move the camera in the 3D view. Dragging the map with the mouse isn't affected.</R3D_Settings_PanSpeedTip>
+  <R3D_Settings_PanZoom>Pan slower when zoomed in</R3D_Settings_PanZoom>
+  <R3D_Settings_PanZoomTip>The camera pans at the same speed across the screen at any zoom: the game's speed when zoomed all the way out, several times slower close up. Off: the game's own, only a little slower close up.</R3D_Settings_PanZoomTip>
   <R3D_Settings_SmoothTurnTip>Q and E keep turning the camera for as long as they are held, as in 3D strategy games. Off: they turn it in steps (below).</R3D_Settings_SmoothTurnTip>
   <R3D_Settings_TurnSmoothly>camera turns smoothly</R3D_Settings_TurnSmoothly>
   <R3D_Settings_MiddleLooks>Middle button turns the view ({0} + middle button drags the map)</R3D_Settings_MiddleLooks>

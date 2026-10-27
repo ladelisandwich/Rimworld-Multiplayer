@@ -77,6 +77,9 @@ namespace IsoRim
         public bool instantTurn = false; // Q and E (and the free-look snap) jump straight to the new angle, with no swing
         public bool smoothTurn = true;   // Port: Q and E turn the view smoothly while held; off: steps (snap45)
         public bool middleLooks = true;  // Port: the middle button turns the view with no hold key; with it, it drags the map
+        public bool invertTurn = false;  // Port: Q turns the view right and E left
+        public float panSpeed = 1f;      // Port: keyboard and screen-edge panning speed in 3D (Patches.PanScale)
+        public bool panZoom = true;      // Port: panning speed follows the zoom (the same speed across the screen; slower close up)
         public bool freeLook = true;     // the view can be turned and tilted by dragging with the mouse
         public float freeYaw = 0f;       // degrees turned by free look, on top of the eighth turns
         public float lookSensitivity = 0.25f;   // degrees per pixel dragged
@@ -213,6 +216,9 @@ namespace IsoRim
             Scribe_Values.Look(ref instantTurn, "instantTurn", false);
             Scribe_Values.Look(ref smoothTurn, "smoothTurn", true);   // Port
             Scribe_Values.Look(ref middleLooks, "middleLooks", true);   // Port
+            Scribe_Values.Look(ref invertTurn, "invertTurn", false);   // Port
+            Scribe_Values.Look(ref panSpeed, "panSpeed", 1f);   // Port
+            Scribe_Values.Look(ref panZoom, "panZoom", true);   // Port
             Scribe_Values.Look(ref freeLook, "freeLook", true);
             if (Scribe.mode == LoadSaveMode.LoadingVars && Scribe.loader.curXmlParent != null && Scribe.loader.curXmlParent["smoothTurn"] == null)
             {
@@ -726,6 +732,10 @@ namespace IsoRim
                 Section(l, "R3D_Settings_Camera".Translate(), "R3D_Settings_CameraNote".Translate());
                 Check(l, "R3D_Settings_Isometric".Translate(), ref st.isometric, "R3D_Settings_IsometricTip".Translate());
                 Check(l, "R3D_Settings_SmoothTurn".Translate(), ref st.smoothTurn, "R3D_Settings_SmoothTurnTip".Translate());   // Port
+                Check(l, "R3D_Settings_InvertTurn".Translate(), ref st.invertTurn, "R3D_Settings_InvertTurnTip".Translate());   // Port
+                st.panSpeed = Slider(l, "R3D_Settings_PanSpeed".Translate(), st.panSpeed, 0.25f, 3f, st.panSpeed.ToStringPercent(),
+                    "R3D_Settings_PanSpeedTip".Translate());   // Port
+                Check(l, "R3D_Settings_PanZoom".Translate(), ref st.panZoom, "R3D_Settings_PanZoomTip".Translate());   // Port
                 if (!st.smoothTurn)   // Port: the steps are only used with smooth turning off
                 {
                     Check(l, "R3D_Settings_Snap45".Translate(), ref st.snap45, "R3D_Settings_Snap45Tip".Translate());

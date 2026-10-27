@@ -34,6 +34,12 @@
   <R3D_Settings_IsometricTip>镜头转 45 度并压低，类似等距视角游戏。关闭：北方朝上。</R3D_Settings_IsometricTip>
   <!-- Port: smoothTurn and middleLooks (the Multiplayer port's camera defaults) -->
   <R3D_Settings_SmoothTurn>按住 Q 或 E 时平滑转动</R3D_Settings_SmoothTurn>
+  <R3D_Settings_InvertTurn>反转 Q 和 E</R3D_Settings_InvertTurn>
+  <R3D_Settings_InvertTurnTip>Q 向右转动镜头，E 向左。</R3D_Settings_InvertTurnTip>
+  <R3D_Settings_PanSpeed>镜头平移速度</R3D_Settings_PanSpeed>
+  <R3D_Settings_PanSpeedTip>3D 视图中方向键和屏幕边缘移动镜头的速度。用鼠标拖动地图不受影响。</R3D_Settings_PanSpeedTip>
+  <R3D_Settings_PanZoom>放大时平移更慢</R3D_Settings_PanZoom>
+  <R3D_Settings_PanZoomTip>任何缩放下镜头在屏幕上的平移速度都相同：完全拉远时与游戏相同，拉近时慢好几倍。关闭：使用游戏自己的速度，拉近时只略慢。</R3D_Settings_PanZoomTip>
   <R3D_Settings_SmoothTurnTip>按住 Q 和 E 时镜头持续转动，就像 3D 策略游戏一样。关闭：按档转动（见下方）。</R3D_Settings_SmoothTurnTip>
   <R3D_Settings_TurnSmoothly>镜头平滑转动</R3D_Settings_TurnSmoothly>
   <R3D_Settings_MiddleLooks>鼠标中键转动视角（{0} + 中键拖动地图）</R3D_Settings_MiddleLooks>

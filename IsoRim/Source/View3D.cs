@@ -522,6 +522,10 @@ namespace IsoRim
                         heldTurnArmed = false;
                     }
                     float spin = heldTurnArmed ? (right ? 1f : 0f) - (left ? 1f : 0f) : 0f;
+                    if (turnSettings.invertTurn)
+                    {
+                        spin = -spin;   // Port: invertTurn
+                    }
                     if (spin != 0f)
                     {
                         // (a hitch can't jump the view: at most a tenth of a second counts, as the game's CameraDriver.MaxDeltaTime)
@@ -533,11 +537,11 @@ namespace IsoRim
                 {
                     if (R3DKeyDefOf.R3D_TurnLeft != null && R3DKeyDefOf.R3D_TurnLeft.JustPressed)
                     {
-                        SnapTurn(turnSettings, -1);
+                        SnapTurn(turnSettings, turnSettings.invertTurn ? 1 : -1);   // Port: invertTurn
                     }
                     if (R3DKeyDefOf.R3D_TurnRight != null && R3DKeyDefOf.R3D_TurnRight.JustPressed)
                     {
-                        SnapTurn(turnSettings, 1);
+                        SnapTurn(turnSettings, turnSettings.invertTurn ? -1 : 1);   // Port: invertTurn
                     }
                 }
             }

@@ -880,7 +880,15 @@ read of both codebases before merging. What changed and why:
   headless on Proton 1.7.4990: the game's Slang compiles all 38 IsoRim 
   variants (ShaderCheck, now sequential: compiling on worker threads during 
   the static constructors hung the load), a game loads to a map with 0 
-  errors. Frame cost unmeasured; in-game check pending.
+  errors. Frame cost unmeasured. First look in game by the user (Oct 26): 
+  "looks good".
+  - Camera pan (Oct 26, user request): IsoRimSettings.panSpeed (slider 
+  25-300%), panZoom (on: Patches.PanScale in DollyVect_Postfix takes the 
+  game's own 0.3-1 zoom factor back out and scales by RootSize / the 
+  maximum zoom, so keys and the screen edge pan at the same speed across the 
+  screen at any zoom: the game's speed zoomed out, about 4.5x slower at the 
+  closest zoom) and invertTurn (Q/E swapped, smooth and stepped). 3D view 
+  only; the middle-button map drag isn't scaled.
   - To check in game (two players, one with 3D on and one off, both on the 
   same build): a smoke or toxic spewer on a map (dev mode can spawn one), 
   idle drafted pawns (walk one east and stop: the 3D player sees it face 
