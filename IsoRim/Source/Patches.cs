@@ -659,6 +659,8 @@ namespace IsoRim
                 Log.Error("[IsoRim] Could not hook beams and streams: " + e);
             }
 
+            Fp.FpHooks.InstallAll(harmony);   // Port: first-person play
+
             // Stacked floors (Floors): only when a gameplay addon has registered a floor layout.
             Ready = true;
             Floors.ApplyPatches();
@@ -1119,6 +1121,7 @@ namespace IsoRim
                 View3D.Active = View3D.LockedOn || View3D.HarnessStartsOn;
                 MpFacing.ForgetAll();   // MP: kept drafted facings end with the game
             }
+            Fp.FpHooks.OnRootUpdate();   // Port: first-person play
         }
 
         public static void RegenerateEverythingNow_Prefix(MapDrawer __instance)
@@ -1661,6 +1664,7 @@ namespace IsoRim
         // The game assumes the camera looks straight down when it turns a mouse position into a map cell.
         public static bool UIToMapPosition_Prefix(Vector2 __0, ref Vector3 __result)
         {
+            if (Fp.FpHooks.PointerMapPos(__0, ref __result)) return false;   // Port: first-person play
             if (!View3D.Ready)
             {
                 return true;
@@ -2340,6 +2344,7 @@ namespace IsoRim
         // MP: __1 is the game's optional bracket material; Multiplayer passes each player's colour for their selection.
         public static bool DrawSelectionBracketFor_Prefix(object __0, Material __1)
         {
+            if (Fp.FpHooks.HidesBracket(__0)) return false;   // Port: first-person play
             Thing t = __0 as Thing;
             if (!View3D.Ready || t == null || !t.Spawned || t.Map != Find.CurrentMap)
             {
@@ -2364,6 +2369,7 @@ namespace IsoRim
             {
                 return;
             }
+            if (Fp.FpHooks.ThingsUnderCrosshair(ref __result, __2)) return;   // Port: first-person play
             try
             {
                 List<Thing> hits = Interaction.PickUnderPointer(Find.CurrentMap);

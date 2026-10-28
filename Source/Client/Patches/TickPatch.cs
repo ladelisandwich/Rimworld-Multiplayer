@@ -22,6 +22,10 @@ namespace Multiplayer.Client
         public static int tickUntil; // Ticks < tickUntil can be simulated
         public static int workTicks;
         public static bool currentExecutingCmdIssuedBySelf;
+        // The player id the server stamped on the running command (ScheduledCommand.playerId), -1 outside a command or
+        // for the server's own commands. The same on every client, so command bodies may decide on it; read by the
+        // built-in IsoRim's first-person play to know who sent a control command (IsoRimFp)
+        public static int currentExecutingCmdPlayerId = -1;
         public static CommandType? currentExecutingCmdType;
         public static bool serverFrozen;
         public static int frozenAt;

@@ -186,6 +186,7 @@ public class AsyncWorldTimeComp : IExposable, ITickable
         data.Log.Node($"{cmdType} Global");
 
         TickPatch.currentExecutingCmdIssuedBySelf = cmd.IsIssuedBySelf() && !TickPatch.Simulating;
+        TickPatch.currentExecutingCmdPlayerId = cmd.playerId;
         TickPatch.currentExecutingCmdType = cmdType;
 
         PreContext();
@@ -254,6 +255,10 @@ public class AsyncWorldTimeComp : IExposable, ITickable
                     foreach (var map in Find.Maps)
                         map.AsyncTime().ResetPlayerCount();
 
+                    // None of the saved session's players is here any more, so none of them controls a pawn in first
+                    // person (data only; each map's tick releases the pawns)
+                    IsoRimFp.ResetSession();
+
                     MpLog.Log($"Player counts of the world and {mapCount} maps reset by the server");
                     return;
                 }
@@ -288,6 +293,7 @@ public class AsyncWorldTimeComp : IExposable, ITickable
             FactionExtensions.PopFaction();
             PostContext();
             TickPatch.currentExecutingCmdIssuedBySelf = false;
+            TickPatch.currentExecutingCmdPlayerId = -1;
             TickPatch.currentExecutingCmdType = null;
 
             Multiplayer.game.sync.TryAddCommandRandomState(randState);
@@ -350,6 +356,11 @@ public class AsyncWorldTimeComp : IExposable, ITickable
     {
         TimeVote vote = (TimeVote)data.ReadByte();
         int tickableId = data.ReadInt32();
+
+        // The server sends this vote stamped with a player who disconnected, desynced or asked to rejoin
+        // (ServerPlayer.ResetTimeVotes): that player's first-person pawn goes back to the AI on every client at this
+        // world tick (data only; the map's own tick releases it)
+        if (vote == TimeVote.PlayerResetGlobal) IsoRimFp.PlayerLeft(cmd.playerId);
 
         // Update the vote
         if (vote >= TimeVote.ResetTickable)

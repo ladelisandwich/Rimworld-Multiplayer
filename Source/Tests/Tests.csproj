@@ -24,6 +24,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <!-- First-person play's pure functions (IsoRim side, no Verse or Unity), tested by FpMathTest -->
+      <Compile Include="..\IsoRim\Fp\FpMath.cs" Link="Fp\FpMath.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\ChatCommandContracts\ChatCommandContracts.csproj" />
       <ProjectReference Include="..\Common\Common.csproj" />
       <ProjectReference Include="..\SourceGen\SourceGen.csproj" ReferenceOutputAssembly="true" />

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- First-person play, integrator's keys (Source/IsoRim/Fp: FpIds, FpSettings). Each track has its own IsoRimFp_<Track>.xml. -->
+
+  <R3D_Fp_You>you</R3D_Fp_You>
+
+  <!-- ==================== Mod settings: View tab, under the first-person camera ==================== -->
+  <R3D_Fp_Settings_Section>First-person play</R3D_Fp_Settings_Section>
+  <R3D_Fp_Settings_SectionTip>With play on, the first person key on one of your own colonists takes control of them: the mouse looks round, the movement keys walk, the left button does the main action on what the crosshair points at and the right button opens every order. Shift and the first person key, or the key on anyone else, only rides along as before.</R3D_Fp_Settings_SectionTip>
+  <R3D_Fp_Settings_Play>Control the colonist (play)</R3D_Fp_Settings_Play>
+  <R3D_Fp_Settings_PlayTip>On: the first person key takes control of the one selected colonist of yours. Off: it only rides along in their head, as before.</R3D_Fp_Settings_PlayTip>
+  <R3D_Fp_Settings_Sensitivity>Mouse look speed</R3D_Fp_Settings_Sensitivity>
+  <R3D_Fp_Settings_SensitivityTip>How far the view turns for each step of mouse movement while you control a colonist. The camera's "Invert up and down" option applies too.</R3D_Fp_Settings_SensitivityTip>
+  <R3D_Fp_Settings_DegPerCount>{0}° a step</R3D_Fp_Settings_DegPerCount>
+  <R3D_Fp_Settings_Hints>Action hint under the crosshair</R3D_Fp_Settings_Hints>
+  <R3D_Fp_Settings_HintsTip>Shows what the left button would do on what the crosshair points at.</R3D_Fp_Settings_HintsTip>
+  <R3D_Fp_Settings_CheatSheet>Show the controls once per session</R3D_Fp_Settings_CheatSheet>
+  <R3D_Fp_Settings_CheatSheetTip>A line with the keys and buttons, for a few seconds the first time you take control in a session.</R3D_Fp_Settings_CheatSheetTip>
+  <R3D_Fp_Settings_AnyDistance>Left button works at any distance</R3D_Fp_Settings_AnyDistance>
+  <R3D_Fp_Settings_AnyDistanceTip>Off: the left button only acts on things within arm's reach (walk up to them). The right-button menu always works at any distance.</R3D_Fp_Settings_AnyDistanceTip>
+  <R3D_Fp_Settings_MoveInterrupt>Hold to walk away from a job</R3D_Fp_Settings_MoveInterrupt>
+  <R3D_Fp_Settings_MoveInterruptTip>How long a movement key must be held before it stops the job the colonist is doing, so a brief tap doesn't cancel an order.</R3D_Fp_Settings_MoveInterruptTip>
+  <R3D_Fp_Settings_Ms>{0} ms</R3D_Fp_Settings_Ms>
+  <R3D_Fp_Settings_Resume>Take control again after a reload</R3D_Fp_Settings_Resume>
+  <R3D_Fp_Settings_ResumeTip>In multiplayer every join point and resync reloads the game. On: you are back in control of the same colonist afterwards.</R3D_Fp_Settings_ResumeTip>
+  <R3D_Fp_Settings_HudScale>Crosshair and hint size</R3D_Fp_Settings_HudScale>
+  <R3D_Fp_Settings_HudScaleTip>Size of the first-person crosshair, hint, status line and messages.</R3D_Fp_Settings_HudScaleTip>
+  <R3D_Fp_Settings_Reset>Reset first-person play options</R3D_Fp_Settings_Reset>
+
+</LanguageData>

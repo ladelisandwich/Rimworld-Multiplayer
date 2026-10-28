@@ -289,6 +289,21 @@ python3 scripts/animal_bones/preview.py --only X,Y|--all|--plan birds
 [--out DIR] (living vs bones, standing and dead, side and 3/4; the orange line is 
 the living silhouette). Rerun both after IsoRim's living animal models change 
 (a subtree pull touching Models/animal_*.obj or their ModelDefs).
+- First-person play (Source/IsoRim/Fp, namespace IsoRim.Fp, compiled into 
+IsoRim.dll; spec docs/fp-play-spec.md): its defs 
+(Source/IsoRim/Defs) are staged into IsoRim/Defs/IsoRimMp/ and its keyed 
+strings (Source/IsoRim/Languages) merged into IsoRim/Languages/ 
+(stage_isorim). The only subtree edits are one-line calls into 
+Fp/FpHooks.cs marked "// Port: first-person play" (15 in IsoRim/Source, 
+one in Source/IsoRim/MpView.cs); re-check them after every subtree pull. 
+Self-test: python3 scripts/fp_selftest.py <scenario> [--mp] (install 
+first; windowed Proton instances under ~/.rw-mp-test/fptest-<role>, so 
+only while nobody plays; refuses when a RimWorld is running unless 
+--force). The harness (Fp/Test) only runs with dev mode on and 
+ISORIM_FPTEST=<scenario>[:solo|host|client]; it logs FPTEST PASS/FAIL 
+lines and FPSTATE lines, which scripts/fp_compare.py compares between host 
+and client. In game: dev mode, Debug actions > IsoRim > "FP: patch hit 
+counts".
 - Two instances on this PC: ./scripts/run_two.sh (host, then Enter, then a 
 client that auto-joins 127.0.0.1:30502 with -connect=). Each instance has 
 its own XDG_CONFIG_HOME and -savedatafolder under ~/.rw-mp-test/<host|client>; 
@@ -419,6 +434,24 @@ the normal isometric view (Backspace / Keypad 5) and the right-button free
 look as an option (Known gaps, IsoRim, camera reset and right-button look); 
 all 8 scripted input checks pass in the windowed test copy; the user: "this 
 feels good" (Oct 27).
+- [ ] Extra (Oct 27, user request): first-person play, F5 takes control of 
+a colonist (milestones M1-M6 of docs/fp-play-spec.md). M1.0 scaffold done: every 
+Fp file of the spec as a compiling stub with the spec's signatures, FpHooks 
+with the 16 Port lines, FpIds/FpMpHooks (bound by Multiplayer.dll's 
+IsoRimFp), FpSettings, the IsoRimFp_Tuning def, two key bindings, FpMath 
+with unit tests (FpMathTest), the harness, scene, M1 scenarios and both 
+runners. M1 code complete (Oct 27): track A (FpPlay, FpCamera, FpInput, 
+FpMenu, FpHud), B (FpMapComp, FpSync, FpControlJob, IsoRimFp_Control.xml) 
+and C (FpPick, FpActions) landed and were integrated, then fixed after a 
+review (Known gaps, first-person play, M1). Builds with no warnings in the 
+new files, 231 tests pass, staging passes check_staged, fp_selftest.py 
+--dry-run starts every M1 scenario. Oct 27: all 26 M1 scenarios (21 solo, 
+5 --mp) pass in the Proton test copies with 0 error lines in any log; every 
+--mp compare matched (34+ common state lines) with no desync file. Fixed on 
+the way: the played colonist was among the float menu's clicked pawns (the 
+left button chose "Drop assault rifle"), per-frame UI ran while a load tore 
+the old game down ("invalid map index"), and harness/scene issues. The 
+user's in-game check is pending (list in Known gaps, first-person play, M1).
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -1093,3 +1126,152 @@ read of both codebases before merging. What changed and why:
   selection in 3D, clicking the other player in the chat list (also from 
   first person and from another map), and the "Avg Frame" of the 3D player 
   in the sync debug panel.
+- First-person play (M1, Oct 27; spec docs/fp-play-spec.md):
+  - Multiplayer join race (found by mp1-walk, not first-person code, NOT 
+  FIXED): with consistentCommandOrder, a map command that reaches a joining 
+  client after its async load is Playing but before Loader.PostLoad goes 
+  into the world queue; PostLoad then replaces that queue with 
+  dataSnapshot.MapCmds[Global] while the map queues were already built from 
+  the snapshot in AsyncTimeComp.FinalizeInit, so the joiner never runs it: 
+  "Random state from commands doesn't match" on the joiner (2 of 5 early 
+  mp1-walk runs). Any player's command during anyone's join can trigger it, 
+  so it may explain the Oct 19 desyncs right after rejoins. Proposed fix: 
+  Loader.PostLoad rebuilds the world queue as the snapshot's Global commands 
+  plus the live queue's non-global entries, de-duplicated by reference, in 
+  arrival order. Also, a map command arriving in the ~26 ms between map 
+  FinalizeInit and Playing goes only into dataSnapshot, which the main thread 
+  mutates while the loading thread reads it. The harness avoids the window 
+  (the mp host waits for the client's first command).
+  - Warning "Could not find think node with key ..." once per load of a save 
+  with a pawn in the control job: JobGiver_FpControl sits in a tag-inserted 
+  subtree (Humanlike_PostMentalState) and ThinkTreeDef.TryGetThinkNodeWithSaveKey 
+  searches only the main tree. Same on every machine, harmless 
+  (CheckForJobOverride is skipped for controlled pawns).
+  - While the cursor is captured, IMGUI hover still follows GLFW's invisible 
+  virtual pointer: a gizmo tooltip ("<name> - Under first-person control.") 
+  was seen staying on screen and will drift as the player looks around (spec 
+  7.4's pointer pin is gated on m1-leak failing, which it doesn't). The 
+  cheat-sheet line at the top left overlaps IsoRim's "First person with X" 
+  message.
+  - Harness: about 1 in 10 headless Proton 11 host launches hangs before 
+  writing any Player.log (RimWorld.exe asleep in ntsync); fp_selftest.py 
+  relaunches once after 180 s. Headless hosting needs FpSelfTestHost to mark 
+  the current long event as displayed (no IMGUI host headless, so MpSaving 
+  waited for a repaint that never came); test host only. mp1-race only 
+  exercises the client-loses branch.
+  - Every map now gets an IsoRim.Fp.FpMapComp (saved: control entries, 
+  tallies, first-person bills), so a save loaded without this mod logs the 
+  game's usual error for a missing component class. A save made while a 
+  colonist is in the control job (IsoRimFp_Control, JobDriver_FpControl) 
+  carries that job too: without the mod the game drops it with a missing-def 
+  error; with it, a single-player load clears every control entry 
+  (FinalizeInit) and the job ends itself on its first tick.
+  - Synced commands: Multiplayer registers IsoRim.dll's [SyncMethod]s itself 
+  (IsoRimFp.RegisterSyncMethods, called by MultiplayerStatic right before 
+  Sync.PostInitHandlers numbers the handlers), not IsoRim from a static 
+  constructor as the spec had it (FpSyncRegistration, removed): a sync id is 
+  a handler's index, and static constructors on startup run in 
+  GenTypes.AllTypesWithAttribute order, a parallel query without AsOrdered 
+  (GenTypes.cs), so a registration from one could number the commands 
+  differently on two machines whenever another mod also registers from a 
+  static constructor. If the registration fails, play stays off in a 
+  session (FpIds.PlayOff). Both players need the same build, as always.
+  - First-person settings are static (FpSettings) inside IsoRim's settings 
+  file; IsoRim's "Reset all" doesn't reset them (the section has its own 
+  reset button). Only the M1 options are drawn; later ones are saved with 
+  their defaults until their milestone shows them.
+  - Deviations from the spec in M1, all deliberate:
+    - Entry waits for Multiplayer: IsoRim's toggle with the 3D view off 
+    queues "Preparing 3D" as a long event, and Multiplayer takes no command 
+    during any long event (Multiplayer.InInterface), so the first F5 with 
+    the 3D view off dropped FpSetControl(on) and fell back to the ride-along 
+    after 3 s (review finding). Play now starts once the event is over; 
+    FpSync.SendSetControl and SendIntent return whether the command went 
+    out, and FpPlay and FpInput record a send (the on, the flags, the 
+    intent, an off) only then, so a Stop released during an autosave or a 
+    join point's loading screen goes out on the first frame after it. The 
+    3 s confirmation clock starts when the on actually went out.
+    - Resume after a reload waits up to 10 s for this player's control to 
+    show (an on sent just before a join point runs in the catch-up ticks 
+    after the reload), and an orphan watchdog lets go (FpSetControl off) of 
+    any pawn this player controls but isn't playing for more than 2 s (an 
+    on that landed after the confirmation timeout or after the resume gave 
+    up). The self-test host's Direct control is exempt.
+    - Taking control ends the current job only when the game would let a 
+    player interrupt it (IsCurrentJobPlayerInterruptible and not 
+    forceCompleteBeforeNextJob, as TryTakeOrderedJob): vomiting, an 
+    uninterruptible cast, deathrest's last toil or carrying a baby to safety 
+    finish first, then the think tree gives the control job.
+    - An order queued behind the control job (Shift, the game's QueueOrder 
+    key, with the left button or a menu option, from any player) ends the 
+    control job, so the queue runs; control comes back when it is empty.
+    - A targeter (an ability, a grenade, a menu option such as "force to 
+    wear") or a selected designator frees the cursor and lets 
+    MapInterface.HandleMapClicks run, so it is used or cancelled (right 
+    click, Esc) with the visible cursor as in the 3D view; before, it could 
+    never complete in play. Selection clicks stay blocked while playing by a 
+    new prefix on Selector.HandleMapClicks (private, 550 bytes): with the 
+    free cursor a right click on the ground gave the colonist a synced 
+    vanilla "go here". MapInterface.HandleMapClicks is 39 bytes of IL, but 
+    its only caller, UIRoot_Play.UIRootOnGUI, is a Harmony replacement, the 
+    runtime never inlines Assembly-CSharp methods into dynamic methods 
+    (JitNoInlinePatchableIntoDynamicMethods), and IsoRim's right-button look 
+    already relies on a prefix there.
+    - Picking: a closed door or other full-height edifice is picked up to 
+    the 3D wall height (doors are drawn every frame, so IsoRim's pick 
+    height for them is 0 and the crosshair passed over them); no pawn is 
+    picked in such a cell (a large pawn's pick radius reached into a wall 
+    from behind). Grass, bushes and other non-tree, non-harvestable plants 
+    don't stop the ray: they are only the hit where the ray reaches the 
+    ground. Port 16 (MpView.PointerMapPoint) sends the pinned menu point 
+    while the right-button menu is open and the colonist's own spot when 
+    the crosshair shows nothing, not only the crosshair's point while 
+    captured.
+    - Facing: the control job's toil handles facing, so a controlled 
+    colonist faces the cell it walks into (through FaceCell, which MpFacing 
+    sees) and keeps that facing when it stops; a controlled drafted idle 
+    colonist doesn't turn south (the spec left facing to M6).
+    - The HUD's crosshair, hint and status line are hidden over the world 
+    map (play stays on there; toasts still show).
+    - R3D_Fp_RefuseBusy: a colonist that just left a map keeps its entry on 
+    that map until that map ticks, and can't be taken until then; with 
+    async time and that map paused, until it is unpaused.
+  - Not fixed (review findings judged not worth it now): while the cursor 
+  is captured, IMGUI hover (tooltips, mouse-over sounds) still follows 
+  GLFW's invisible virtual pointer. Setting Event.current.mousePosition 
+  doesn't help: RimWorld.dll's ImGuiGuiBackend.UpdateEventMouse rewrites it 
+  from the physical pointer at every clip push and pop. The working fix 
+  (pin the virtual pointer each frame, spec 7.4 fallback) pollutes the look 
+  delta; keep it for a failed leak test. On a release for the right-button 
+  menu or the Esc menu, the cursor reappears where it was when capture 
+  began (GLFW), not under the menu; moving it needs Brutal.GlfwApi 
+  (GlfwWindow.CursorPos, window coordinates) and a pointer warp, which a 
+  Wayland session may refuse.
+  - Hit counters (dev mode, Debug actions > IsoRim > "FP: patch hit 
+  counts"): Port OnRootUpdate, Port LookFrame, Port Toggle, Port 
+  CameraLeft, Port CameraReset; UIRootOnGUI filter, DispatchInputToWindows 
+  mouse dropped, HandleMapClicks skipped, Selector clicks skipped, HUD 
+  drawn (A); Control job tick, CheckForJobOverride skipped, Game ctor: 
+  control index cleared (B); Pointer is crosshair, Things under crosshair, 
+  LMB option chosen, RMB menu opened (C).
+  - Self-test (Fp/Test): the scene differs from the spec's in three ways: 
+  every colonist's work priorities are cleared (otherwise the AI would haul 
+  the steel, finish the table frame and harvest the rice before a scenario 
+  reaches them; not seen, expected), C2 stands at (-2, -2), and the ground 
+  is cleared 20 cells south of C1. North of C1 the stove and the wall line 
+  stop a walk within 7 cells, so m1-walk, m1-diag and m1-sector walk south 
+  (the spec walked north, which can't reach its own distance bounds), and 
+  m1-far aims at the east end of the wall line (the middle is straight 
+  behind the stove, which is in reach). m1-esc clicks 
+  Dialog_FpMenu.LeaveButtonRect; m1-down expects the game message 
+  "R3D_Fp_EndDowned" (FirstPerson.Leave). FpInput.TestForceFocus stands in 
+  for window focus.
+  - To check in game (the harness can't): the first frame of capture (a 
+  jump?), where the cursor lands on release, Alt-Tab and click to resume, 
+  raw-motion sensitivity under Proton/XWayland, that no hidden click 
+  reaches the UI and no tooltip pops up while looking round, that F5 
+  doesn't open Wildlife, the first F5 with the 3D view off (play starts 
+  after "Preparing 3D"), walking at 1x (start and stop latency with a 
+  friend), the Esc menu, an ability or grenade used with Alt and the free 
+  cursor, picking a closed door, a Shift-queued order while controlled, 
+  and a friend joining while you play.

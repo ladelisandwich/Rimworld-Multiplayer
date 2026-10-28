@@ -61,6 +61,11 @@ stage_isorim() {
     cp "$src/Tools/PackGate/IsoRimPackGate.dll" "$d/Tools/PackGate/" || return 1
     cp -r "$src/Defs/." "$d/IsoRim/Defs/IsoRim/" || return 1
     cp -r "$src/Languages" "$src/Textures" "$d/IsoRim/" || return 1
+    # First-person play's own defs and keyed strings (port-owned, Source/IsoRim): in the IsoRim load folder, because they
+    # name types in this IsoRim.dll and that folder is skipped exactly when a standalone IsoRim is active
+    mkdir -p "$d/IsoRim/Defs/IsoRimMp" || return 1
+    cp -r "$REPO_ROOT/Source/IsoRim/Defs/." "$d/IsoRim/Defs/IsoRimMp/" || return 1
+    cp -r "$REPO_ROOT/Source/IsoRim/Languages/." "$d/IsoRim/Languages/" || return 1
     rsync -a --exclude README.txt "$src/Shaders/" "$d/IsoRim/Shaders/" || return 1
     cp "$bin/IsoRim.dll" "$bin/IsoRim.pdb" "$d/IsoRim/Assemblies/" || return 1
     cp "$src/LICENSE" "$d/IsoRim/LICENSE" || return 1

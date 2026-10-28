@@ -114,6 +114,7 @@ namespace IsoRim
         // point of a thing's top under the pointer, kept inside the thing's cells.
         public static Vector3 PointerMapPoint()
         {
+            if (Fp.FpHooks.PointerMapPoint(out Vector3 fpPoint)) return fpPoint;   // Port: first-person play
             Vector3 ground = Verse.UI.MouseMapPosition();
             try
             {

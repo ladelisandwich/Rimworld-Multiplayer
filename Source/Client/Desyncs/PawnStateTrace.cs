@@ -80,5 +80,8 @@ public static class PawnStateTrace
             b.Append(' ').Append(h.def.defName).Append(':').Append(h.CurStageIndex).Append(':')
                 .Append(h.Severity.ToString("F3", inv));
         }
+
+        // First-person play's synced state of this pawn (controller, intent, pending skill check), when it has any
+        IsoRimFp.Describe(pawn, b);
     }
 }

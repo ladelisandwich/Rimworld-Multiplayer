@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- First-person play, simulation core (Source/IsoRim/Fp: FpSync, FpMapComp). {0} is the colonist's short name. -->
+
+  <!-- ==================== Taking control refused (only the player who asked sees these) ==================== -->
+  <R3D_Fp_RefuseGone>{0} isn't on a map right now, so you can't take control of them.</R3D_Fp_RefuseGone>
+  <R3D_Fp_RefuseDowned>{0} is downed, so you can't take control of them.</R3D_Fp_RefuseDowned>
+  <R3D_Fp_RefuseMental>{0} is having a mental break, so you can't take control of them.</R3D_Fp_RefuseMental>
+  <R3D_Fp_RefuseNotColonist>{0} isn't one of your colonists, so you can't take control of them.</R3D_Fp_RefuseNotColonist>
+  <R3D_Fp_RefuseNoSlot>{0} can't be controlled in first person: their behaviour (a child, a mutant or another mod's AI) has no place for it.</R3D_Fp_RefuseNoSlot>
+  <R3D_Fp_RefuseBusy>{0} is still being released from first-person control on the map they left. Try again in a moment.</R3D_Fp_RefuseBusy>
+  <R3D_Fp_RefuseTaken>{0} is already controlled by another player.</R3D_Fp_RefuseTaken>
+
+  <!-- ==================== Autopilot reasons (the colonist acts on their own while controlled) ==================== -->
+  <R3D_Fp_AutoNotControlled>not under your control</R3D_Fp_AutoNotControlled>
+  <R3D_Fp_AutoLord>taking part in a group activity</R3D_Fp_AutoLord>
+  <R3D_Fp_AutoNeeds>looking after their needs</R3D_Fp_AutoNeeds>
+
+</LanguageData>

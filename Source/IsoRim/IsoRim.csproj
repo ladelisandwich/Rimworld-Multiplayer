@@ -30,6 +30,8 @@
     <Compile Include="MpFacing.cs" />
     <Compile Include="MpView.cs" />
     <Compile Include="ShaderCheck.cs" />
+    <!-- First-person play (F5 takes control of a colonist): port-owned, namespace IsoRim.Fp -->
+    <Compile Include="Fp/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -36,12 +36,12 @@ namespace IsoRim
 
         public static float Yaw
         {
-            get { return Mathf.Repeat(heading + lookYaw, 360f); }
+            get { if (Fp.FpHooks.Steering) return Fp.FpHooks.Yaw; return Mathf.Repeat(heading + lookYaw, 360f); }   // Port: first-person play
         }
 
         public static float Pitch
         {
-            get { return lookPitch; }
+            get { if (Fp.FpHooks.Steering) return Fp.FpHooks.Pitch; return lookPitch; }   // Port: first-person play
         }
 
         // The eye: on the colonist's spot (smooth, as drawn), at head height, on an upper floor if they are on one.
@@ -58,7 +58,7 @@ namespace IsoRim
                 Vector3 o = Floors.ThingOffset(pawn);
                 float h = Mathf.Clamp(IsoRimMod.Settings.fpEyeHeight, 0.3f, 3f) + headRise;
                 // A little forward, so the eye is not inside the back of the head.
-                Vector3 f = Quaternion.Euler(0f, heading, 0f) * Vector3.forward * 0.12f;
+                Vector3 f = Quaternion.Euler(0f, Fp.FpHooks.Steering ? Fp.FpHooks.Yaw : heading, 0f) * Vector3.forward * 0.12f + Fp.FpHooks.EyeOffset;   // Port: first-person play
                 return new Vector3(p.x + o.x + f.x, h + o.y, p.z + o.z + f.z);
             }
         }
@@ -66,6 +66,7 @@ namespace IsoRim
         // The first person key: in with the one selected person, out again.
         public static void Toggle()
         {
+            if (Fp.FpHooks.Toggle()) return;   // Port: first-person play
             if (pawn != null)
             {
                 Leave("R3D_Msg_FirstPersonOff".Translate());
@@ -97,6 +98,7 @@ namespace IsoRim
             }
             Pawn was = pawn;
             pawn = null;
+            Fp.FpHooks.CameraLeft(was);   // Port: first-person play
             if (was.Spawned && Find.CameraDriver != null && was.Map == Find.CurrentMap)
             {
                 Find.CameraDriver.JumpToCurrentMapLoc(was.DrawPos);
@@ -110,6 +112,7 @@ namespace IsoRim
         // A scene/game change must not keep the previous game's followed pawn. No camera or UI work here.
         internal static void Reset()
         {
+            Fp.FpHooks.CameraReset(pawn);   // Port: first-person play
             pawn = null;
             headingSet = false;
             ResetLook();

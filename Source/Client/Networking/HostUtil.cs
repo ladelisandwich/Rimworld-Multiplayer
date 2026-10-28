@@ -89,6 +89,9 @@ namespace Multiplayer.Client
             foreach (var map in Find.Maps)
                 map.AsyncTime().ResetPlayerCount();
             VTRSync.Reset();
+            // Nobody controls a pawn in first person in a new session (a single-player controller or an old session's
+            // players): reset here, before CreateGameData, so the reload and the joiners' snapshot have it
+            IsoRimFp.ResetSession();
 
             Multiplayer.game.ChangeRealPlayerFaction(Faction.OfPlayer);
             Multiplayer.session.ReapplyPrefs();

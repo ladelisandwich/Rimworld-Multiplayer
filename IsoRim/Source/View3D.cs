@@ -487,6 +487,7 @@ namespace IsoRim
 
             // Port: the mouse look reads no text keys, so it keeps working while a text box has focus (Multiplayer's chat
             // keeps its input focused while open); only the keys below wait for typing to end.
+            if (Fp.FpHooks.LookFrame()) { lookDragging = false; heldTurning = false; return; }   // Port: first-person play
             HandleLook();
             if (typing)
             {
@@ -718,6 +719,7 @@ namespace IsoRim
         // person, which always looks with its drag button), the 3D view on, the map shown and nothing holding the camera.
         private static bool RightLookOn()
         {
+            if (Fp.FpHooks.PlayActive) return false;   // Port: first-person play
             IsoRimSettings st = IsoRimMod.Settings;
             return st.lookMode == 1 && (st.freeLook || FirstPerson.On) && Active && !ControlsLocked && !CameraBlocked
                 && Find.CurrentMap != null && RimWorld.Planet.WorldRendererUtility.DrawingMap;

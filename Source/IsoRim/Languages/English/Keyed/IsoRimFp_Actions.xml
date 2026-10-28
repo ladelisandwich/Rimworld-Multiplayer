@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- First-person play, picking and interaction (Source/IsoRim/Fp: FpPick, FpActions): the messages of the left and right
+       buttons. The hint under the crosshair is the label of what the left button would do; the HUD (FpHud) adds the
+       button names around it. -->
+
+  <R3D_Fp_TooFar>Too far: walk closer, or use the right button for every order</R3D_Fp_TooFar>
+  <R3D_Fp_Nothing>Nothing to do there: the right button shows every order</R3D_Fp_Nothing>
+  <R3D_Fp_NoOrders>No orders there</R3D_Fp_NoOrders>
+
+</LanguageData>

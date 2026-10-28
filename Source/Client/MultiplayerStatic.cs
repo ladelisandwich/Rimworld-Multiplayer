@@ -111,6 +111,7 @@ namespace Multiplayer.Client
             ClientUtil.DoubleLongEvent(() =>
             {
                 MultiplayerData.CollectDefInfos();
+                IsoRimFp.RegisterSyncMethods(); // After every static constructor: fixed sync ids (see there)
                 Sync.PostInitHandlers();
             }, "Loading"); // Right before the events from HandleCommandLine
 

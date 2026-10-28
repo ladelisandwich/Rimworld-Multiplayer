@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- First-person play's own keys (fp-play-spec 13.3). Everything else reuses the game's or IsoRim's bindings (movement
+       keys, draft, cancel, first person). No checkForConflicts: Space doubling as the game's pause key is intended, the
+       skill-check key only takes it while a check shows. -->
+  <KeyBindingCategoryDef>
+    <defName>IsoRimFp</defName>
+    <label>first person play</label>
+    <description>Keys while controlling a colonist in first person (IsoRim's first person key with play on).</description>
+  </KeyBindingCategoryDef>
+
+  <KeyBindingDef>
+    <defName>R3D_FpSkillCheck</defName>
+    <label>skill check (first person)</label>
+    <category>IsoRimFp</category>
+    <defaultKeyCodeA>Space</defaultKeyCodeA>
+  </KeyBindingDef>
+
+  <KeyBindingDef>
+    <defName>R3D_FpFreeCursor</defName>
+    <label>free the cursor while held (first person)</label>
+    <category>IsoRimFp</category>
+    <defaultKeyCodeA>LeftAlt</defaultKeyCodeA>
+    <defaultKeyCodeB>RightAlt</defaultKeyCodeB>
+  </KeyBindingDef>
+
+</Defs>

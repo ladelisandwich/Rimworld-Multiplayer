@@ -319,6 +319,7 @@ namespace IsoRim
             {
                 lutFile = "";
             }
+            Fp.FpHooks.ExposeSettings();   // Port: first-person play
         }
 
         // Puts every option back to its default.
@@ -788,6 +789,7 @@ namespace IsoRim
                 st.fpFov = Slider(l, "R3D_Settings_FpFov".Translate(), st.fpFov, 40f, 100f, st.fpFov.ToString("0") + "°",
                     "R3D_Settings_FpFovTip".Translate(R3DKeyDefOf.R3D_FirstPerson != null ? R3DKeyDefOf.R3D_FirstPerson.MainKeyLabel : "F5", DragButtonLabel(st)));
                 st.fpEyeHeight = Slider(l, "R3D_Settings_FpEyeHeight".Translate(), st.fpEyeHeight, 0.5f, 2f, Cells(st.fpEyeHeight, "0.00"));
+                Fp.FpHooks.DrawSettings(l);   // Port: first-person play
                 st.minZoom = Slider(l, "R3D_Settings_MinZoom".Translate(), st.minZoom, 2f, 11f, st.minZoom.ToString("0.0"), "R3D_Settings_MinZoomTip".Translate());
                 Check(l, "R3D_Settings_Weather3D".Translate(), ref st.weather3D, "R3D_Settings_Weather3DTip".Translate());
                 if (st.weather3D)

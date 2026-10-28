@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- First-person play, track A's keys (Source/IsoRim/Fp: FpPlay, FpInput, FpHud, FpMenu). -->
+
+  <!-- ==================== Entering and leaving (FpPlay) ==================== -->
+  <R3D_Fp_Left>Left first-person play.</R3D_Fp_Left>
+  <R3D_Fp_NotTaken>{0} already controls this colonist: riding along instead.</R3D_Fp_NotTaken>
+  <R3D_Fp_NotTakenNoReply>Couldn't take control of {0}: riding along instead.</R3D_Fp_NotTakenNoReply>
+  <R3D_Fp_EndDowned>Downed: first-person play ended.</R3D_Fp_EndDowned>
+  <R3D_Fp_EndDead>Died: first-person play ended.</R3D_Fp_EndDead>
+  <R3D_Fp_EndMental>Mental break: first-person play ended.</R3D_Fp_EndMental>
+  <R3D_Fp_EndOther>No longer under your control: first-person play ended.</R3D_Fp_EndOther>
+  <R3D_Fp_RideAlongBecause>Riding along with {0} without control: {1}.</R3D_Fp_RideAlongBecause>
+  <R3D_Fp_Why_NoPawn>nobody selected</R3D_Fp_Why_NoPawn>
+  <R3D_Fp_Why_NotHere>not on the map shown</R3D_Fp_Why_NotHere>
+  <R3D_Fp_Why_NotHumanlike>only people can be played</R3D_Fp_Why_NotHumanlike>
+  <R3D_Fp_Why_Prisoner>a prisoner</R3D_Fp_Why_Prisoner>
+  <R3D_Fp_Why_NotYours>not a colonist you control</R3D_Fp_Why_NotYours>
+  <R3D_Fp_Why_Downed>downed</R3D_Fp_Why_Downed>
+  <R3D_Fp_Why_Mental>in a mental state</R3D_Fp_Why_Mental>
+  <R3D_Fp_Why_ControlledBy>controlled by {0}</R3D_Fp_Why_ControlledBy>
+  <R3D_Fp_Why_NoMultiplayer>this Multiplayer build doesn't support first-person play</R3D_Fp_Why_NoMultiplayer>
+
+  <!-- ==================== HUD (FpHud) ==================== -->
+  <R3D_Fp_ClickToResume>Click to resume</R3D_Fp_ClickToResume>
+  <R3D_Fp_Hud_Action>[LMB] {0}   [RMB] more</R3D_Fp_Hud_Action>
+  <R3D_Fp_Hud_TooFar>Too far — [RMB] more</R3D_Fp_Hud_TooFar>
+  <R3D_Fp_Hud_Invalid>{0} — [RMB] more</R3D_Fp_Hud_Invalid>
+  <R3D_Fp_Hud_TakingControl>taking control…</R3D_Fp_Hud_TakingControl>
+  <R3D_Fp_Hud_Autopilot>Autopilot: {0} — {1} to leave</R3D_Fp_Hud_Autopilot>
+  <R3D_Fp_Hud_Drafted>drafted</R3D_Fp_Hud_Drafted>
+  <R3D_Fp_Hud_Hungry>hungry</R3D_Fp_Hud_Hungry>
+  <R3D_Fp_Hud_Tired>tired</R3D_Fp_Hud_Tired>
+  <R3D_Fp_Hud_Bleeding>bleeding</R3D_Fp_Hud_Bleeding>
+  <R3D_Fp_Hud_CheatSheet>{0} move · Mouse look · LMB use · RMB menu · {1} draft · {2} skill check · {3} cursor · Esc menu · {4} leave</R3D_Fp_Hud_CheatSheet>
+
+  <!-- ==================== Esc menu (Dialog_FpMenu) ==================== -->
+  <R3D_Fp_Menu_Title>Playing {0}</R3D_Fp_Menu_Title>
+  <R3D_Fp_Menu_Resume>Resume</R3D_Fp_Menu_Resume>
+  <R3D_Fp_Menu_Leave>Leave first person</R3D_Fp_Menu_Leave>
+  <R3D_Fp_Menu_ModSettings>Mod settings</R3D_Fp_Menu_ModSettings>
+  <R3D_Fp_Menu_GameMenu>Game menu</R3D_Fp_Menu_GameMenu>
+  <R3D_Fp_Menu_KeyMouse>Mouse</R3D_Fp_Menu_KeyMouse>
+  <R3D_Fp_Menu_KeyLmb>LMB</R3D_Fp_Menu_KeyLmb>
+  <R3D_Fp_Menu_KeyRmb>RMB</R3D_Fp_Menu_KeyRmb>
+  <R3D_Fp_Menu_Move>move</R3D_Fp_Menu_Move>
+  <R3D_Fp_Menu_Look>look</R3D_Fp_Menu_Look>
+  <R3D_Fp_Menu_Use>use</R3D_Fp_Menu_Use>
+  <R3D_Fp_Menu_Orders>all orders</R3D_Fp_Menu_Orders>
+  <R3D_Fp_Menu_Draft>draft</R3D_Fp_Menu_Draft>
+  <R3D_Fp_Menu_Check>skill check</R3D_Fp_Menu_Check>
+  <R3D_Fp_Menu_Cursor>free cursor (hold)</R3D_Fp_Menu_Cursor>
+  <R3D_Fp_Menu_LeaveKey>leave</R3D_Fp_Menu_LeaveKey>
+
+</LanguageData>

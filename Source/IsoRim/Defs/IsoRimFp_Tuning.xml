@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- First-person play's gameplay numbers (IsoRim.Fp.FpTuningDef, fp-play-spec 13.2). The simulation reads them, so they
+       are a def: Multiplayer's join check makes every player run the same ones. -->
+  <IsoRim.Fp.FpTuningDef>
+    <defName>IsoRimFp_Tuning</defName>
+
+    <!-- Skill checks: ticks at 1x, times the game-speed factor (1, 3, 6, 15) -->
+    <checkSpacingTicks>480</checkSpacingTicks>
+    <minRemainingTicks>150</minRemainingTicks>
+    <minGapTicks>180</minGapTicks>
+    <deadlineTicks>600</deadlineTicks>
+    <maxChecks>12</maxChecks>
+    <endDuePermille>900</endDuePermille>
+    <holdPermille>970</holdPermille>
+
+    <!-- Grants: a share of the work done since the last check -->
+    <grantGreat>0.40</grantGreat>
+    <grantHit>0.15</grantHit>
+    <grantMiss>-0.30</grantMiss>
+    <!-- Skill xp per outcome: timeout, miss, hit, great -->
+    <xp>
+      <li>0</li>
+      <li>0</li>
+      <li>0</li>
+      <li>0</li>
+    </xp>
+
+    <!-- Levers by form -4 .. +4 -->
+    <constructFail>
+      <li>2.0</li>
+      <li>1.75</li>
+      <li>1.5</li>
+      <li>1.25</li>
+      <li>1</li>
+      <li>0.9</li>
+      <li>0.8</li>
+      <li>0.7</li>
+      <li>0.6</li>
+    </constructFail>
+    <surgery>
+      <li>0.80</li>
+      <li>0.85</li>
+      <li>0.90</li>
+      <li>0.95</li>
+      <li>1</li>
+      <li>1.02</li>
+      <li>1.04</li>
+      <li>1.06</li>
+      <li>1.08</li>
+    </surgery>
+    <foodPoison>
+      <li>2.0</li>
+      <li>1.75</li>
+      <li>1.5</li>
+      <li>1.25</li>
+      <li>1</li>
+      <li>0.85</li>
+      <li>0.7</li>
+      <li>0.6</li>
+      <li>0.5</li>
+    </foodPoison>
+    <yield>
+      <li>0.80</li>
+      <li>0.85</li>
+      <li>0.90</li>
+      <li>0.95</li>
+      <li>1</li>
+      <li>1.03</li>
+      <li>1.06</li>
+      <li>1.08</li>
+      <li>1.10</li>
+    </yield>
+
+    <!-- The ring: seconds and degrees -->
+    <ringPeriod>1.15</ringPeriod>
+    <ringWarn>0.55</ringWarn>
+    <resultGrace>0.6</resultGrace>
+    <arcBase>34</arcBase>
+    <arcPerLevel>3</arcPerLevel>
+    <arcMin>24</arcMin>
+    <arcMax>110</arcMax>
+    <greatBase>6</greatBase>
+    <greatPerLevel>0.5</greatPerLevel>
+    <greatMin>4</greatMin>
+    <greatMax>22</greatMax>
+    <passionMinor>1.1</passionMinor>
+    <passionMajor>1.2</passionMajor>
+    <manipMin>0.5</manipMin>
+    <inspiredMul>1.25</inspiredMul>
+    <arcStartMin>110</arcStartMin>
+    <arcEndMax>330</arcEndMax>
+
+    <!-- Interaction: cells -->
+    <reachCells>2.5</reachCells>
+    <interactionCellReach>1.5</interactionCellReach>
+    <pickMaxCells>60</pickMaxCells>
+    <pawnPickRadius>0.45</pawnPickRadius>
+    <ingredientRadius>20</ingredientRadius>
+    <maxBillStack>15</maxBillStack>
+  </IsoRim.Fp.FpTuningDef>
+
+</Defs>

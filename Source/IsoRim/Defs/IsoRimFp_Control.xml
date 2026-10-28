@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- First-person play's control job (IsoRim.Fp.JobDriver_FpControl, fp-play-spec 5.2-5.4): one long job that walks a
+       controlled colonist by its player's synced movement keys. Player-forced and never overridden on damage, so the
+       colonist's own AI leaves it alone; the player can still give orders (right-button menu), which end it. -->
+  <JobDef>
+    <defName>IsoRimFp_Control</defName>
+    <label>first-person control</label>
+    <driverClass>IsoRim.Fp.JobDriver_FpControl</driverClass>
+    <reportString>under first-person control.</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+    <alwaysShowWeapon>true</alwaysShowWeapon>
+    <suspendable>false</suspendable>
+    <isIdle>false</isIdle>
+  </JobDef>
+
+  <!-- Where the control job comes from: the humanlike think tree's modder hook right after the mental states
+       (Humanlike.xml, Humanlike_PostMentalState). Below it in priority: downed, burning, mental states, reacting to a
+       melee attacker. Above it: queued jobs (so an order runs first), drafted orders, lords, needs, work and joy. -->
+  <ThinkTreeDef>
+    <defName>IsoRimFp_ControlInsert</defName>
+    <insertTag>Humanlike_PostMentalState</insertTag>
+    <insertPriority>100</insertPriority>
+    <thinkRoot Class="ThinkNode_Priority">
+      <subNodes>
+        <li Class="IsoRim.Fp.JobGiver_FpControl" />
+      </subNodes>
+    </thinkRoot>
+  </ThinkTreeDef>
+
+</Defs>
