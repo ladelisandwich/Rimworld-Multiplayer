@@ -46,6 +46,7 @@ namespace IsoRim.Fp
         private static double moveSince = -1;   // since when a direction is held (restarted when the colonist turns busy)
         private static bool wasBusy;
         private static float interruptFill = -1f;
+        private static int autopilotToldJob = -1;   // the autopilot job a held movement key was last answered for (a toast)
 
         private static KeyBindingDef mpToggleChat, mpPingKey;
         private static List<KeyBindingDef> devKeys;
@@ -385,10 +386,20 @@ namespace IsoRim.Fp
             {
                 double need = FpSettings.moveInterruptMs / 1000.0;
                 double held = now - moveSince;
+                // On autopilot (a lord's activity, or AutoNeeds eating or resting) walking doesn't interrupt the job
+                // (FpSetIntent leaves it), so no fill promises it would: once held as long, a toast says what does. The
+                // intent still goes out, so the direction is current when control comes back.
+                bool autopilot = FpPlay.Confirmed && FpState.AutopilotKey(p) != null;
                 if (held < need)
                 {
                     send = FpDir.Stop;
-                    interruptFill = need > 0 ? (float)(held / need) : 1f;
+                    interruptFill = autopilot ? -1f : need > 0 ? (float)(held / need) : 1f;
+                }
+                else if (autopilot && p.CurJob != null && p.CurJob.loadID != autopilotToldJob)
+                {
+                    autopilotToldJob = p.CurJob.loadID;
+                    FpHud.Toast("R3D_Fp_Hud_AutopilotHold".Translate(FpState.AutopilotReason(p), FpHud.KeyLabel(KeyBindingDefOf.Command_ColonistDraft),
+                        FpHud.KeyLabel(R3DKeyDefOf.R3D_FirstPerson)), new Color(1f, 0.82f, 0.45f), 3f);
                 }
             }
 

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- First-person play, the skill-check ring and the work progress bar (Source/IsoRim/Fp/FpSkillCheck.cs). -->
+
+  <!-- ==================== The ring's centre ==================== -->
+  <!-- {0} is the skill (Crafting), {1} the colonist's level in it. -->
+  <R3D_Fp_Check_Label>{0} {1}</R3D_Fp_Check_Label>
+  <!-- Shown instead of a skill when the work names none. -->
+  <R3D_Fp_Check_Work>Work</R3D_Fp_Check_Work>
+  <!-- Under the skill while the game is paused (the ring waits). -->
+  <R3D_Fp_Check_Paused>paused</R3D_Fp_Check_Paused>
+
+  <!-- ==================== Results ==================== -->
+  <R3D_Fp_Check_Great>GREAT</R3D_Fp_Check_Great>
+  <R3D_Fp_Check_Hit>HIT</R3D_Fp_Check_Hit>
+  <R3D_Fp_Check_Miss>MISS</R3D_Fp_Check_Miss>
+  <!-- Under MISS when the key wasn't pressed before the spark went round. -->
+  <R3D_Fp_Check_TooLate>too late</R3D_Fp_Check_TooLate>
+  <!-- Under MISS when the colonist was taken off the work (walked away, another order, drafted, checks turned off) while the ring showed. -->
+  <R3D_Fp_Check_Left>left the work</R3D_Fp_Check_Left>
+
+  <!-- ==================== Progress bar ==================== -->
+  <!-- {0} is the piece's form from -4 to +4, with its sign (+2, 0, -1). -->
+  <R3D_Fp_Check_Form>Form {0}</R3D_Fp_Check_Form>
+
+</LanguageData>

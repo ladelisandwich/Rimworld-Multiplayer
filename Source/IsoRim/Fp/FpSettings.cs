@@ -20,7 +20,8 @@ namespace IsoRim.Fp
         public static bool resume = true;               // take control again after a Multiplayer reload (join points, resyncs)
         public static float hudScale = 1f;
 
-        // M2-M6: saved from the start so a later milestone needs no settings change; shown once their feature lands.
+        // M2-M6: saved from the start so a later milestone needs no settings change; shown once their feature lands (M2 and
+        // M3 are shown).
         public static bool autoNeeds = true;            // M2: autopilot for urgent hunger, exhaustion, medical rest
         public static bool skillChecks = true;          // M3
         public static int checkLatencyMs = 16;          // M3: subtracted from a press's time
@@ -127,6 +128,17 @@ namespace IsoRim.Fp
                 l.CheckboxLabeled("R3D_Fp_Settings_Resume".Translate(), ref resume, "R3D_Fp_Settings_ResumeTip".Translate());
                 hudScale = Slider(l, "R3D_Fp_Settings_HudScale".Translate(), hudScale, 0.75f, 1.5f, hudScale.ToStringPercent(),
                     "R3D_Fp_Settings_HudScaleTip".Translate());
+                // M2
+                l.CheckboxLabeled("R3D_Fp_Settings_AutoNeeds".Translate(), ref autoNeeds, "R3D_Fp_Settings_AutoNeedsTip".Translate());
+                // M3
+                l.CheckboxLabeled("R3D_Fp_Settings_SkillChecks".Translate(), ref skillChecks, "R3D_Fp_Settings_SkillChecksTip".Translate());
+                if (skillChecks)
+                {
+                    checkLatencyMs = Mathf.RoundToInt(Slider(l, "R3D_Fp_Settings_CheckLatency".Translate(), checkLatencyMs, 0f, 100f,
+                        "R3D_Fp_Settings_Ms".Translate(checkLatencyMs.ToString()), "R3D_Fp_Settings_CheckLatencyTip".Translate()));
+                    l.CheckboxLabeled("R3D_Fp_Settings_CheckSounds".Translate(), ref checkSounds, "R3D_Fp_Settings_CheckSoundsTip".Translate());
+                    l.CheckboxLabeled("R3D_Fp_Settings_ColourBlind".Translate(), ref colourBlind, "R3D_Fp_Settings_ColourBlindTip".Translate());
+                }
                 if (Widgets.ButtonText(l.GetRect(26f).LeftPart(0.5f), "R3D_Fp_Settings_Reset".Translate()))
                 {
                     ResetAll();

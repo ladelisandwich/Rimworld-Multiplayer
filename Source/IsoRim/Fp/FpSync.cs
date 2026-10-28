@@ -112,6 +112,7 @@ namespace IsoRim.Fp
             if (dir != FpDir.Stop && p.Spawned && e.comp != null && e.comp.map == p.Map && !p.Downed && !p.InMentalState
                 && !FpControlJob.InControlJob(p) && p.jobs.IsCurrentJobPlayerInterruptible() && FpState.AutopilotKey(p) == null)
             {
+                FpWork.ForfeitPending(e);   // walking away from skilled work with a check showing counts as missing it
                 p.jobs.ClearQueuedJobs();
                 p.jobs.EndCurrentJob(JobCondition.InterruptForced);   // the think tree hands out the control job
             }
@@ -157,6 +158,12 @@ namespace IsoRim.Fp
                 // Released (by a player leaving) but its map hasn't ticked since: finish that release now, so the new
                 // controller starts without the old one's movement or pending check.
                 comp.Release(existing, false);
+            }
+            else if (existing != null && (existing.flags & FpFlags.Checks) != 0 && (flags & FpFlags.Checks) == 0)
+            {
+                // The controller turns skill checks off with one showing: it counts as missed (no escape from a bad
+                // check through the settings), while the driver is still tracked under the old flags.
+                FpWork.ForfeitPending(existing);
             }
             comp.Control(p, me, p.Faction, (byte)(flags & (FpFlags.AutoNeeds | FpFlags.Checks)));
             if (isNew)

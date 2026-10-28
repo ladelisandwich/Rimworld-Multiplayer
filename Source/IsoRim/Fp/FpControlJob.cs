@@ -93,7 +93,7 @@ namespace IsoRim.Fp
                 EndJobWith(JobCondition.InterruptForced);
                 return;
             }
-            if (pawn.IsHashIntervalTick(60) && (pawn.GetLord() != null || FpControlJob.NeedsAutopilot(e, pawn)))
+            if (pawn.IsHashIntervalTick(60) && (pawn.GetLord() != null || FpControlJob.AutopilotDue(e, pawn)))
             {
                 EndJobWith(JobCondition.Succeeded);   // the think tree gives the lord's or the needs' job; control resumes after
                 return;
@@ -184,10 +184,31 @@ namespace IsoRim.Fp
     // Spec 5.3: in the humanlike think tree right after the mental states (IsoRimFp_ControlInsert), before queued jobs,
     // drafted orders, lords, needs and work. Queued orders (an LMB order) therefore run first and control resumes when
     // they end.
+    //
+    // With the AutoNeeds flag (M2) this node also hands out the needs autopilot's jobs: a colonist who must eat, sleep or
+    // go to bed for a doctor gets the game's own job for it from here, and the control job comes back when that job
+    // ends. The node gives them itself rather than leaving the pawn to the rest of the tree, because the rest of the tree
+    // would put a colonist whose need can't be met (no food, no bed, no doctor) on its work and joy jobs, out of the
+    // player's hands for as long as the need lasts, and a drafted one on the drafted wait.
     public class JobGiver_FpControl : ThinkNode_JobGiver
     {
+        // Each job is tagged, so the pawn's last job tag (saved, the same on every machine) tells whether the needs
+        // autopilot has it (FpControlJob.NeedsAutopilot): the autopilot's jobs carry the game's needs tags, the control job
+        // carries Misc, as an ordered job does.
+        public override ThinkResult TryIssueJobPackage(Pawn pawn, JobIssueParams jobParams)
+        {
+            Job job = Choose(pawn, out JobTag? tag);
+            return job == null ? ThinkResult.NoJob : new ThinkResult(job, this, tag);
+        }
+
         protected override Job TryGiveJob(Pawn pawn)
         {
+            return Choose(pawn, out _);
+        }
+
+        private static Job Choose(Pawn pawn, out JobTag? tag)
+        {
+            tag = null;
             if (FpRegistry.ControlledCount == 0)
             {
                 return null;
@@ -198,14 +219,33 @@ namespace IsoRim.Fp
             {
                 return null;
             }
-            if (pawn.jobs.jobQueue.Count > 0 || pawn.GetLord() != null || FpControlJob.NeedsAutopilot(e, pawn))
+            if (pawn.jobs.jobQueue.Count > 0 || pawn.GetLord() != null)
             {
                 return null;
+            }
+            if (FpControlJob.AutoNeedsOn(e, pawn))
+            {
+                Job cur = pawn.CurJob;
+                if (cur != null && FpControlJob.KeepsNeedsJob(pawn, cur))
+                {
+                    // An override check during the autopilot's meal or rest: the same job object means carry on, with no
+                    // restart (the game's JobGiver_KeepLyingDown does the same).
+                    FpHits.Hit("AutoNeeds job kept");
+                    return cur;
+                }
+                Job needs = FpControlJob.NeedsJob(pawn, out JobTag needsTag);
+                if (needs != null)
+                {
+                    FpHits.Hit("AutoNeeds job given");
+                    tag = needsTag;
+                    return needs;
+                }
             }
             Job job = JobMaker.MakeJob(def);
             job.playerForced = true;
             job.expiryInterval = -1;
             job.locomotionUrgency = LocomotionUrgency.Jog;   // the game's normal walking speed, never faster
+            tag = JobTag.Misc;
             return job;
         }
     }
@@ -292,11 +332,190 @@ namespace IsoRim.Fp
             return def != null && p?.CurJob != null && p.CurJob.def == def;
         }
 
-        // M2 (AutoNeeds): true when the AutoNeeds flag is set and the pawn must eat, sleep or rest in bed now, so the
-        // think tree's needs take over. Off in M1.
+        // ---------------------------------------------------------------- AutoNeeds (M2, spec 5.3 and 5.4)
+        //
+        // The autopilot starts when a need is urgent: urgently hungry or starving, exhausted (the last rest category,
+        // under 1%), or HealthAIUtility.ShouldSeekMedicalRestUrgent (a wound or illness that needs tending, an operation
+        // due). The control job checks every 60 ticks (AutopilotDue) and ends; JobGiver_FpControl then gives the game's
+        // own job for the need (NeedsJob). The pawn is back under control when that job ends; a rest in bed ends once the
+        // pawn is up again (KeepsNeedsJob). Everything here reads synced state, so every machine decides the same.
+
+        // The game's needs job givers, outside any tree (as WorkGiver_PatientGoToBedRecuperate keeps its own): their
+        // jobs are what the colonist's own AI would take for that need. Made on first use; they hold no state.
+        private static JobGiver_GetFood getFood;
+        private static JobGiver_GetRest getRest;
+
+        // The controller asked for the autopilot (FpFlags.AutoNeeds, from their settings through FpSetControl). Never
+        // while drafted: the game's drafted colonists don't see to their needs either, and the player drafted them to
+        // fight (drafting is also how a player calls a colonist back from the autopilot early).
+        internal static bool AutoNeedsOn(FpEntry e, Pawn p)
+        {
+            return e != null && (e.flags & FpFlags.AutoNeeds) != 0 && p?.needs != null && !p.Drafted;
+        }
+
+        // The needs autopilot has the pawn now: the HUD says so and a movement key doesn't cancel it (FpState.AutopilotKey,
+        // FpSetIntent). True while the pawn does a job the autopilot gave for a need. Synced state only and no side
+        // effects, so the UI may call it.
         internal static bool NeedsAutopilot(FpEntry e, Pawn p)
         {
-            return false;
+            return AutoNeedsOn(e, p) && OnNeedsJob(p, p.CurJob);
+        }
+
+        // A job the AI chose (not player-forced, not the control job) that started with one of the game's needs tags:
+        // the autopilot's own jobs (JobGiver_FpControl tags them), or a need the game itself put first.
+        private static bool OnNeedsJob(Pawn p, Job j)
+        {
+            if (j == null || j.playerForced || j.def == Def || p.mindState == null)
+            {
+                return false;
+            }
+            JobTag t = p.mindState.lastJobTag;
+            return t == JobTag.SatisfyingNeeds || t == JobTag.RestingForMedicalReasons;
+        }
+
+        // An override check (the game's CheckForJobOverride: on damage, and every 211 ticks while lying down) found the
+        // pawn on the autopilot's job: true to carry on. A meal, the walk to it and whatever else a need started end by
+        // themselves. Lying down is the exception: the game keeps a sleeper in bed above the control node
+        // (ThinkNode_ConditionalMustKeepLyingDown) and lets them up through an override check once they are awake, so
+        // lying down is kept only while its reason lasts (still exhausted, or a doctor can still come or the bleeding is
+        // urgent, as the game's Patient work asks) and hunger doesn't come first. Then NeedsJob or control takes over.
+        internal static bool KeepsNeedsJob(Pawn p, Job cur)
+        {
+            if (!OnNeedsJob(p, cur))
+            {
+                return false;
+            }
+            if (cur.def != JobDefOf.LayDown)
+            {
+                return true;
+            }
+            if (UrgentlyHungry(p))
+            {
+                return false;
+            }
+            return Exhausted(p) || MedicalUrgent(p)
+                && (HealthAIUtility.ShouldBeTendedNowByPlayerUrgent(p) || WorkGiver_PatientGoToBedTreatment.AnyAvailableDoctorFor(p));
+        }
+
+        // Urgently hungry or starving, and not a patient in bed who waits to be fed until starving
+        // (JobGiver_GetFood.GetPriority).
+        private static bool UrgentlyHungry(Pawn p)
+        {
+            Need_Food food = p.needs.food;
+            return food != null && food.CurCategory >= HungerCategory.UrgentlyHungry
+                && (food.CurCategory == HungerCategory.Starving || !FoodUtility.ShouldBeFedBySomeone(p));
+        }
+
+        // The last rest category: under 1% (Need_Rest.CurCategory).
+        private static bool Exhausted(Pawn p)
+        {
+            Need_Rest rest = p.needs.rest;
+            return rest != null && rest.CurCategory == RestCategory.Exhausted;
+        }
+
+        // A wound or illness that needs tending, an operation due (HealthAIUtility.ShouldSeekMedicalRestUrgent), for a
+        // colonist who works. Not in labour: the game's work giver (JobGiver_Work) gives nothing then, and the birth
+        // ritual's lord takes over.
+        private static bool MedicalUrgent(Pawn p)
+        {
+            return p.workSettings != null && p.workSettings.EverWork && !p.health.hediffSet.InLabor()
+                && HealthAIUtility.ShouldSeekMedicalRestUrgent(p);
+        }
+
+        // Spec 5.4 step 2, every 60 ticks in the control job: a need is urgent and the game has a job for it, so the control
+        // job ends and the think tree hands that job out (JobGiver_FpControl asks the same givers again in the same tick;
+        // this check's job goes back to the pool). When no food, bed or doctor can be had the pawn stays under control
+        // (the HUD's need warnings say why) instead of ending and restarting the control job every 60 ticks.
+        internal static bool AutopilotDue(FpEntry e, Pawn p)
+        {
+            if (!AutoNeedsOn(e, p) || p.Downed || p.InMentalState)
+            {
+                return false;
+            }
+            Job job = NeedsJob(p, out _);
+            if (job == null)
+            {
+                return false;
+            }
+            JobMaker.ReturnToPool(job);
+            return true;
+        }
+
+        // The game's job for the pawn's most pressing urgent need, or null when nothing is urgent or the game has no job
+        // for it. The givers are asked in the order the humanlike think tree reaches them: emergency treatment (bleeding
+        // out), urgent hunger, treatment by a doctor, exhaustion, each under the conditions the tree puts on it. Simulation
+        // only (the map tick or the think tree): the givers search the map and make jobs, which take job ids.
+        internal static Job NeedsJob(Pawn p, out JobTag tag)
+        {
+            tag = JobTag.SatisfyingNeeds;
+            bool medical = MedicalUrgent(p);
+            bool hungry = UrgentlyHungry(p);
+            // Only a pawn that could fall asleep goes to bed (JobGiver_GetRest.GetPriority); a starving one can't.
+            bool exhausted = Exhausted(p) && Find.TickManager.TicksGame >= p.mindState.canSleepTick && RestUtility.CanFallAsleep(p);
+            if (!medical && !hungry && !exhausted)
+            {
+                return null;
+            }
+            Job job;
+            if (medical && (job = PatientJob(p, p.workSettings.WorkGiversInOrderEmergency)) != null)
+            {
+                tag = JobTag.RestingForMedicalReasons;
+                return job;
+            }
+            if (hungry)
+            {
+                if (getFood == null)
+                {
+                    getFood = new JobGiver_GetFood();
+                }
+                if ((job = getFood.TryIssueJobPackage(p, default).Job) != null)
+                {
+                    return job;
+                }
+            }
+            if (medical && (job = PatientJob(p, p.workSettings.WorkGiversInOrderNormal)) != null)
+            {
+                tag = JobTag.RestingForMedicalReasons;
+                return job;
+            }
+            if (exhausted)
+            {
+                if (getRest == null)
+                {
+                    getRest = new JobGiver_GetRest();
+                }
+                if ((job = getRest.TryIssueJobPackage(p, default).Job) != null)
+                {
+                    return job;
+                }
+            }
+            return null;
+        }
+
+        // The game's Patient work, with JobGiver_Work's own tests for a work giver: go to bed for emergency treatment, or for
+        // treatment when a doctor can come (WorkGiver_PatientGoToBedTreatment). Only while the colonist's Patient work is
+        // on: the work lists hold the givers of active work types only.
+        private static Job PatientJob(Pawn p, List<WorkGiver> givers)
+        {
+            for (int i = 0; i < givers.Count; i++)
+            {
+                WorkGiver g = givers[i];
+                if (!(g is WorkGiver_PatientGoToBedTreatment) && !(g is WorkGiver_PatientGoToBedEmergencyTreatment))
+                {
+                    continue;
+                }
+                if (p.WorkTagIsDisabled(g.def.workTags) || g.def.workType != null && p.WorkTypeIsDisabled(g.def.workType)
+                    || g.ShouldSkip(p) || g.MissingRequiredCapacity(p) != null)
+                {
+                    continue;
+                }
+                Job job = g.NonScanJob(p);
+                if (job != null)
+                {
+                    return job;
+                }
+            }
+            return null;
         }
 
         // The pawn's main think tree reaches a JobGiver_FpControl, so the control job can be given at all (spec 5.1). A

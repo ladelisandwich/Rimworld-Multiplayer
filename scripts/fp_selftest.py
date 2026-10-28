@@ -267,7 +267,32 @@ def game_running():
     """Any RimWorld already running on the host (the user playing, or a test left behind)."""
     r = subprocess.run(host_cmd("pgrep -af 'RimWorld(\\.exe|\\.dll)?( |$)' | grep -v pgrep || true"),
                        capture_output=True, text=True)
-    return [line for line in r.stdout.splitlines() if "RimWorld" in line and "fp_selftest" not in line]
+    return [line for line in r.stdout.splitlines() if "RimWorld" in line and "fp_selftest" not in line and is_game(line)]
+
+
+def is_game(line):
+    """A pgrep -af line of the game itself: the Windows build (RimWorld.exe, also in Steam's and Proton's launcher lines)
+    or the native apphost (argv[0] named RimWorld) or RimWorld.dll. Not another program that merely has the game folder
+    on its command line (a file manager open on .../common/RimWorld matched the bare pattern)."""
+    parts = line.split(None, 1)
+    rest = parts[1] if len(parts) > 1 else ""
+    if re.search(r"RimWorld\.(exe|dll)\b", rest, re.IGNORECASE):
+        return True
+    if re.search(r"(^|/)RimWorld/RimWorld( |$)", rest):   # the apphost in the game folder (the path may hold spaces)
+        return True
+    argv0 = rest.split(" ", 1)[0]
+    return os.path.basename(argv0.replace("\\", "/")) in ("RimWorld", "RimWorld.exe")
+
+
+def registered_scenarios():
+    """Scenario ids the harness knows: the s["<id>"] = ... lines of each FpTestM<n>.Register."""
+    ids = set()
+    folder = os.path.join(REPO, "Source", "IsoRim", "Fp", "Test")
+    for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+        if re.fullmatch(r"FpTestM\d+\.cs", name):
+            with open(os.path.join(folder, name), encoding="utf-8") as f:
+                ids.update(re.findall(r'\bs\["([^"]+)"\]\s*=', f.read()))
+    return ids
 
 
 def main():
@@ -281,6 +306,14 @@ def main():
     ap.add_argument("--force", action="store_true", help="start even though a RimWorld is already running")
     ap.add_argument("--dry-run", action="store_true", help="print the commands only")
     args = ap.parse_args()
+
+    known = registered_scenarios()
+    if known and args.scenario not in known:
+        print(f"unknown scenario {args.scenario}: not registered in Source/IsoRim/Fp/Test (known: {', '.join(sorted(known))})")
+        return 98
+    if args.scenario.startswith("mp") and not args.mp:
+        print(f"{args.scenario} is a multiplayer scenario: add --mp")
+        return 98
 
     if not os.path.isfile(os.path.join(args.game, "RimWorld.exe")):
         print(f"no Windows build at {args.game} (RimWorld.exe): Steam must be forcing Proton (CLAUDE.md)")

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- First-person play, bills (Source/IsoRim/Fp: FpBills, FpRecipeWindow): the recipe picker the left button opens on a
+       bench, and the messages of its two commands. Only the player who chose sees a command's message. -->
+
+  <!-- ==================== The hint under the crosshair ==================== -->
+  <R3D_Fp_UseBench>Use {0}…</R3D_Fp_UseBench>
+
+  <!-- ==================== A choice refused ({0} is usually the colonist's short name) ==================== -->
+  <R3D_Fp_NoIngredients>{0} found no ingredients for {1} within {2} cells of the {3}.</R3D_Fp_NoIngredients>
+  <R3D_Fp_BillBenchGone>The {0} can't be used from here.</R3D_Fp_BillBenchGone>
+  <R3D_Fp_BillUnavailable>{0} can't be made at the {1} right now.</R3D_Fp_BillUnavailable>
+  <R3D_Fp_BillStackFull>The {0} already has {1} bills: remove one in its bills tab first.</R3D_Fp_BillStackFull>
+  <R3D_Fp_BillSkill>{0} needs {1} for this.</R3D_Fp_BillSkill>
+  <R3D_Fp_BillMechanitor>Only a mechanitor can do this, and {0} isn't one.</R3D_Fp_BillMechanitor>
+  <R3D_Fp_BillDrafted>{0} is drafted: undraft to work at a bench.</R3D_Fp_BillDrafted>
+  <R3D_Fp_BillUnusable>The {0} can't be used now (no power, or broken down).</R3D_Fp_BillUnusable>
+  <R3D_Fp_BillNoGiver>Nobody can work at the {0} this way.</R3D_Fp_BillNoGiver>
+  <R3D_Fp_BillIncapable>{0} is incapable of {1}.</R3D_Fp_BillIncapable>
+  <R3D_Fp_BillCapacity>{0} can't do this: no {1}.</R3D_Fp_BillCapacity>
+  <R3D_Fp_BillNoPath>{0} can't reach the {1}.</R3D_Fp_BillNoPath>
+  <R3D_Fp_BillOtherJob>{0} must do something else here first ({1}). Try again after.</R3D_Fp_BillOtherJob>
+  <R3D_Fp_BillNeedsFuel>The {0} needs fuel first.</R3D_Fp_BillNeedsFuel>
+  <R3D_Fp_BillClearBench>Something is in the way on the {0}: it has to be hauled off first.</R3D_Fp_BillClearBench>
+  <R3D_Fp_BillNotAllowed>{0} isn't allowed to work on this bill.</R3D_Fp_BillNotAllowed>
+  <R3D_Fp_BillNotAllowedBecause>{0} isn't allowed to work on this bill: {1}</R3D_Fp_BillNotAllowedBecause>
+  <R3D_Fp_BillBenchInUse>The {0} is in use by {1}.</R3D_Fp_BillBenchInUse>
+  <R3D_Fp_BillCantStart>{0} couldn't start on {1}.</R3D_Fp_BillCantStart>
+  <R3D_Fp_BillGone>That bill is gone.</R3D_Fp_BillGone>
+  <R3D_Fp_BillRestricted>That bill is for {0} only.</R3D_Fp_BillRestricted>
+  <R3D_Fp_BillNotSent>Not sent: try again in a moment.</R3D_Fp_BillNotSent>
+
+  <!-- ==================== The recipe picker ==================== -->
+  <R3D_Fp_Recipes_Count>How many</R3D_Fp_Recipes_Count>
+  <R3D_Fp_Recipes_FiveTip>Five pieces, made one at a time: after each one the colonist is yours again. Look at the bench, press the left button and Enter to make the next.</R3D_Fp_Recipes_FiveTip>
+  <!-- {0} is the recipe, {1} the count. -->
+  <R3D_Fp_Recipes_FiveToast>{0} x{1}: one at a time (left button on the bench, then Enter, for the next)</R3D_Fp_Recipes_FiveToast>
+  <R3D_Fp_Recipes_Continue>Continue</R3D_Fp_Recipes_Continue>
+  <R3D_Fp_Recipes_Make>Make</R3D_Fp_Recipes_Make>
+  <R3D_Fp_Recipes_None>Nothing can be made here right now.</R3D_Fp_Recipes_None>
+  <R3D_Fp_Recipes_Keys>1-9: choose    Enter: the last choice again    Esc: close</R3D_Fp_Recipes_Keys>
+  <R3D_Fp_Recipes_Seconds>{0} s</R3D_Fp_Recipes_Seconds>
+  <R3D_Fp_Recipes_Minutes>{0} min</R3D_Fp_Recipes_Minutes>
+  <R3D_Fp_Recipes_Needs>needs {0}</R3D_Fp_Recipes_Needs>
+  <R3D_Fp_Recipes_Missing>No {0} on the map</R3D_Fp_Recipes_Missing>
+  <R3D_Fp_Recipes_Yours>yours</R3D_Fp_Recipes_Yours>
+  <R3D_Fp_Recipes_Done>{0} done</R3D_Fp_Recipes_Done>
+  <R3D_Fp_Recipes_BoundTo>{0} started this piece: only they can finish it</R3D_Fp_Recipes_BoundTo>
+  <R3D_Fp_Recipes_Working>{0} is working on this now</R3D_Fp_Recipes_Working>
+  <R3D_Fp_Recipes_PowerOn>Powered</R3D_Fp_Recipes_PowerOn>
+  <R3D_Fp_Recipes_NoPower>No power</R3D_Fp_Recipes_NoPower>
+  <R3D_Fp_Recipes_Fuel>Fuel {0}</R3D_Fp_Recipes_Fuel>
+  <R3D_Fp_Recipes_NoFuel>Out of fuel</R3D_Fp_Recipes_NoFuel>
+  <R3D_Fp_Recipes_Broken>Broken down</R3D_Fp_Recipes_Broken>
+  <R3D_Fp_Recipes_Bills>Bills {0}/{1}</R3D_Fp_Recipes_Bills>
+
+</LanguageData>

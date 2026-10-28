@@ -217,11 +217,15 @@ namespace IsoRim.Fp
         // C1 and C2 (spec 15.2): the free colonists by thingIDNumber, passing over any that can never haul while two others
         // can. The left button's order on the steel (m1-lmb, mp1-lmb) is the game's "Prioritize hauling", which such a
         // colonist never gets ("Will never do hauling"), and -quicktest colonists are random. Build and Adopt pick alike.
+        // Among those, colonists who can cook come first (M2's stove scenarios cook with C1, mp2-cook with C2; a colonist who
+        // can never cook failed their setup), the rest after them, each group by thingIDNumber.
         private static List<Pawn> Colonists(Map map)
         {
             List<Pawn> all = map.mapPawns.FreeColonistsSpawned.OrderBy(p => p.thingIDNumber).ToList();
             List<Pawn> haulers = all.Where(p => !p.WorkTypeIsDisabled(WorkTypeDefOf.Hauling)).ToList();
-            return haulers.Count >= 2 ? haulers : all;
+            List<Pawn> pick = haulers.Count >= 2 ? haulers : all;
+            WorkTypeDef cooking = DefDatabase<WorkTypeDef>.GetNamedSilentFail("Cooking");
+            return cooking == null ? pick : pick.OrderBy(p => p.WorkTypeIsDisabled(cooking) ? 1 : 0).ToList();
         }
 
         // Lets a colonist do one kind of work again (the scene clears every priority).

@@ -53,6 +53,18 @@ namespace IsoRim.Fp
         public static int Ticks => Find.TickManager != null ? Find.TickManager.TicksGame : 0;
 
         private static readonly Dictionary<string, Func<IEnumerator<int>>> scenarios = new Dictionary<string, Func<IEnumerator<int>>>();
+
+        // Per-scenario additions to the scene (solo and host), made with it on the first Playing frame, before
+        // SceneReady lets Multiplayer's test host start the session: a thing the harness spawns once a session runs is
+        // made outside any command, so Multiplayer gives it a negative id (mp3-craft's bench came out as
+        // HandTailoringBench-2), which no real game's thing has. Each returns null, or why it failed.
+        private static readonly Dictionary<string, Func<Map, string>> sceneExtras = new Dictionary<string, Func<Map, string>>();
+
+        internal static void AddSceneExtra(string scenario, Func<Map, string> extra)
+        {
+            sceneExtras[scenario] = extra;
+        }
+
         private static readonly Queue<Action> input = new Queue<Action>();
         private static readonly List<Hold> holds = new List<Hold>();
 
@@ -283,6 +295,11 @@ namespace IsoRim.Fp
             }
             string error;
             bool built = IsClient ? FpScene.Adopt(map, out error) : FpScene.Build(map, out error);
+            if (built && !IsClient && sceneExtras.TryGetValue(Scenario, out Func<Map, string> extra))
+            {
+                error = extra(map);
+                built = error == null;
+            }
             if (!built)
             {
                 Check("scene", false, error);

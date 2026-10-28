@@ -379,7 +379,8 @@ namespace IsoRim.Fp
         public static SkillDef SkillOf(JobDriver d);           // d.ActiveSkill
         public static float Progress01(Pawn p);                // UI: tracked progress 0..1, -1 if not tracking
         public static int TallyKeyOf(Pawn p, Job job);         // §10.6
-        public static void SendResult(Pawn p, int jobLoadId, int seq, byte outcome);   // UI sender
+        public static bool SendResult(Pawn p, int jobLoadId, int seq, byte outcome);   // UI sender; true when it went out (integration: was void)
+        internal static void ForfeitPending(FpEntry e);        // integration: a shown pending check counts as missed (10.2)
         [SyncMethod(cancelIfAnyArgNull = true)] [MethodImpl(MethodImplOptions.NoInlining)]
         public static void FpCheckResult(Pawn p, int jobLoadId, int seq, byte outcome);
         internal static void Tick(FpMapComp comp, FpEntry e);  // called by B for each controlled entry, every tick
@@ -953,6 +954,7 @@ HintKind: TooFar when out of reach, Invalid when nothing.
 | lastOutcome | byte | 255 | `lastOutcome` |
 | lastOutcomeTick | int | −99999 | `lastOutcomeTick` |
 | carry | float | 0 | `carry` (repair rounding) |
+| startHp | int | 0 | `startHp` (M4, Repair: HP at tracking start; added at integration of M2/M3, B adds the field with the Repair adapter) |
 
 - **`FpTally`:** `key`, `target` (ref), `owner` (ref), `jobLoadId`, `great`, `hit`, `miss`, `lastTick`, under the same names.
 - **`FpMapComp.ExposeData`:**
@@ -1052,13 +1054,20 @@ if e.pendingSeq == 0 && e.issued < e.planned:
     else if P >= FpMath.DuePermille(e.issued, e.planned, e.p0, T.endDuePermille, Gen.HashCombineInt(job.loadID, e.issued))
             && TicksGame - e.lastResolveTick >= T.minGapTicks * f:
         e.pendingSeq = ++e.seq; e.pendingTick = TicksGame; e.deadlineTick = TicksGame + T.deadlineTicks * f
-if e.pendingSeq != 0 && TicksGame >= e.deadlineTick: void pending
+if e.pendingSeq != 0 && TicksGame >= e.deadlineTick: e.segStart = a.Done(d); void pending   // the segment closes with it
 FpRegistry.SetHeld(e, e.pendingSeq != 0 && a.CanHold && a.NearCompletion(d))
 ```
 
 Never use `HashCode.Combine` here (CLAUDE.md); `Gen.HashCombineInt` is deterministic.
 
 **Void pending:** `pendingSeq = 0; issued++; lastResolveTick = TicksGame; held = false`. There is no effect and no tally change.
+
+**Integration changes (M2/M3 review: no free void).** A void must not be a free way out of a check, so:
+- At the deadline the segment closes with the void (`segStart = Done`): a later answer's grant covers only the work after it.
+- When a check is raised on a thing-keyed piece, its tally is created (`GetOrAddTally(e.tallyKey, TallyTarget, p, job.loadID)`, counts 0), so a check abandoned with the job can still be counted.
+- **Shown:** `TicksGame − e.pendingTick ≥ (int)(T.ringWarn·60)·f`. Before that the ring can't have been seen, and every forfeit below voids instead.
+- **`FpWork.ForfeitPending(e)`** (command context, before the job ends, the tracked driver current): a shown pending check gets the full `MissTimeout` result (work and tally, as 10.4). Called by `FpSetIntent` before it ends the job, by `FpSetControl(on)` when the new flags drop `Checks`, and by `FpStartRecipe`/`FpWorkBill` before `TryTakeOrderedJob` unless the new job `JobIsSameAs` the current one.
+- **Left job** (this tick, the tracked job gone, in either branch): a shown pending check whose pawn is now `Drafted`, or on a new `playerForced` job other than the control job (a vanilla order), counts a tally-only miss (`miss++`, `lastOutcome = 0`, `lastOutcomeTick`); the work went with the job. A job that ended on its own (fail conditions, then the control job) still voids.
 
 **Resulting cadence at 1x** (`UnitsPerTick` about 1):
 - a simple meal (300) gets 1 check;
@@ -1102,7 +1111,7 @@ FpRegistry.SetHeld(e, false); FpHits.Hit("Check accepted")
 ```
 
 **`OnRelease(comp, e, countAsMiss)`:**
-- If `countAsMiss` and a check is pending, and the pawn is still on the tracked job: apply outcome 1, as above. Leaving voluntarily doesn't escape a bad check.
+- If `countAsMiss` and a shown check is pending (10.2, integration changes), and the pawn is still on the tracked job: apply outcome 1, as above. Leaving voluntarily doesn't escape a bad check.
 - Otherwise void it.
 
 **Caps:**
@@ -1158,7 +1167,8 @@ No StatPart ever touches shooting, melee, warmup, move speed or work speed.
 - **Warn:** `T.ringWarn` = 0.55 s, a 0.55 s fade-in and the sound `Tick_Low`.
 - **Needle:** one clockwise turn from 12 o'clock in `T.ringPeriod` = 1.15 s (313.04°/s).
   - The clock is `Time.realtimeSinceStartupAsDouble`.
-  - It freezes while `Find.TickManager.Paused` (the map's state) or while not `Captured`.
+  - It freezes while `Find.TickManager.Paused` (the map's state). While not `Captured` it freezes only in Warn, and for at most `FpSkillCheck.CursorGrace` (3 s) of real time per ring (integration change: a free cursor could otherwise hold a check off until the deadline voids it). A needle that runs while the cursor is free can't be answered and runs out (outcome 0).
+  - A check the simulation settles as a miss of its own (forfeit, left job) shows as "MISS — left the work".
 - **Press:** `FpKeyDefOf.R3D_FpSkillCheck.JustPressed` (polled; true once per press, no auto-repeat). Presses during Warn are ignored.
 - **Judging:**
   - `pressDeg = (FrameInputTime − FpSettings.checkLatencyMs/1000 − needleT0) × 313.04`.
@@ -1209,7 +1219,7 @@ No StatPart ever touches shooting, melee, warmup, move speed or work speed.
   Sounds go through `PlayOneShotOnCamera` and are local only.
 
 **Progress bar** (E, M3; drawn from `FpSkillCheck.OnGUI` on Repaint):
-- Bottom centre, 240×6 at y = `screenHeight − 92`, filled to `FpWork.Progress01`.
+- Bottom centre, 240×6 at y = `screenHeight − 92`, filled to `FpWork.Progress01` (test-copy run: it moves up with the status line, §14).
 - A tick at each check's due ‰ (computed with `FpMath.DuePermille` from the entry).
 - Pips (gold, white, red) for the tally and "Form +F".
 - A ghost segment of the expected grant from the press until `e.issued` changes.
@@ -1384,7 +1394,7 @@ The postfix on `UIRoot_Play.UIRootOnGUI` draws on Repaint only, while `Mode == P
 
   It is hidden while the ring shows.
 - **Hint** 18 px below the crosshair: "[LMB] <label>   [RMB] More" (Small font, shadowed), or "Too far — [RMB] More".
-- **Status line**, bottom centre at y = `screenHeight − 112`:
+- **Status line**, bottom centre at y = `screenHeight − 112` (test-copy run, M2/M3: raised above the game's gizmo grid while one is drawn, `FpHud.StatusTop` from `GizmoGridDrawer.HeightDrawnRecently`; at 1280×720 the line, its toasts and the skill-check bar sat on the selected colonist's gizmo row, whose top is 115 px from the bottom):
   - "<Name> — <`curDriver.GetReport()`>";
   - plus one of: "Taking control…" (unconfirmed), "Autopilot: <reason> — F5 to leave", "Drafted";
   - plus need warnings (Hungry, Tired, Bleeding) from `pawn.needs` and `pawn.health`;
@@ -1551,6 +1561,7 @@ Multiplayer scenarios (`--mp`; host headless with Direct, client windowed with i
 | m2-cancel | while fetching, hold W 0.5 s → job control; bill still present (repeatCount 1) |
 | m2-autoneeds | set C1 food to 0.05 → within 120 ticks job is an eating job, HUD shows Autopilot; after eating, job control |
 | mp2-cook | client cooks on C2; compare OK; the bill `loadID` is the same in both logs |
+| m2-autoneeds-nofood, -drafted, -sleep, -off | (added at integration, B's list) no food on the map, drafted, or the option off → the control job holds for 300 ticks; exhausted → LayDown, then control once rested |
 
 ### M3: Skill checks on bills (E: ring; F: FpWork, Bill adapter, quality and food-poison levers)
 
@@ -1564,6 +1575,8 @@ Multiplayer scenarios (`--mp`; host headless with Direct, client windowed with i
 | m3-quality | in `Rand.PushState(42)`, 400 calls of `GenerateQualityCreatedByPawn(C1, Crafting)` with a forced tally of F = −4, 0 and +4 → mean category strictly increasing; F = 0 gives the same sequence as with no tally |
 | m3-poison | F = −4 → `C1.GetStatValue(FoodPoisonChance)` = base × 2.0 (± 1e-5), and the explanation contains the FP line |
 | m3-space | Space during Needle doesn't pause; Space 2 s after Result pauses |
+| m3-freeze | (added at integration) pause during Needle → needle still, Space unpauses without answering; LeftAlt held from Warn → Warn waits ≤ 3 s, then the needle runs out → outcome 0 reaches the sim |
+| m3-forfeit | (added at integration) hold a movement key during Needle → `Check forfeited`, outcome 0 applied (work and tally), the ring shows MISS; carry on (FpWorkBill), draft during Needle → tally-only miss (`Check abandoned`) |
 | mp3-craft | client crafts with the scripted pattern G,H,M,H…; compare OK (wl and tally fields included) |
 
 ### M4: All skilled work (F: the other adapters and levers; D: FpOrders)

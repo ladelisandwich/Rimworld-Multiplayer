@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- First-person play, skill checks in the simulation and their levers (Source/IsoRim/Fp: FpWork, FpLevers). -->
+
+  <!-- ==================== Stat explanations (a colonist's stat while they finish a piece worked in first person) ==================== -->
+  <!-- {0} is the form score (-4 to +4, with its sign), {1} the factor ("×0.80"). -->
+  <R3D_Fp_StatForm>First-person skill checks (form {0}): {1}</R3D_Fp_StatForm>
+  <R3D_Fp_StatFormFail>First-person skill checks (form {0}): failure chance {1}</R3D_Fp_StatFormFail>
+
+</LanguageData>

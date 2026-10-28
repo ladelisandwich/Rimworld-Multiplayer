@@ -121,6 +121,8 @@ namespace IsoRim.Fp
 
         // Map -> its component, so For() doesn't walk the map's ~50 components on every call. Lookups only; replaced with
         // the registry for each new Game (possibly on a loading thread, hence a new instance), a removed map drops its key.
+        // Copy on write: a filled dictionary is never changed, only replaced, so a reader on another thread (a stat read
+        // through StatPart_FpForm) never sees one half-changed.
         private static Dictionary<Map, FpMapComp> byMap = new Dictionary<Map, FpMapComp>();
 
         public FpMapComp(Map map) : base(map)
@@ -142,9 +144,16 @@ namespace IsoRim.Fp
             comp = map.GetComponent<FpMapComp>();
             if (comp != null)
             {
-                d[map] = comp;
+                Cache(map, comp);
             }
             return comp;
+        }
+
+        private static void Cache(Map map, FpMapComp comp)
+        {
+            Dictionary<Map, FpMapComp> d = new Dictionary<Map, FpMapComp>(byMap);
+            d[map] = comp;
+            byMap = d;
         }
 
         internal static void ClearCache()
@@ -332,7 +341,17 @@ namespace IsoRim.Fp
         {
             LookList(entries, "fpEntries", LookMode.Deep);
             LookList(tallies, "fpTallies", LookMode.Deep);
-            LookList(fpBills, "fpBills", LookMode.Reference);
+            if (Scribe.mode == LoadSaveMode.Saving)
+            {
+                // A bill deleted, or whose bench was destroyed, since the last clean-up (FpBills.Tick, every 60 ticks) isn't
+                // saved anywhere else: its reference would make every loader log "Could not resolve reference".
+                List<Bill> kept = fpBills.Where(b => b != null && b.billStack != null && !b.DeletedOrDereferenced).ToList();
+                Scribe_Collections.Look(ref kept, "fpBills", LookMode.Reference);
+            }
+            else
+            {
+                LookList(fpBills, "fpBills", LookMode.Reference);
+            }
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 CleanUpAfterLoading();
@@ -391,13 +410,19 @@ namespace IsoRim.Fp
             {
                 entries.Clear();
             }
+            Cache(map, this);   // filled here on the main thread, before anything reads stats of this map's pawns
             FpRegistry.Rebuild();
         }
 
         public override void MapRemoved()
         {
             FpRegistry.Forget(this);
-            byMap.Remove(map);
+            if (byMap.ContainsKey(map))
+            {
+                Dictionary<Map, FpMapComp> d = new Dictionary<Map, FpMapComp>(byMap);
+                d.Remove(map);
+                byMap = d;
+            }
         }
 
         // Binary searches over the sorted lists: the index, or the bitwise complement of the insertion point.

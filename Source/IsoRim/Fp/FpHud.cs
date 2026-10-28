@@ -145,9 +145,9 @@ namespace IsoRim.Fp
                     Log.ErrorOnce("[IsoRim] First person: drawing the reticle failed: " + ex, 93652403);
                 }
             }
-            if (FpSettings.hints)
+            if (FpSettings.hints && FpSkillCheck.State == FpRingState.Idle)
             {
-                DrawHint(c, s);
+                DrawHint(c, s);   // not under a skill-check ring: its arc runs where the hint line would be
             }
             DrawStatus(p, s);
             DrawCheatSheet(s);
@@ -248,7 +248,7 @@ namespace IsoRim.Fp
             float lh = Text.LineHeight;
             float maxW = Mathf.Clamp(UI.screenWidth - 2f * InspectPaneClear, 300f, 900f);
             float w = Mathf.Min(Text.CalcSize(line).x + 4f, maxW);
-            float y = UI.screenHeight - StatusFromBottom * s;
+            float y = StatusTop(s);
             Rect r = new Rect(UI.screenWidth / 2f - w / 2f, y, w, lh);
             Widgets.DrawBoxSolid(r.ExpandedBy(8f * s, 2f * s), PanelColor);
             ShadowLabel(r, Fit(line, w), Color.white, TextAnchor.MiddleCenter);
@@ -257,6 +257,23 @@ namespace IsoRim.Fp
             {
                 DrawFillRing(new Vector2(r.x - 8f * s - 10f * s, r.center.y), 7f * s, fill);
             }
+        }
+
+        // The status line's top: spec 14's 112 px from the bottom, raised above the game's gizmo grid while one is drawn
+        // (the selected colonist's commands, right of the inspect pane, under the screen's centre at 1280 x 720): at 112 px
+        // the line, the toasts' base and the skill-check bar under it (FpSkillCheck.BarY) sat on the grid's first row, whose
+        // top is 115 px from the bottom. GizmoGridDrawer.HeightDrawnRecently is this frame's grid, drawn before this postfix.
+        internal static float StatusTop(float s)
+        {
+            float top = UI.screenHeight - StatusFromBottom * s;
+            float grid = GizmoGridDrawer.HeightDrawnRecently;
+            if (grid > 0f)
+            {
+                // The line and the bar under it as FpSkillCheck.BarY places it, its ticks, and a gap above the grid.
+                float below = Mathf.Max(20f * s, Text.LineHeightOf(FontFor(s)) + 10f * s) + 12f * s;
+                top = Mathf.Min(top, UI.screenHeight - grid - below);
+            }
+            return top;
         }
 
         // "<Name> — <job report>", then one of taking control / autopilot / drafted, then need warnings. Rebuilt at most 4
@@ -351,7 +368,7 @@ namespace IsoRim.Fp
             toasts.RemoveAll(t => now >= t.until);
             Text.Font = FontFor(s);
             float lh = Text.LineHeight;
-            float y = UI.screenHeight - StatusFromBottom * s - 6f * s;
+            float y = StatusTop(s) - 6f * s;
             for (int i = toasts.Count - 1; i >= 0; i--)
             {
                 ToastEntry t = toasts[i];

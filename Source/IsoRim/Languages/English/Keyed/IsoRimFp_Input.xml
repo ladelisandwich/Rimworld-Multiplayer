@@ -28,6 +28,8 @@
   <R3D_Fp_Hud_Invalid>{0} — [RMB] more</R3D_Fp_Hud_Invalid>
   <R3D_Fp_Hud_TakingControl>taking control…</R3D_Fp_Hud_TakingControl>
   <R3D_Fp_Hud_Autopilot>Autopilot: {0} — {1} to leave</R3D_Fp_Hud_Autopilot>
+  <!-- A movement key held while on autopilot: {0} the reason, {1} the draft key, {2} the first person key. -->
+  <R3D_Fp_Hud_AutopilotHold>On autopilot ({0}): walking waits. {1} drafts them back to you, {2} leaves.</R3D_Fp_Hud_AutopilotHold>
   <R3D_Fp_Hud_Drafted>drafted</R3D_Fp_Hud_Drafted>
   <R3D_Fp_Hud_Hungry>hungry</R3D_Fp_Hud_Hungry>
   <R3D_Fp_Hud_Tired>tired</R3D_Fp_Hud_Tired>

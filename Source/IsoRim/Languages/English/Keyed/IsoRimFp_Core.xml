@@ -25,6 +25,16 @@
   <R3D_Fp_Settings_ResumeTip>In multiplayer every join point and resync reloads the game. On: you are back in control of the same colonist afterwards.</R3D_Fp_Settings_ResumeTip>
   <R3D_Fp_Settings_HudScale>Crosshair and hint size</R3D_Fp_Settings_HudScale>
   <R3D_Fp_Settings_HudScaleTip>Size of the first-person crosshair, hint, status line and messages.</R3D_Fp_Settings_HudScaleTip>
+  <R3D_Fp_Settings_AutoNeeds>Look after their own needs</R3D_Fp_Settings_AutoNeeds>
+  <R3D_Fp_Settings_AutoNeedsTip>On: a colonist you control who becomes urgently hungry, exhausted or in need of a doctor eats, sleeps or goes to bed on their own and comes back to you after. Not while drafted; draft them to call them back early.</R3D_Fp_Settings_AutoNeedsTip>
+  <R3D_Fp_Settings_SkillChecks>Skill checks in skilled work</R3D_Fp_Settings_SkillChecks>
+  <R3D_Fp_Settings_SkillChecksTip>A ring round the crosshair during crafting, cooking, art and other skilled work: press the check key as the spark crosses the arc. A good press speeds the work and raises its quality, a miss slows it and lowers it, and walking away from a check counts as a miss. Off: the work runs as in the game.</R3D_Fp_Settings_SkillChecksTip>
+  <R3D_Fp_Settings_CheckLatency>Skill check timing offset</R3D_Fp_Settings_CheckLatency>
+  <R3D_Fp_Settings_CheckLatencyTip>Taken off the time of each press to make up for display and input lag. Raise it if your presses land late.</R3D_Fp_Settings_CheckLatencyTip>
+  <R3D_Fp_Settings_CheckSounds>Skill check sounds</R3D_Fp_Settings_CheckSounds>
+  <R3D_Fp_Settings_CheckSoundsTip>A tick as the ring appears and a sound for each result.</R3D_Fp_Settings_CheckSoundsTip>
+  <R3D_Fp_Settings_ColourBlind>Colour-blind skill check ring</R3D_Fp_Settings_ColourBlind>
+  <R3D_Fp_Settings_ColourBlindTip>A dashed arc and a white great part with marks at its edges.</R3D_Fp_Settings_ColourBlindTip>
   <R3D_Fp_Settings_Reset>Reset first-person play options</R3D_Fp_Settings_Reset>
 
 </LanguageData>

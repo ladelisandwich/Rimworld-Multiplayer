@@ -302,8 +302,10 @@ only while nobody plays; refuses when a RimWorld is running unless
 --force). The harness (Fp/Test) only runs with dev mode on and 
 ISORIM_FPTEST=<scenario>[:solo|host|client]; it logs FPTEST PASS/FAIL 
 lines and FPSTATE lines, which scripts/fp_compare.py compares between host 
-and client. In game: dev mode, Debug actions > IsoRim > "FP: patch hit 
-counts".
+and client, together with the FPTEST CMD lines (every first-person command 
+as each side ran it, in the common tick range). fp_selftest.py refuses an id 
+no FpTestM<n>.Register lists, and an mp* id without --mp. In game: dev mode, 
+Debug actions > IsoRim > "FP: patch hit counts".
 - Two instances on this PC: ./scripts/run_two.sh (host, then Enter, then a 
 client that auto-joins 127.0.0.1:30502 with -connect=). Each instance has 
 its own XDG_CONFIG_HOME and -savedatafolder under ~/.rw-mp-test/<host|client>; 
@@ -451,7 +453,25 @@ new files, 231 tests pass, staging passes check_staged, fp_selftest.py
 the way: the played colonist was among the float menu's clicked pawns (the 
 left button chose "Drop assault rifle"), per-frame UI ran while a load tore 
 the old game down ("invalid map index"), and harness/scene issues. The 
-user's in-game check is pending (list in Known gaps, first-person play, M1).
+user's in-game check is pending (list in Known gaps, first-person play, M1). 
+M2 (workbench and AutoNeeds) and M3 (skill checks on bills, risk and reward, 
+the user's choice) code complete, Oct 27, NOT yet run in game or in the test 
+copies: tracks D (FpRecipeWindow, FpBills, FpTestM2), B (AutoNeeds in 
+FpControlJob), E (FpSkillCheck) and F (FpWork, FpAdapters' Bill adapter, 
+FpLevers, FpTestM3) landed, were integrated and fixed after a review (Known 
+gaps, first-person play, M2 and M3). Builds with no warnings in the new 
+files, 231 tests pass, staging passes check_staged, fp_selftest.py 
+--dry-run starts all 22 M2/M3 scenarios (m2-cook, m2-noingr, m2-15, 
+m2-continue, m2-cancel, m2-autoneeds and its -nofood, -drafted, -sleep, 
+-off, mp2-cook --mp; m3-plan, m3-outcomes, m3-hold, m3-deadline, m3-stale, 
+m3-quality, m3-poison, m3-space, m3-freeze, m3-forfeit, mp3-craft --mp). 
+Oct 27 night: all 22 M2/M3 scenarios pass in the Proton test copies and 
+the 26 M1 ones still pass, 0 error lines in any log, every --mp compare 
+matched with no desync file. The feature code needed no fix; the harness 
+did (mp2-cook's host, mp3-craft's kit, an m3-deadline expectation, the 
+scene's colonist choice, the runner's game detection), and the HUD and 
+picker were made readable at 1280 x 720 (Known gaps, first-person play, 
+M2 and M3, test-copy run). Next: the user's in-game check.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -1275,3 +1295,193 @@ read of both codebases before merging. What changed and why:
   friend), the Esc menu, an ability or grenade used with Alt and the free 
   cursor, picking a closed door, a Shift-queued order while controlled, 
   and a friend joining while you play.
+- First-person play, M2 and M3 (Oct 27, code complete, all scenarios pass 
+in the test copies, in-game check pending; spec 
+docs/fp-play-spec.md 5.3-5.4, 10, 11, whose "integration changes" notes 
+record what changed below):
+  - Workbench (M2, D): the left button on one of the colony's benches in 
+  reach opens Dialog_FpRecipes (Continue: bills open to the colonist; Make: 
+  the bench's recipes, greyed with the game's reasons, this colonist's 
+  time; 1-9, Enter repeats, Esc). A recipe goes out as FpStartRecipe: a 
+  RepeatCount bill restricted to the colonist, radius 20, put first on the 
+  bench, listed in FpMapComp.fpBills (saved; deleted, dereferenced ones are 
+  left out of the save so no load logs "Could not resolve reference"), and 
+  the game's own DoBill job for exactly that bill; Continue goes out as 
+  FpWorkBill. Both commands carry SyncContext.QueueOrder_Down: the game's 
+  TryTakeOrderedJob reads the queue key (KeyBindingDefOf.QueueOrder), and 
+  read live in a command it would be whatever each machine's player holds 
+  at that moment. Both set FloatMenuMakerMap.makingFor to the colonist 
+  round WorkGiver_DoBill.JobOnThing, as the game's "Prioritize" order does: 
+  the work giver then records why a bill can't be done (JobFailReason, 
+  "Missing materials") and doesn't push back the other bills' next 
+  ingredient search (which would draw ReCheckFailedBillTicksRange from 
+  Rand). FpWorkBill and the picker also test Bill.PawnAllowedToStartAnew 
+  (slaves or mechs only, the bill's allowed skill range; review finding: 
+  the work giver silently passed such a bill over). A refusal names the 
+  real cause: no ingredients within the radius (also when the work giver 
+  answered with another bill's job), the bench needs fuel, something lies 
+  on the bench, the bench is in use (Core job defs have no label; the first 
+  version printed "would have to  first"). The picker shows a refusal in 
+  its footer (the HUD's toasts draw under windows).
+  - x5 makes five pieces one at a time: each DoBill job makes one, then the 
+  control job comes back and the bill shows "4 remaining" restricted to the 
+  colonist; the left button on the bench and Enter carries on (the x5 
+  button's tooltip and the toast say so). Auto-continuing a listed bill 
+  after a finished piece is left for later. Each piece that ends a bill 
+  posts the game's historical "Bill complete" message on every player's 
+  machine (the game's Bill_Production.Notify_IterationCompleted; same 
+  machinery as any colony bill, deterministic; review finding accepted, not 
+  suppressed). Clean-up (every 60 ticks): a finished bill is deleted once 
+  its worker is off it, an unfinished one stays as an ordinary restricted 
+  bill when its colonist is released (the AI finishes it).
+  - Upstream risk noted by D, not first-person code: the game's bills tab 
+  calls Bill.ShouldDoNow (Bill_Production sets or clears `paused`) and 
+  Bill_ProductionWithUft.BoundWorker (unbinds a piece) from the interface, 
+  so a player with the bills tab open writes bill state the others don't. 
+  The picker never calls either (its own read-only DoableNow); FpWorkBill 
+  settles BoundWorker inside the command.
+  - AutoNeeds (M2, B): with the option on (FpFlags.AutoNeeds, sent with 
+  FpSetControl) JobGiver_FpControl itself gives the game's needs jobs: 
+  JobGiver_GetFood for urgent hunger, JobGiver_GetRest for exhaustion (only 
+  when the colonist could fall asleep), the Patient work givers (emergency 
+  treatment, bed rest for a doctor) when HealthAIUtility 
+  .ShouldSeekMedicalRestUrgent, in the think tree's order. The rest of the 
+  tree would put a colonist whose need can't be met on work and joy jobs, 
+  out of the player's hands. The control job checks every 60 ticks and ends 
+  when one of these has a job. The autopilot's jobs carry the game's needs 
+  tags and the control job JobTag.Misc, so mindState.lastJobTag (saved) 
+  tells every machine alike that the autopilot has the colonist 
+  (FpState.AutopilotReason, the HUD). On an override check the node returns 
+  the same job (a meal carries on); lying down is kept only while still 
+  exhausted or a doctor can still come. Never while drafted (drafting is how 
+  a player calls a colonist back early; the drafted wait isn't replaced). A 
+  movement key doesn't cancel the autopilot: the HUD shows no interrupt 
+  fill then and a toast says R drafts and F5 leaves (review finding). Open: 
+  the medical trigger fires for any wound that needs tending 
+  (HasHediffsNeedingTend), so a scratch sends a controlled colonist to bed 
+  whenever a doctor is free; the "Could not find think node with key" 
+  warning on loading a save (Known gaps, M1) now also comes from the 
+  autopilot's jobs (JobGiver_FpControl gives them). The options autoNeeds, 
+  skillChecks, checkLatencyMs (0-100), checkSounds and colourBlind are now 
+  on the settings page.
+  - Skill checks (M3, E and F): while a controlled colonist with checks on 
+  (FpFlags.Checks) is in JobDriver_DoBill's DoRecipeWork toil (any bill but 
+  Bill_Autonomous, the mech gestator's: its formed work is a flat 300, not 
+  the recipe's), FpWork plans PlanChecks over the work left at this speed, 
+  raises one at its due point, holds the work near the end while it waits 
+  (prefix on JobDriver.DriverTickInterval), and applies the answer 
+  (FpCheckResult: Great +40%, Hit +15%, Miss or none -30% of the work since 
+  the last answer) and counts it in the piece's tally (an unfinished thing, 
+  else the job), whose form F (-4..+4) moves quality by F skill levels 
+  (QualityUtility patches) and FoodPoisonChance, MedicalSurgerySuccessChance 
+  and the butchery efficiencies by the tuning tables (StatPart_FpForm, added 
+  in code; a stat the game had marked immutable is made mutable, or its 
+  per-thing cache would never see the part). Surgery and butchery levers are 
+  in M3 (they are bill stats); construction, mining and plant ones come 
+  with their adapters in M4. The hold point is max(3% of the work, 1.25 x 15 
+  x UnitsPerTick): the work toil runs once per interval of the variable tick 
+  rate, up to 15 ticks at once (Thing.MaxTickIntervalRate), so a short job 
+  could step from above 3% straight to done under a pending check; M4's 
+  adapters need the same rule. The ring (E): a hit arc somewhere between 
+  110 and 330 degrees with a great part in its middle, widths from the 
+  skill, passion, manipulation and inspiration (the same for every player), 
+  a 0.55 s warning, then a spark once round in 1.15 s; the check key judges 
+  the press at the frame's input time less the latency option; no press is 
+  a timeout miss. Space is the check key only while the ring runs (and 0.6 s 
+  after a result); while the game is paused it pauses or unpauses as 
+  always. Progress bar under the status line with the due points, the 
+  tally's pips and form, and the expected grant from a press until the 
+  answer lands. The crosshair's action hint is hidden while a ring shows.
+  - No free way out of a check (review finding, risk and reward): a check 
+  the ring has shown (raised at least ringWarn game seconds ago) counts as a 
+  miss when the player walks away from it (FpSetIntent ends the job), takes 
+  another bill (FpStartRecipe, FpWorkBill), turns checks off (FpSetControl's 
+  flags) or leaves (F5, as the spec had it): FpWork.ForfeitPending, work and 
+  tally. Drafting or a float-menu order ends the job in the game's own code, 
+  so the next map tick counts the miss on the piece's tally only 
+  (FpWork.LeftJob; a piece's tally is created when its first check is 
+  raised for this). A job that ends on its own still voids the check. The 
+  ring shows such a miss as "MISS, left the work". The ring's clock stops 
+  while the game is paused; a free cursor (Alt, a menu, a window, the world 
+  map, focus lost) holds only the warning, for 3 s in all 
+  (FpSkillCheck.CursorGrace), then the needle runs and, unanswerable, runs 
+  out into a timeout miss (spec 10.7 had the ring frozen for any free 
+  cursor, which let a player hold every check off until the 10 s deadline 
+  voided it). A check voided at its deadline now gives up its segment 
+  (segStart moves on), so skipping checks can't stake one answer on all the 
+  work so far. The deadline still voids rather than counts a miss: a 
+  client catching up (many ticks a frame) can pass it before its ring ever 
+  shows.
+  - Hit counters (dev mode, Debug actions > IsoRim > "FP: patch hit 
+  counts"): Recipe picker opened, Bill started, Bill continued, Bill 
+  refused, Bill cleaned up (D); AutoNeeds job given, AutoNeeds job kept (B); 
+  Check ring shown, Check ring answered, Check result sent, Check ring 
+  cancelled, Check ring forfeited (E); Hold skipped interval, Check 
+  accepted, Check stale, Check forfeited, Check abandoned, Quality offset, 
+  StatPart applied (F).
+  - Self-test deviations (M2): m2-cook also checks that the picker frees the 
+  cursor and captures it again; m2-15 also checks the picker greys a full 
+  bench's recipes (the command's refusal through a direct send); 
+  m2-continue puts a suspended bill first, so Continue must take the chosen 
+  bill and keep the order; m2-cancel also checks the bill leaves the list 
+  once play ends but stays on the bench; m2-autoneeds also holds W while 
+  the autopilot eats; four AutoNeeds scenarios B asked for were added. A 
+  random -quicktest colonist who can't cook fails a scenario's setup with 
+  that reason (rerun). (M3): tribalwear on a hand tailoring bench spawned at 
+  (-4, -6) with 75 cloth (not the duster: it needs research the colony may 
+  lack, and the scene has no tailoring bench; not built into FpScene, where 
+  the bench would stand beside m1-diag's south-west diagonal), m3-hold, 
+  m3-deadline and m3-stale under Direct control (no ring), mp3-craft's kit 
+  spawned by the host before the client joins, the doer C1 or else C2, 
+  m3-outcomes raises the doer's Crafting to 10 (narrow arcs at level 0 made 
+  a scripted Hit land on Great at 30 fps), and m3-freeze and m3-forfeit test 
+  the no-free-void rules.
+  - Test-copy run (Oct 27 night): every M2 and M3 scenario passes in the 
+  Proton test copies (m2-cook, m2-noingr, m2-15, m2-continue, m2-cancel, 
+  m2-autoneeds and its -nofood, -drafted, -sleep, -off, mp2-cook; m3-plan, 
+  m3-outcomes, m3-hold, m3-deadline, m3-stale, m3-quality, m3-poison, 
+  m3-space, m3-freeze, m3-forfeit, mp3-craft), both --mp compares matched 
+  (state lines and commands), no desync file, 0 mod error lines; the M1 set 
+  still passes (21 solo, 5 --mp, the --mp compares matched). The feature 
+  code needed no fix; found and fixed in the harness and the interface:
+    - mp2-cook's host read the bill from the stove it adopted after hosting, 
+    but the client's join makes a join point, which saves and reloads the 
+    host's game, so that stove was a discarded object and the wait for the 
+    bill could only time out. The host now waits for the client's first 
+    command and adopts the scene again.
+    - mp3-craft's kit was spawned by the host once the session ran, outside 
+    any command, so Multiplayer gave it negative ids (HandTailoringBench-2). 
+    It is now part of the host's scene, spawned before hosting 
+    (FpTestKit.AddSceneExtra, run before SceneReady lets the test host start 
+    the session), and found again by its cells.
+    - m3-deadline expected the void to use up exactly one check; when the 
+    void lets go of work held at the hold point with more checks planned, 
+    the next tick gives up the rest as too late (spec 10.2: P >= 
+    holdPermille sets issued = planned). The check now allows that case.
+    - FpScene puts colonists who can cook first among C1 and C2 (a 
+    -quicktest colonist "incapable of cooking" failed m2-noingr's setup), 
+    and mp2-cook cooks with C2, or with C1 when only C1 can (both machines 
+    work it out alike from the pawns' synced data).
+    - fp_selftest.py took a Dolphin window open on the game folder for a 
+    running game (exit 98): it now counts only RimWorld.exe or RimWorld.dll 
+    command lines, or the native apphost.
+    - HUD at 1280 x 720 (screenshots): the status line, its toasts and the 
+    skill-check bar with its "Form" label sat on the selected colonist's 
+    gizmo row (the grid's top is 115 px from the bottom, the line was at 
+    112, the bar under it): FpHud.StatusTop raises them above the grid while 
+    one is drawn (GizmoGridDrawer.HeightDrawnRecently).
+    - Picker: a recipe's skill requirement in the detail column pushed the 
+    time out of it ("Cooking 1   needs Cooking" with no time); it is now on 
+    the row's second line, the detail is skill and time only.
+    - More screenshots: m2_continue_picker, m3_plan_warn, 
+    m3_result_<outcome>; m2_autoneeds waits for the HUD's status refresh.
+  - To check in game: the ring's readability and fairness at your frame 
+  rate and the timing offset (raise it if presses land late); the picker 
+  (number keys, Enter to carry on an x5 bill, the footer refusals); a meal 
+  and a crafted piece with checks, alone and with the friend (both see the 
+  same work progress and tally); walking away from or drafting during a 
+  ring (MISS, left the work); Alt during a ring's warning (waits about 3 s, 
+  then runs out); AutoNeeds eating and sleeping, R to call the colonist back; 
+  the "Bill complete" messages with two players; at your resolution, the 
+  status line and the skill-check bar clear of the selected colonist's 
+  commands (raised above them since the test-copy run).
