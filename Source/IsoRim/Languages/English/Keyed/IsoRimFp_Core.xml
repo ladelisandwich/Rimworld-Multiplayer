@@ -35,6 +35,8 @@
   <R3D_Fp_Settings_CheckSoundsTip>A tick as the ring appears and a sound for each result.</R3D_Fp_Settings_CheckSoundsTip>
   <R3D_Fp_Settings_ColourBlind>Colour-blind skill check ring</R3D_Fp_Settings_ColourBlind>
   <R3D_Fp_Settings_ColourBlindTip>A dashed arc and a white great part with marks at its edges.</R3D_Fp_Settings_ColourBlindTip>
+  <R3D_Fp_Settings_ShowHitChance>Show the hit chance</R3D_Fp_Settings_ShowHitChance>
+  <R3D_Fp_Settings_ShowHitChanceTip>While drafted, the game's own estimate of the chance to hit what the crosshair points at, next to the crosshair and in the hint. Firing in first person always uses the game's own odds.</R3D_Fp_Settings_ShowHitChanceTip>
   <R3D_Fp_Settings_Reset>Reset first-person play options</R3D_Fp_Settings_Reset>
 
 </LanguageData>

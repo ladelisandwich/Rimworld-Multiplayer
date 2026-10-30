@@ -26,6 +26,8 @@
   <R3D_Fp_Hud_Action>[LMB] {0}   [RMB] more</R3D_Fp_Hud_Action>
   <R3D_Fp_Hud_TooFar>Too far — [RMB] more</R3D_Fp_Hud_TooFar>
   <R3D_Fp_Hud_Invalid>{0} — [RMB] more</R3D_Fp_Hud_Invalid>
+  <!-- A hint that names a key rather than a click (undrafted on a hostile: "R: raise your weapon"): no [LMB]. -->
+  <R3D_Fp_Hud_NoClick>{0}   [RMB] more</R3D_Fp_Hud_NoClick>
   <R3D_Fp_Hud_TakingControl>taking control…</R3D_Fp_Hud_TakingControl>
   <R3D_Fp_Hud_Autopilot>Autopilot: {0} — {1} to leave</R3D_Fp_Hud_Autopilot>
   <!-- A movement key held while on autopilot: {0} the reason, {1} the draft key, {2} the first person key. -->
@@ -34,7 +36,17 @@
   <R3D_Fp_Hud_Hungry>hungry</R3D_Fp_Hud_Hungry>
   <R3D_Fp_Hud_Tired>tired</R3D_Fp_Hud_Tired>
   <R3D_Fp_Hud_Bleeding>bleeding</R3D_Fp_Hud_Bleeding>
+  <!-- The needs strip at the bottom left (M6): the health bar's label (food, rest and mood use the game's need names). -->
+  <R3D_Fp_Hud_Health>Health</R3D_Fp_Hud_Health>
   <R3D_Fp_Hud_CheatSheet>{0} move · Mouse look · LMB use · RMB menu · {1} draft · {2} skill check · {3} cursor · Esc menu · {4} leave</R3D_Fp_Hud_CheatSheet>
+
+  <!-- ==================== M6 options (drawn by FpSettings.DrawSection; the keys live here with the features) ==================== -->
+  <R3D_Fp_Settings_EyeLead>Camera lead when walking</R3D_Fp_Settings_EyeLead>
+  <R3D_Fp_Settings_EyeLeadTip>A walk starts when the game receives your key, a moment later with a friend. Meanwhile the view moves a little ahead (at most a third of a cell) so starting feels immediate; it settles back once your colonist walks.</R3D_Fp_Settings_EyeLeadTip>
+  <R3D_Fp_Settings_HeadBob>Head bob</R3D_Fp_Settings_HeadBob>
+  <R3D_Fp_Settings_HeadBobTip>A slight up and down movement of the view while walking. 0 is none.</R3D_Fp_Settings_HeadBobTip>
+  <R3D_Fp_Settings_FriendTags>Show who plays which colonist</R3D_Fp_Settings_FriendTags>
+  <R3D_Fp_Settings_FriendTagsTip>In multiplayer, a tag with the player's name over each colonist another player controls in first person, with a small ring while their skill check runs and its result over it.</R3D_Fp_Settings_FriendTagsTip>
 
   <!-- ==================== Esc menu (Dialog_FpMenu) ==================== -->
   <R3D_Fp_Menu_Title>Playing {0}</R3D_Fp_Menu_Title>

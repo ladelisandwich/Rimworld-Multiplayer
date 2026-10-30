@@ -885,6 +885,12 @@ namespace IsoRim.Fp
                     yield return K.Done();
                     yield break;
                 }
+                // The doer and the colonists as the client found them (the M4-M6 test-copy run: twice the client's scene
+                // differed from the host's after the half minute between hosting and the join, once the kit's cloth gone,
+                // once another C1 and no control taken on the doer).
+                K.Info("mp3-craft doer " + p.ThingID + " " + p.LabelShort + ": mental state " + (p.MentalStateDef?.defName ?? "none") + ", downed "
+                    + p.Downed + ", drafted " + p.Drafted + ", " + JobOf(p) + "; colonists " + string.Join(", ", Find.CurrentMap.mapPawns.FreeColonistsSpawned
+                    .Select(c => c.ThingID + (c.InMentalState ? " (" + c.MentalStateDef.defName + ")" : "") + (c.Downed ? " (downed)" : ""))));
                 foreach (int w in EnterPlay(p)) yield return w;
                 // The bill command only goes out from the interface (not during a long event): the sender's own test.
                 yield return K.WaitUntil(() => MP.InInterface, "for Multiplayer to take commands", 1800);

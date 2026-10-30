@@ -40,7 +40,18 @@ namespace IsoRim.Fp
         private static bool hintReach;
         private static bool hintDrafted;
         private static bool hintAnyDistance;
+        private static Thing hintWeapon;     // the primary the hint was worked out with (a swap changes what a click does)
+        private static bool hintValid;
+        private static bool hintCombat;      // the hint came from FpCombat: worked out again at every slot (where the shooter
+                                             // stands and the target's cover change the refusal and the hit chance)
+        private static bool hintNoClick;     // ... and names a key, not a click (FpCombat.LastHintNoClick when it was set)
         private static float hintTime = -1000f;
+
+        // Wheel cycling (M6, spec 7.1): the left button's float-menu options in the order Best ranks them (at most
+        // CycleMax), as the last hint pass found them, and which one the left button takes now (0: the best).
+        private const int CycleMax = 3;
+        private static readonly List<string> cycleLabels = new List<string>();
+        private static int cycleIndex;
 
         // A first-person float menu is open (FpInput.PointerOverride keeps the pointer pinned to MenuPoint meanwhile).
         // Updated once a frame, so it stays true through the OnGUI pass in which an option closes the menu.
@@ -73,6 +84,13 @@ namespace IsoRim.Fp
             get { return hintKind; }
         }
 
+        // The hint names a key, not what the left button does (FpCombat's undrafted "R: raise your weapon"): the HUD leaves
+        // out its "[LMB]" and keeps the crosshair white.
+        internal static bool HintNoClick
+        {
+            get { return hintCombat && hintNoClick && hintKind == FpHintKind.Action; }
+        }
+
         // From FpInput.OnRootUpdate, every frame in every program state.
         internal static void Update()
         {
@@ -103,11 +121,13 @@ namespace IsoRim.Fp
                     return;
                 }
                 FpHit hit = FpPick.Current;
-                if (!hit.Valid)
+                // Combat first, before the hit's own test: an invalid hit (the ray rose over a standing pawn's shoulder)
+                // still fires at a hostile within the aim's wider radius (review finding, M5).
+                if (p.Drafted && FpCombat.TryPrimaryDown(p, hit))
                 {
                     return;
                 }
-                if (p.Drafted && FpCombat.TryPrimaryDown(p, hit))
+                if (!hit.Valid)
                 {
                     return;
                 }
@@ -126,7 +146,7 @@ namespace IsoRim.Fp
                     return;
                 }
                 List<FloatMenuOption> opts = FloatMenuMakerMap.GetOptions(new List<Pawn> { p }, hit.Point, out FloatMenuContext _);
-                FloatMenuOption best = Best(opts);
+                FloatMenuOption best = Cycled(opts) ?? Best(opts);
                 if (best == null)
                 {
                     FloatMenuOption refused = FirstRefused(opts);
@@ -135,6 +155,7 @@ namespace IsoRim.Fp
                 }
                 FpHits.Hit("LMB option chosen");
                 string label = best.Label;
+                LastChosen = label;
                 // floatMenu null: no menu to revalidate against (FloatMenuOption.Chosen is null-safe there)
                 best.Chosen(true, null);
                 FpHud.Toast(label, Color.white);
@@ -271,9 +292,10 @@ namespace IsoRim.Fp
                 return;
             }
             FpHit hit = FpPick.Current;
-            if (!hit.Valid)
+            if (!hit.Valid && !FpCombat.NearHostile(p))
             {
-                // Nothing under the crosshair: no menu to build, so no need to wait for the next slot.
+                // Nothing under the crosshair and no hostile beside it: no menu to build, so no need to wait for the next
+                // slot. (A hostile within the aim's wider radius still gets the combat hint: review finding, M5.)
                 ClearHint();
                 return;
             }
@@ -286,8 +308,10 @@ namespace IsoRim.Fp
             }
             bool drafted = p.Drafted;
             bool anyDistance = FpSettings.interactAnyDistance;
-            if (hintKnown && hintPawn == p && hintThing == hit.Thing && hintCell == hit.Cell && hintReach == hit.InReach
-                && hintDrafted == drafted && hintAnyDistance == anyDistance)
+            Thing weapon = p.equipment?.Primary;
+            bool same = hintKnown && hintPawn == p && hintThing == hit.Thing && hintCell == hit.Cell && hintReach == hit.InReach
+                && hintDrafted == drafted && hintAnyDistance == anyDistance && hintValid == hit.Valid && hintWeapon == weapon;
+            if (same && !hintCombat)
             {
                 return;
             }
@@ -298,6 +322,22 @@ namespace IsoRim.Fp
                 return;
             }
             hintTime = now;
+            if (same)
+            {
+                // The same target with a combat hint: only the combat part can have changed (the shooter walked, the target
+                // moved into cover; review finding, M5: the hint kept "Out of range" while the reticle showed 45%). It
+                // builds no float menu. Once it has nothing to say, the target is worked out afresh below.
+                string again = FpCombat.Hint(p, hit);
+                if (again != null)
+                {
+                    SetCombatHint(again);
+                    return;
+                }
+            }
+            if (!same)
+            {
+                cycleIndex = 0;   // a new target starts at its best option
+            }
             hintKnown = true;
             hintPawn = p;
             hintThing = hit.Thing;
@@ -305,17 +345,28 @@ namespace IsoRim.Fp
             hintReach = hit.InReach;
             hintDrafted = drafted;
             hintAnyDistance = anyDistance;
+            hintWeapon = weapon;
+            hintValid = hit.Valid;
             WorkOutHint(p, hit, anyDistance);
         }
 
-        // The first of: the combat hint (drafted, or a hostile pawn), the bench's recipe picker, a work order, the best
-        // float-menu option. Kind: TooFar out of reach (whatever the target offers), Invalid with nothing to do.
+        // The first of: the combat hint (drafted, or a hostile pawn), the bench's recipe picker, a work order, why a work
+        // order can't be given, the best float-menu option. Kind: TooFar out of reach (whatever the target offers), Invalid
+        // with nothing to do.
         private static void WorkOutHint(Pawn p, FpHit hit, bool anyDistance)
         {
+            hintCombat = false;
+            hintNoClick = false;
+            cycleLabels.Clear();
             string combat = FpCombat.Hint(p, hit);
             if (combat != null)
             {
-                SetHint(combat, FpHintKind.Action);
+                SetCombatHint(combat);
+                return;
+            }
+            if (!hit.Valid)
+            {
+                SetHint(null, FpHintKind.None);   // only the combat hint works off the crosshair's ray
                 return;
             }
             if (!hit.InReach && !anyDistance)
@@ -329,6 +380,14 @@ namespace IsoRim.Fp
                 SetHint(s, FpHintKind.Action);
                 return;
             }
+            // A rock or plant the colonist can't be ordered onto (outside the allowed area, forbidden, incapable): the
+            // reason, in red, as the click would toast it (track D's request; the float menu usually offers nothing there).
+            string refusal = FpOrders.RefusalHint(p, hit);
+            if (refusal != null)
+            {
+                SetHint(refusal, FpHintKind.Invalid);
+                return;
+            }
             // Checked first: GetOptions would post a "can't" message on its own (spec 1, corrections).
             AcceptanceReport allowed = FloatMenuMakerMap.ShouldGenerateFloatMenuForPawn(p);
             if (!allowed.Accepted)
@@ -337,14 +396,94 @@ namespace IsoRim.Fp
                 return;
             }
             List<FloatMenuOption> opts = FloatMenuMakerMap.GetOptions(new List<Pawn> { p }, hit.Point, out FloatMenuContext _);
-            FloatMenuOption best = Best(opts);
-            if (best != null)
+            List<FloatMenuOption> ranked = Ranked(opts);
+            if (ranked.Count > 0)
             {
-                SetHint(best.Label, FpHintKind.Action);
+                for (int i = 0; i < ranked.Count && i < CycleMax; i++)
+                {
+                    cycleLabels.Add(ranked[i].Label);
+                }
+                if (cycleIndex >= cycleLabels.Count)
+                {
+                    cycleIndex = 0;
+                }
+                SetHint(CycleText(), FpHintKind.Action);
                 return;
             }
             // Nothing the left button can take: the game's own reason, if it offers one ("Cannot wear: burning").
             SetHint(FirstRefused(opts)?.Label, FpHintKind.Invalid);
+        }
+
+        // A combat hint: Invalid (red crosshair, spec 14) when it can't be acted on (a friendly, out of range, no line of
+        // fire), else Action. FpCombat.LastHintNoClick (the undrafted "raise your weapon") is read by the HUD.
+        private static void SetCombatHint(string text)
+        {
+            hintCombat = true;
+            hintNoClick = FpCombat.LastHintNoClick;
+            cycleLabels.Clear();
+            SetHint(text, FpCombat.LastHintBlocked ? FpHintKind.Invalid : FpHintKind.Action);
+        }
+
+        // The wheel (M6, spec 7.1; FpInput on a scroll while captured): the left button's float-menu option moves along the
+        // first CycleMax of the ranked options, the hint following at once. Nothing when the hint isn't a float-menu
+        // option or there is only one.
+        internal static void CycleOption(int step)
+        {
+            if (step == 0 || cycleLabels.Count < 2 || hintCombat || hintKind != FpHintKind.Action)
+            {
+                return;
+            }
+            int n = cycleLabels.Count;
+            cycleIndex = ((cycleIndex + step) % n + n) % n;
+            SetHint(CycleText(), FpHintKind.Action);
+            FpHits.Hit("LMB option cycled");
+        }
+
+        // The option the wheel picked, when it is still among the first CycleMax of the ranked options (matched by label);
+        // null for the best one or when the menu changed, so the click takes Best.
+        private static FloatMenuOption Cycled(List<FloatMenuOption> opts)
+        {
+            if (cycleIndex <= 0 || cycleIndex >= cycleLabels.Count || hintCombat)
+            {
+                return null;
+            }
+            string want = cycleLabels[cycleIndex];
+            List<FloatMenuOption> ranked = Ranked(opts);
+            for (int i = 0; i < ranked.Count && i < CycleMax; i++)
+            {
+                if (ranked[i].Label == want)
+                {
+                    return ranked[i];
+                }
+            }
+            return null;
+        }
+
+        // The cycled option's label, with its place ("2/3") while there is more than one to pick from.
+        private static string CycleText()
+        {
+            string label = cycleLabels[cycleIndex];
+            return cycleLabels.Count < 2 ? label : label + "  (" + (cycleIndex + 1) + "/" + cycleLabels.Count + ")";
+        }
+
+        // The left button's option index (the self-test reads it).
+        internal static int CycleIndex
+        {
+            get { return cycleIndex; }
+        }
+
+        internal static int CycleCount
+        {
+            get { return cycleLabels.Count; }
+        }
+
+        // The label of the float-menu option the left button last chose (the self-test reads it).
+        internal static string LastChosen { get; private set; }
+
+        // The option the left button takes now, without the "(2/3)" (the self-test reads it).
+        internal static string CycledLabel
+        {
+            get { return cycleIndex < cycleLabels.Count ? cycleLabels[cycleIndex] : null; }
         }
 
         private static void SetHint(string text, FpHintKind kind)
@@ -360,6 +499,11 @@ namespace IsoRim.Fp
             hintKnown = false;
             hintPawn = null;
             hintThing = null;
+            hintWeapon = null;
+            hintCombat = false;
+            hintNoClick = false;
+            cycleLabels.Clear();
+            cycleIndex = 0;
         }
 
         // After an order the target's options change (the job taken, the bill added): work the hint out again at the next
@@ -388,10 +532,17 @@ namespace IsoRim.Fp
         // then orderInPriority, both descending, stable).
         private static FloatMenuOption Best(List<FloatMenuOption> opts)
         {
-            FloatMenuOption best = null;
+            List<FloatMenuOption> ranked = Ranked(opts);
+            return ranked.Count > 0 ? ranked[0] : null;
+        }
+
+        // Every option the left button may take, best first (as Best ranks them; ties keep the menu's order).
+        private static List<FloatMenuOption> Ranked(List<FloatMenuOption> opts)
+        {
+            List<FloatMenuOption> ranked = new List<FloatMenuOption>();
             if (opts == null)
             {
-                return null;
+                return ranked;
             }
             for (int i = 0; i < opts.Count; i++)
             {
@@ -400,12 +551,14 @@ namespace IsoRim.Fp
                 {
                     continue;
                 }
-                if (best == null || o.Priority > best.Priority || o.Priority == best.Priority && o.orderInPriority > best.orderInPriority)
+                int at = ranked.Count;
+                while (at > 0 && (o.Priority > ranked[at - 1].Priority || o.Priority == ranked[at - 1].Priority && o.orderInPriority > ranked[at - 1].orderInPriority))
                 {
-                    best = o;
+                    at--;
                 }
+                ranked.Insert(at, o);
             }
-            return best;
+            return ranked;
         }
 
         // The first refused option (no action; its label carries the game's reason), walking aside.

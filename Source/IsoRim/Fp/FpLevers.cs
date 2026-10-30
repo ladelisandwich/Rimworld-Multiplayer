@@ -14,8 +14,9 @@ namespace IsoRim.Fp
     // someone worked in first person. No lever touches shooting, melee, warmup, move speed or work speed.
     //
     // M3 has the bill levers: quality (crafting and art through bills) and the stats read while a bill finishes. M4 adds the
-    // construction and harvest stats (ConstructSuccessChance, MiningYield, PlantHarvestYield, DrugHarvestYield) with their
-    // adapters. Everything here runs inside the game's own stat and quality code, so it reads only synced state.
+    // construction, mining and harvest stats (ConstructSuccessChance, MiningYield, PlantHarvestYield; DrugHarvestYield
+    // through PlantHarvestYield) with their adapters, and the quality patch covers buildings (Frame.CompleteConstruction).
+    // Everything here runs inside the game's own stat and quality code, so it reads only synced state.
 
     // Which FpTuningDef table a lever uses.
     public enum FpLeverTable : byte
@@ -32,7 +33,8 @@ namespace IsoRim.Fp
     {
         public FpLeverTable table;
 
-        // A success chance whose failure part scales: val = 1 - (1 - val) * k. Otherwise val *= k.
+        // A success chance whose failure part scales: val = 1 - (1 - val) * k, for a chance under 1 (a worker whose chance
+        // is 1 or more before the stat's clamp can't fail, and stays so). Otherwise val *= k.
         public bool failChance;
 
         public override void TransformValue(StatRequest req, ref float val)
@@ -51,7 +53,18 @@ namespace IsoRim.Fp
             {
                 return;
             }
-            val = failChance ? 1f - (1f - val) * k : val * k;
+            if (failChance)
+            {
+                if (val >= 1f)
+                {
+                    return;
+                }
+                val = 1f - (1f - val) * k;
+            }
+            else
+            {
+                val *= k;
+            }
             FpHits.Hit("StatPart applied");
         }
 
@@ -113,6 +126,17 @@ namespace IsoRim.Fp
             new LeverStat("ButcheryMechanoidEfficiency", FpLeverTable.Yield, false),
         };
 
+        // The stats the M4 work reads from its worker (spec 10.5): the construction failure roll every interval of a frame's
+        // build toil (JobDriver_ConstructFinishFrame.cs:61), the yield booked with each mining hit (Mineable.cs:88-96) and
+        // the harvest roll when a plant is collected (JobDriver_PlantWork.cs:68-80). Not DrugHarvestYield: it takes
+        // PlantHarvestYield as a stat factor (Stats_Pawns_WorkGeneral.xml), so a part on both would apply the form twice.
+        private static readonly LeverStat[] WorkStats =
+        {
+            new LeverStat("ConstructSuccessChance", FpLeverTable.ConstructFail, true),
+            new LeverStat("MiningYield", FpLeverTable.Yield, false),
+            new LeverStat("PlantHarvestYield", FpLeverTable.Yield, false),
+        };
+
         private struct LeverStat
         {
             public readonly string defName;
@@ -157,6 +181,10 @@ namespace IsoRim.Fp
                     new[] { typeof(int), typeof(bool) }),
                 prefix: new HarmonyMethod(typeof(FpLevers), nameof(QualityByLevel_Prefix)));
             foreach (LeverStat s in BillStats)
+            {
+                AddStatPart(s);
+            }
+            foreach (LeverStat s in WorkStats)
             {
                 AddStatPart(s);
             }

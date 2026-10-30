@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using LudeonTK;
 using Multiplayer.API;
 using RimWorld;
 using UnityEngine;
@@ -61,9 +62,22 @@ namespace IsoRim.Fp
             return true;
         }
 
-        // M6
+        // A UI sender would send now: outside a session always, in one only from the interface (not from a tick, a command
+        // or a long event). For callers that must know whether a void sender's command went out (FpInput's facing).
+        internal static bool CanSend
+        {
+            get { return !MpBridge.InSession || MP.InInterface; }
+        }
+
+        // Spec 9.2: the idle facing the controller's camera asks for (Rot4 as a byte: 0 north, 1 east, 2 south, 3 west).
+        // The rate (a quadrant change with 10 degrees of hysteresis, at least 250 ms apart) is FpInput's; this only guards.
         public static void SendFacing(Pawn p, byte rot)
         {
+            if (p == null || !CanSend || rot > 3)
+            {
+                return;
+            }
+            FpSetFacing(p, rot);
         }
 
         // Take control (on) or let go (off) of a pawn. Spec 5.1.
@@ -118,11 +132,24 @@ namespace IsoRim.Fp
             }
         }
 
-        // M6 (stub body in M1)
+        // The facing a controlled pawn turns to while it stands in its control job (spec 5.4 step 4, 9.2), from its
+        // controller only. The control job's tick does the turn (through the rotation tracker, so IsoRim's drawn facing
+        // follows); a pawn walking, busy (aiming, a full-body stance) or on another job isn't turned.
         [SyncMethod(cancelIfAnyArgNull = true)]
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void FpSetFacing(Pawn p, byte rot)
         {
+            int me = FpIds.Executing;
+            FpEntry e = FpRegistry.EntryOf(p);
+            if (FpTestKit.Active)
+            {
+                FpTestKit.OnCommand(me, "FpSetFacing p=" + p.thingIDNumber + " rot=" + rot + " by=" + me + " controller=" + (e?.controller ?? FpIds.None));
+            }
+            if (me == FpIds.None || e == null || e.controller != me || rot > 3)
+            {
+                return;
+            }
+            e.facing = rot;
         }
 
         private static void TakeControl(Pawn p, int me, byte flags)
@@ -181,12 +208,20 @@ namespace IsoRim.Fp
             }
         }
 
-        // Spec 5.1, off: only the controller (M6 adds the Force flag for any player of the faction). Leaving with a check
-        // pending counts it as missed (FpWork), so leaving doesn't escape a bad check.
+        // Spec 5.1, off: the controller, or with the Force flag any player of the pawn's faction (the issuer's faction is
+        // pushed during a map command): a way to take a colonist back from a player who walked away from the keyboard.
+        // Leaving with a check pending counts it as missed (FpWork), so leaving doesn't escape a bad check; a forced
+        // release by another player voids it instead (the controller didn't choose to leave). The controller's own forced
+        // release (the dev action on their own colonist) counts like any other leaving (review finding, M6).
         private static void LetGo(Pawn p, int me, byte flags)
         {
             FpEntry e = FpRegistry.EntryOf(p);
-            if (e == null || e.controller != me)
+            if (e == null)
+            {
+                return;
+            }
+            bool force = (flags & FpFlags.Force) != 0;
+            if (e.controller != me && !(force && e.controller != FpIds.None && p.Faction == Faction.OfPlayer))
             {
                 return;
             }
@@ -197,7 +232,7 @@ namespace IsoRim.Fp
                 e.dir = FpDir.Stop;
                 return;
             }
-            e.comp.Release(e, (flags & FpFlags.Force) == 0);
+            e.comp.Release(e, (flags & FpFlags.Force) == 0 || e.controller == me);
         }
 
         // Spec 5.1: the translation key of the reason the pawn can't be taken, null if it can.
@@ -233,6 +268,27 @@ namespace IsoRim.Fp
                 return "R3D_Fp_RefuseTaken";
             }
             return null;
+        }
+
+        // Dev mode: take the selected colonist back from whoever controls it in first person (FpSetControl off with Force).
+        // Local to the player who uses it (Multiplayer runs the IsoRim category's dev actions locally); the release itself
+        // goes out as the synced command.
+        [DebugAction("IsoRim", "FP: force release selected colonist", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        public static void ForceReleaseSelected()
+        {
+            Pawn p = Find.Selector?.SingleSelectedThing as Pawn;
+            int c = FpState.ControllerOf(p);
+            if (p == null || c == FpIds.None)
+            {
+                Messages.Message("R3D_Fp_ForceNone".Translate(), MessageTypeDefOf.RejectInput, false);
+                return;
+            }
+            if (!SendSetControl(p, false, FpFlags.Force))
+            {
+                Messages.Message("R3D_Fp_ForceLater".Translate(), MessageTypeDefOf.RejectInput, false);
+                return;
+            }
+            Messages.Message("R3D_Fp_ForceSent".Translate(p.LabelShort, FpIds.NameOf(c)), MessageTypeDefOf.NeutralEvent, false);
         }
 
         // Only the player who sent the command sees why (historical false: the message archive is saved game state).

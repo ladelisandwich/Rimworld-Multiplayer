@@ -274,27 +274,41 @@ namespace IsoRim.Fp
             FpTuningDef T = FpTuning.Get;
             int f = FpMath.SpeedFactor((int)Find.TickManager.CurTimeSpeed);
             Job job = p.CurJob;
-            float total = a.Total(d);
-            float done = a.Done(d);
-            int P = (int)(1000f * done / total);
-            if (job.loadID != e.checkJob)
+            int key = a.TallyKey(d);
+            if (job.loadID != e.checkJob || key != e.tallyKey)
             {
-                // Tracking starts: the checks of this job are planned now, over the work still to do at this speed.
-                if (e.checkJob != -1)
+                // Tracking starts: a new job, or the job's next piece (a harvest or cutting job works the plants of its
+                // queue in turn, each its own piece). The checks are planned now, over the work still to do at this speed.
+                if (e.checkJob != -1 && job.loadID != e.checkJob)
                 {
                     LeftJob(comp, e, p, now);   // straight from another tracked job, with no tick between
                 }
-                VoidPending(e, now);
+                VoidPending(e, now);   // the previous piece of this job: its toil was left, so nothing can be open
                 e.checkJob = job.loadID;
-                e.tallyKey = a.TallyKey(d);
-                e.p0 = P;
-                e.segStart = done;
-                float rem = (total - done) / Math.Max(a.UnitsPerTick(d), 0.01f);
-                e.planned = FpMath.PlanChecks(rem, f, P, T.checkSpacingTicks, T.minRemainingTicks, T.endDuePermille, T.maxChecks);
-                e.issued = 0;
+                e.tallyKey = key;
                 e.carry = 0f;
-                Diag.Planned(p, job.loadID, rem, f, P, e.planned, a.Name);
+                (a as FpWorkAdapterBase)?.BeginTracking(d, e);   // Repair counts from the hit points now
+                float total0 = a.Total(d);
+                float done0 = a.Done(d);
+                int p0 = (int)(1000f * done0 / total0);
+                e.p0 = p0;
+                e.segStart = done0;
+                float rem = (total0 - done0) / Math.Max(a.UnitsPerTick(d), 0.01f);
+                e.planned = FpMath.PlanChecks(rem, f, p0, T.checkSpacingTicks, T.minRemainingTicks, T.endDuePermille, T.maxChecks);
+                e.issued = 0;
+                if (e.planned > 0)
+                {
+                    // The piece's tally learns how many checks it gets (integration change, spec 10.4): its form is averaged
+                    // over at least the answers so far plus this plan, so a check left unanswered (F5, checks turned off,
+                    // a void, the AI finishing the piece) counts as a zero rather than leaving a good start locked in.
+                    FpTally t = comp.GetOrAddTally(key, a.TallyTarget(d), p, job.loadID);
+                    t.expected = Math.Max(t.expected, t.Count + e.planned);
+                }
+                Diag.Planned(p, job.loadID, rem, f, p0, e.planned, a.Name);
             }
+            float total = a.Total(d);
+            float done = a.Done(d);
+            int P = (int)(1000f * done / total);
             if (e.pendingSeq == 0 && e.issued < e.planned)
             {
                 if (P >= T.holdPermille)

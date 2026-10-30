@@ -12,9 +12,11 @@ namespace Multiplayer.Client.Desyncs;
 // stack depth, so only the first MaxTracesPerTick calls of each map (and the world) per tick are traced, and only
 // with the "slow" tracing setting on. Frames are hashed by declaring type and method name (GenText.StableStringHash),
 // never by address, so the hashes compare between clients. Left out because they aren't the same on every client:
-// frames of the runtime's own libraries (their IL differs per OS) and runtime-generated stubs (InvokeStub_*, which
+// frames of the runtime's own libraries (their IL differs per OS), runtime-generated stubs (InvokeStub_*, which
 // CoreCLR emits for a reflection target only after a few invocations of it; seen as a false "Trace hashes don't
-// match" on Oct 19).
+// match" on Oct 19) and the engine's host loop under Root_Play.Update (Waylith.*, RimWorldWaylith.*: a -Headless
+// instance runs EngineApplication.RunHeadlessLoop, one frame more than a windowed one, so every trace of a headless
+// host differed from its windowed client's by its depth; a false desync 2 s into the Oct 30 mp6-soak run).
 public static class ManagedStackTracing
 {
     public const int MaxTracesPerTick = 200;
@@ -104,6 +106,8 @@ public static class ManagedStackTracing
         bool skip = ns.StartsWith("Multiplayer.Client.Desyncs")
                     || ns.StartsWith("HarmonyLib")
                     || ns.StartsWith("MonoMod")
+                    || ns == "Waylith" || ns.StartsWith("Waylith.")
+                    || ns == "RimWorldWaylith" || ns.StartsWith("RimWorldWaylith.")
                     || ns == "System"
                     || ns.StartsWith("System.")
                     // Other dynamic methods are the runtime's and the engine's stubs (InvokeStub_*, InvokeMessageMethod_*)

@@ -828,14 +828,21 @@ namespace IsoRim.Fp
             // One line just above the centre: the skill and level, then the passion flame; the key (or "paused") under it.
             // Kept compact: FpHud's hint line starts 18 px under the crosshair.
             Text.Font = s >= 0.9f ? GameFont.Small : GameFont.Tiny;
-            float h = Text.LineHeight;
             string name = skill == null ? "R3D_Fp_Check_Work".Translate().Resolve()
                 : (skill.skillLabel.NullOrEmpty() ? skill.LabelCap.Resolve() : skill.skillLabel.CapitalizeFirst());
             string label = "R3D_Fp_Check_Label".Translate(name, level);
             Texture2D flame = passion >= 2 ? SkillUI.PassionMajorIcon : passion == 1 ? SkillUI.PassionMinorIcon : null;
             float icon = flame != null ? Mathf.Round(14f * s) : 0f;
             float iconGap = flame != null ? Mathf.Round(2f * s) : 0f;
-            float lw = Mathf.Min(Text.CalcSize(label).x + 2f, 2f * (Radius - 14f) * s - icon - iconGap);
+            float room = 2f * (Radius - 14f) * s - icon - iconGap;
+            if (Text.CalcSize(label).x + 2f > room && Text.Font != GameFont.Tiny)
+            {
+                // A long skill name with its passion flame ("Construction 10" and the flame, M4-M6 test-copy screenshots)
+                // didn't fit the ring's inside, and the level was cut off: the smaller font keeps the whole label.
+                Text.Font = GameFont.Tiny;
+            }
+            float h = Text.LineHeight;
+            float lw = Mathf.Min(Text.CalcSize(label).x + 2f, room);
             float x = Mathf.Round(c.x - (lw + iconGap + icon) / 2f);
             float y = Mathf.Round(c.y - h);
             Label(new Rect(x, y, lw, h), label, new Color(1f, 1f, 1f, a), TextAnchor.MiddleLeft);

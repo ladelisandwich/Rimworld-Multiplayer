@@ -485,7 +485,7 @@ namespace IsoRim.Fp
 
 ### 4.1 Port lines in the subtree (I)
 
-There are exactly these 15, each ending `// Port: first-person play`, plus one line in the port-owned MpView.
+There are exactly these 15 (16 since the M4-M6 integration added line 17), each ending `// Port: first-person play`, plus one line in the port-owned MpView.
 
 | # | File, method, anchor | Line |
 |---|---|---|
@@ -505,10 +505,12 @@ There are exactly these 15, each ending `// Port: first-person play`, plus one l
 | 14 | `IsoRim/Source/IsoRimMod.cs` `IsoRimSettings.ExposeData()`, last statement | `Fp.FpHooks.ExposeSettings();` |
 | 15 | `IsoRimMod.cs` `ViewTab`, after the `st.fpEyeHeight = Slider(...)` line | `Fp.FpHooks.DrawSettings(l);` |
 | 16 (port-owned) | `Source/IsoRim/MpView.cs` `PointerMapPoint()`, first statement | `if (Fp.FpHooks.PointerMapPoint(out Vector3 fpPoint)) return fpPoint;` |
+| 17 (M6 integration) | `FirstPerson.cs` `Eye`, the `return new Vector3(...)` line after line 13 | `return new Vector3(p.x + o.x + f.x, h + o.y + f.y, p.z + o.z + f.z);` (the head bob, `EyeOffset.y`, reaches the eye; `f.y` is 0 outside play) |
 
 Notes:
 - `FirstPerson.Toggle` is called by the polled F5 in `View3D.HandleKeys` (`View3D.cs:468-471`). Every IsoRim leave path ends in `FirstPerson.Leave` or `Reset`: F5, 3D off, pawn gone, the reset key (`View3D.ResetLook:938`), gravship flight (`ShipFlight.cs:218`), MpView jump (`MpView.cs:229`), and the Game constructor (`View3D.NewGame:1169`). Lines 8-10 therefore catch every path.
 - `PickUnderPointer` has only two callers, MpView and `ThingsUnderMouse_Postfix`, so `Interaction.cs` needs no Port line.
+- Integration of M4-M6: line 17 makes 16 Port lines in `IsoRim/Source` (plus the MpView one). Without it the eye dropped `f.y`, so the head bob was computed every frame and never moved the camera (review finding).
 
 ### 4.2 Multiplayer.dll (H)
 
@@ -783,7 +785,7 @@ In `OnRootUpdate`, when `resumeId != 0`:
 | Esc (`KeyBindingDefOf.Cancel` or `KeyCode.Escape`) | opens `Dialog_FpMenu` | |
 | F5 | leave | Shift+F5 enters ride-along |
 | 1-4, Slower/Faster, Ultrafast (dev), `MpToggleChat`, `MpPingKey`, Development-category keys in dev mode | pass through | |
-| Mouse wheel | swallowed | M6: cycles the LMB option among the top 3 |
+| Mouse wheel | swallowed | M6: cycles the LMB option among the top 3 (built at integration: down is the next one, the hint shows "(k/n)", a new target starts at its best; float-menu options only, not bills, orders or combat) |
 | Shift | never bound | Shift is QueueOrder (`Pawn_JobTracker.cs:904`) |
 
 ### 7.2 Capture watchdog (`FpInput.OnRootUpdate`, every frame, every program state)
@@ -839,6 +841,7 @@ It has `[HarmonyPriority(Priority.First)]` and returns void.
 - **`AccessTools.Method(typeof(GUI), "DispatchInputToWindows")`** (UnityStubs, `GUI.cs:2136`, public static void): a prefix returning false when `Captured` and the event type is a mouse type. Counter: `DispatchInputToWindows mouse dropped`.
   - Fallback, only if the M1 leak test fails: each frame while captured, set `EngineApplication.Instance.Window.CursorPos` to the screen centre and call `InputSystem.QueueMouseMove(centre)` (fp_input §3).
 - **`AccessTools.DeclaredMethod(typeof(MapInterface), "HandleMapClicks")`** (shared with IsoRim and Multiplayer, declaring type): a prefix returning false while `Mode == Playing`. Counter: `HandleMapClicks skipped`.
+- **Test-copy run of M4-M6 (Oct 30):** with the M6 pointer pin, the map's thing tooltips (a pawn's name and health, the game's "Shot by" report with a drafted colonist) came up at the crosshair after the tooltip delay and covered the hint under it (M5 screenshots, 1280 × 720). A prefix on `AccessTools.DeclaredMethod(typeof(TooltipGiverList), "DispenseAllThingTooltips")` (Verse's, 423 bytes of IL, nothing else patches it) skips them while `Captured` and `Mode == Playing`; the free cursor keeps them. Counter: `Thing tooltips skipped` (checked in m6-hover). Same run: Waylith's `ImguiDispatch.Dispatch` marks a mouse event used before the OnGUI pass when the pointer is over a window drawn in the last pass (`ImGuiGuiBackend.InlineControlsObscured`; it sets `type` only, `Event.Use` also sets `rawType`). With the pointer pinned to the centre that is the skill-check ring's immediate window, so every left or right click, release and wheel step from the ring's warning to 0.8 s after its result was lost (mp4-work: the click on the next rock right after a check's result ordered nothing). While captured the filter takes a mouse event with `type == Used` and a mouse `rawType` as its own (no window gets mouse events then); counter `Obscured mouse event taken`; m4-mine clicks over the ring's result. The input path also counts `LMB down`, `Click swallowed after capture`, `Cursor captured` and `Cursor released` (m5-odds prints them when a click starts nothing).
 - **`LookFrame()`** (Port 6):
   - `Mode != Playing` → return false.
   - If `Captured` and the 2-frame settle is over → `FpCamera.Look(dx*sens, dPitch)`.
@@ -956,7 +959,7 @@ HintKind: TooFar when out of reach, Invalid when nothing.
 | carry | float | 0 | `carry` (repair rounding) |
 | startHp | int | 0 | `startHp` (M4, Repair: HP at tracking start; added at integration of M2/M3, B adds the field with the Repair adapter) |
 
-- **`FpTally`:** `key`, `target` (ref), `owner` (ref), `jobLoadId`, `great`, `hit`, `miss`, `lastTick`, under the same names.
+- **`FpTally`:** `key`, `target` (ref), `owner` (ref), `jobLoadId`, `great`, `hit`, `miss`, `lastTick`, under the same names, and (integration of M4-M6) `expected`, int, default 0, key `expected`: the checks the piece was planned to get (§10.4).
 - **`FpMapComp.ExposeData`:**
   - `Scribe_Collections.Look(ref entries, "fpEntries", LookMode.Deep)`;
   - `Scribe_Collections.Look(ref tallies, "fpTallies", LookMode.Deep)`;
@@ -981,7 +984,7 @@ Messages to the issuer: only when `!MpBridge.InSession || MP.IsExecutingSyncComm
 | `FpStartRecipe` (D, M2) | Pawn, Thing bench, RecipeDef, int count (1 or 5) | picker choice | §11.2 | §11.2 |
 | `FpWorkBill` (D, M2) | Pawn, Bill | picker "Continue" | authorized; bill on bench's stack; `!DeletedOrDereferenced`; restriction is null or this pawn; `recipe.PawnSatisfiesSkillRequirements` | job as §11.2 step 4-5 with this bill |
 | `FpCheckResult` (F, M3) | Pawn, int jobLoadId, int seq, byte outcome (0-3) | once per check | §10.5 | §10.5 |
-| `FpOrderWork` (D, M4) | Pawn, Thing target, byte kind (0 Mine, 1 Harvest, 2 Cut) | LMB on an undesignated rock or plant, at most one in flight | §11.4 | §11.4 |
+| `FpOrderWork` (D, M4) | Pawn, Thing target, byte kind (0 Mine, 1 Harvest, 2 Cut) | LMB on a rock or plant the order rules of §11.4 accept (designated ones too), at most one in flight; the same order to the same target within 1 s is dropped | §11.4 | §11.4; `[SyncMethod(SyncContext.QueueOrder_Down)]`, as D's bill commands (TryTakeOrderedJob reads the queue key) |
 | `FpFire` (G, M5) | Pawn, LocalTargetInfo, bool hold | LMB down while drafted; resent at most 4/s when the snapped thing changes while held | §12 | §12 |
 | `FpStopFire` (G, M5) | Pawn | LMB up | authorized | §12 |
 
@@ -1003,8 +1006,10 @@ It returns "" when the pawn has no entry and no tally.
 - A: `UIRootOnGUI filter`, `DispatchInputToWindows mouse dropped`, `HandleMapClicks skipped`, `HUD drawn`.
 - B: `CheckForJobOverride skipped`, `Control job tick`, `Order refused` (M6).
 - F: `Hold skipped interval`, `Check accepted`, `Check stale`, `Quality offset`, `StatPart applied`.
-- D: `Bill started`, `Order work`.
-- G: `Fire`, `StopFire`.
+- D: `Bill started`, `Order work`; M4 also `Order work sent` (interface), `Order work designated`, `Order work refused`.
+- G: `Fire`, `StopFire`; M5 also `Fire sent`, `StopFire sent`, `Fire refused`, `Fire extended`, `Fire retarget`, `Fire not resent (in flight)`, `Reticle drawn`; integration: `Fire released after a reload`.
+- M6 (A and B): `Facing sent`, `Pointer pinned`; integration: `Order ended a checked job` (§10.2), `LMB option cycled` (§7.1 wheel).
+- F, integration: tallies print `e=<expected>` after `t=` in `FpState.Describe` when it is above 0.
 
 ---
 
@@ -1030,8 +1035,19 @@ A pawn is in skilled work when all of these hold:
 | Sow (M4) | `JobDriver_PlantSow` | `def.plant.sowWork` / private `sowWorkDone` (`:9`) | same | ≥ 0.97 | Plant id |
 | Repair (M4) | `JobDriver_Repair` | total = Max − HP at tracking start (`e.carry` holds the fractional HP) | `HitPoints += round(u + carry)`, ≤ Max − 1 | `CanHold = false` | Building id |
 | AffectFloor, SmoothWall, RemoveBuilding (M4) | `JobDriver_AffectFloor` (+ subclasses), `JobDriver_SmoothWall`, `JobDriver_RemoveBuilding` | BaseWorkAmount or private `totalNeededWork` / private `workLeft` | `workLeft -= u` in [total·0.01, total] | `workLeft <= total·0.03` | target thing id, else job |
+| ExtractTree (integration) | `JobDriver_ExtractTree` | private `totalNeededWork` / private `workLeft` (`JobDriver_ExtractTree.cs:41-64`), speed `JobDriver_PlantWork.WorkDonePerTick` | as RemoveBuilding | as RemoveBuilding | tree id |
+| PlantSeed (integration) | `JobDriver_PlantSeed` | `job.plantDefToSow.plant.sowWork` / private `sowWorkDone` (`:49-66`), speed `PlantWorkSpeed` | as Sow | as Sow | job (the seed is used up, the target is a cell) |
+| FixBrokenDown (integration) | `JobDriver_FixBrokenDownBuilding` | the Delay toil's `defaultDuration` (1000) / `defaultDuration − ticksLeftThisToil` (public; `DriverTick` counts it down every tick) | `ticksLeftThisToil −= round(u + carry)` in [max(1, total·0.01), total] | `CanHold = false` (a Delay toil isn't run by `DriverTickInterval`) | building id |
 
 Surgery, butchery, drugs, art and cooking all go through the Bill adapter. Tending and research are out of scope. Unknown drivers get no checks, logged once in dev mode.
+
+**Integration changes (M4-M6):**
+- **Hold point of the M4 adapters:** M3's rule for the bill adapter, not the table's bare 3%: `left <= total·0.03 || left <= 1.25 × 15 × UnitsPerTick` (`FpWorkAdapterBase.NearEnd`). The work toil runs once per interval of the variable tick rate, up to 15 ticks at once (`Thing.MaxTickIntervalRate`), so a short piece could otherwise step from above the hold point straight to done under a check meant to hold it. Mine holds at `HitPoints <= one pick hit` (the next hit mines the rock out).
+- **Work toil test:** the driver's own work toil is the current toil made in its `MakeNewToils` (`ToilMaker` debug name), with an active skill and the tick action the work runs in (`FpWorkAdapterBase.InMadeWorkToil`).
+- **`FpWorkAdapterBase`** (abstract, implements `IFpWorkAdapter`) adds internal members the interface doesn't have: `MatchesJob(Job)` and `KeyForJob(Job)` (the type test and tally key of a job that isn't running, for `FpWork.TallyKeyOf`), `BeginTracking(d, e)` (Repair keeps `e.startHp`), and helpers (`JobKey`, `KeyOfTarget`, `NearEnd`, `AddDone`, `SubLeft`, `RoundCarry`, `Field`, `Getter`). An adapter whose startup lookups fail is left out with one error.
+- **Mine's yield record:** a grant changes the rock's hit points directly, so it also books the change in the rock's yield record as a pick hit does (`Mineable.Notify_TookMiningDamage`, positive or negative), so a Great doesn't lose the ore it skipped and a miss doesn't pay for the restored hit points twice.
+- **Added at integration** (the user asked for checks in all skilled work): ExtractTree, PlantSeed and FixBrokenDown (table above).
+- **Still without checks, and why:** `JobDriver_AffectRoof` (65 work, about 40 ticks: under `minRemainingTicks`, no check could ever be planned) and `JobDriver_PaintBuilding`/`PaintFloor` (one second of work each): too short, no adapter needed. `JobDriver_OperateDeepDrill` (open-ended drilling, no piece to finish), `JobDriver_PruneGauranlenTree` (a timed wait whose effect is connection strength gained per tick), `JobDriver_RepairMech` (healing per interval until whole) and the Intellectual work (research, scanners, studying, analysing, hacking, xenogerms) don't fit the work-units model; tending was left out by §1. Open for the user to decide (CLAUDE.md, Known gaps).
 
 ### 10.2 Scheduling (F, `FpWork.Tick`, map context, every tick per controlled entry)
 
@@ -1068,6 +1084,11 @@ Never use `HashCode.Combine` here (CLAUDE.md); `Gen.HashCombineInt` is determini
 - **Shown:** `TicksGame − e.pendingTick ≥ (int)(T.ringWarn·60)·f`. Before that the ring can't have been seen, and every forfeit below voids instead.
 - **`FpWork.ForfeitPending(e)`** (command context, before the job ends, the tracked driver current): a shown pending check gets the full `MissTimeout` result (work and tally, as 10.4). Called by `FpSetIntent` before it ends the job, by `FpSetControl(on)` when the new flags drop `Checks`, and by `FpStartRecipe`/`FpWorkBill` before `TryTakeOrderedJob` unless the new job `JobIsSameAs` the current one.
 - **Left job** (this tick, the tracked job gone, in either branch): a shown pending check whose pawn is now `Drafted`, or on a new `playerForced` job other than the control job (a vanilla order), counts a tally-only miss (`miss++`, `lastOutcome = 0`, `lastOutcomeTick`); the work went with the job. A job that ended on its own (fail conditions, then the control job) still voids.
+
+**Integration changes (M4-M6):**
+- **Re-tracking per piece:** tracking starts again when the tally key changes within the same job (`job.loadID != e.checkJob || a.TallyKey(d) != e.tallyKey`): a harvest or cutting job works the plants of its target queue in turn, each its own piece with its own plan and tally.
+- **The plan reaches the tally:** at tracking start, when `planned > 0`, the piece's tally is created (as for a raised check) and `t.expected = Max(t.expected, t.Count + planned)` (§10.4, form).
+- **Orders forfeit too** (review finding): `TryTakeOrderedJob`'s order-guard prefix (§16, M6) calls `ForfeitPending(e)` before the original runs when the issuer is the controller (`FpIds.Executing == e.controller`, which in single player is always so) and the order replaces the job as `TryTakeOrderedJob` decides (not the same job, the current one player-interruptible and not `forceCompleteBeforeNextJob`, not queued behind a busy job). A float-menu order off a shown check so costs the work as well, which matters where the work stays with the piece (a frame, a rock, a damaged building, an unfinished thing). Drafting keeps the tally-only miss of **Left job**: it is the emergency recall. Counter: `Order ended a checked job`.
 
 **Resulting cadence at 1x** (`UnitsPerTick` about 1):
 - a simple meal (300) gets 1 check;
@@ -1114,6 +1135,10 @@ FpRegistry.SetHeld(e, false); FpHits.Hit("Check accepted")
 - If `countAsMiss` and a shown check is pending (10.2, integration changes), and the pawn is still on the tracked job: apply outcome 1, as above. Leaving voluntarily doesn't escape a bad check.
 - Otherwise void it.
 
+**Form dilution (integration of M4-M6, review finding).** `F = FpMath.Form(great, hit, miss, expected)`, with denominator `Max(n, expected, 2)`: every check the piece was planned to get counts, an unanswered one as a zero. Before, the form averaged only the checks taken, a tally lives as long as its piece, and every lever reads it for whoever finishes it, so stopping after a good start was free (F5 with nothing pending, checks turned off, walking off during the warning: each only voids) and locked in the form; two Greats then F5 on a six-check piece gave +4, now `RoundDiv(8, 6) = +1`. Integer maths only (`FpMathTest.FormExpected`). The progress bar's "Form" shows the same diluted value while the piece is worked.
+
+**Forced release by the controller (integration, review finding):** `FpSetControl(off, Force)` voids a pending check only when another player sends it; the controller's own forced release (the dev action on their own colonist) counts like any other leaving.
+
 **Caps:**
 - A grant is a share of its own segment, so speed rises by at most 40% and falls by at most 30%.
 - At most `maxChecks` (12) per job, never two pending at once, and at least `minGapTicks·f` between them.
@@ -1147,6 +1172,12 @@ All levers read **F = `FpRegistry.TallyForWorker(pawn)?.Form ?? 0`**, so they al
 | `FoodPoisonChance` | foodPoison `[2.0,1.75,1.5,1.25,1,0.85,0.7,0.6,0.5]` | `val *= k` (read at `CompFoodPoisonable.cs:42`) |
 | `MiningYield` (max 1.25), `PlantHarvestYield` (max 1.5), `DrugHarvestYield` (max 1.5), `ButcheryFleshEfficiency`, `ButcheryMechanoidEfficiency` | yield `[0.80,0.85,0.90,0.95,1,1.03,1.06,1.08,1.10]` | `val *= k` |
 
+**Integration changes (M4-M6):**
+- **No `DrugHarvestYield` part:** that stat takes `PlantHarvestYield` as a stat factor (`Stats_Pawns_WorkGeneral.xml`), so a part on both would apply the form twice; it gets the form once, through `PlantHarvestYield` (checked by m4-levers).
+- **`ConstructSuccessChance` guard:** the failure part scales only a chance under 1 (`val >= 1` before the stat's clamp is left alone), so a worker who can't fail still can't.
+- **`constructFail` retuned toward neutral** (review finding): the build toil rolls its failure every interval with `1 − chance^(work this interval / WorkToBuild)` (`JobDriver_ConstructFinishFrame.cs:61`), and a grant adds work without a roll while a miss's work is done again, so the grants already move a frame's failures by about `1 / (1 + average grant)`. The table is the intended `[2.0 … 0.6]` divided by that for a typical mix of results at each form (hits and misses below +2, hits and Greats above): `[1.40,1.36,1.28,1.16,1,0.97,0.92,0.89,0.84]`; together they land on the intended values. Speed alone never changes the failure chance in the game; here a well worked frame both builds faster and fails less, by the amount §10.4's table intended.
+- `FixBrokenDownBuildingSuccessChance` has no lever (the FixBrokenDown adapter's checks move only the wait).
+
 No StatPart ever touches shooting, melee, warmup, move speed or work speed.
 
 ### 10.6 Tallies (F)
@@ -1155,6 +1186,8 @@ No StatPart ever touches shooting, melee, warmup, move speed or work speed.
 - For DoBill: the `UnfinishedThing` id at TargetB, else −(job.loadID+1).
 - For the thing-targeted adapters in §10.1: `job.targetA.Thing.thingIDNumber`.
 - Otherwise −(job.loadID+1).
+
+A tally is created when tracking of its piece starts with checks planned (integration of M4-M6, with `expected`), when a check is raised on a thing-keyed piece (M3 integration), or with the first result.
 
 `PruneTallies` (every 250 ticks, list order) removes a tally when either:
 - `target != null && target.Destroyed && TicksGame − lastTick > 250`;
@@ -1226,6 +1259,8 @@ No StatPart ever touches shooting, melee, warmup, move speed or work speed.
 
 **WantsKey** is true in Warn and Needle, and in Result for `T.resultGrace` (0.6 s). Space outside that pauses as in vanilla.
 
+**Test-copy run (Oct 30):** the label over the centre ("<Skill> <level>" and the passion flame) takes the Tiny font when it is wider than the ring's inside (`2 × (Radius − 14) × s` less the flame): "Construction 10" with a flame lost its level at 1280 × 720.
+
 ---
 
 ## 11. Bills and work orders (D)
@@ -1295,6 +1330,14 @@ For each bill in `fpBills`, in list order:
 
 **UI rule (`TryOrderWork`):** the target is a Mineable or Plant with no Mine, HarvestPlant or CutPlant designation, and it is in reach. Hints: "Mine X", "Harvest X", "Chop X".
 
+**As built (track D, M4; recorded at integration):**
+- **Kinds follow the game's designators** (`FpOrders.KindOf`, shared by the hint, the click and the command): Mine (0) is a natural rock or ore whose only designations, if any, are Mine or MineVein; smoothed rock walls are left out (a stray click would open the base's wall). Harvest (1) is a ripe plant with harvest tag "Standard", or a ripe tree: the designation is HarvestPlant and the hint "Chop oak tree" (the game's "Chop wood"), job `HarvestDesignated`. Cut (2) is an unripe tree or stump, or anything already marked CutPlant: CutPlant, `CutPlantDesignated`. Grass, unripe crops, a tree marked for extraction, a wall marked for smoothing and plants whose cutting is prevented go to the float menu.
+- **Designated targets too:** a designated rock otherwise fell through to "Prioritize mining", which refuses with "not assigned to mining" at priority 0. The command adds a designation only when it is missing, and removes the one it added when it refuses.
+- **No work priorities needed:** in 1.7 `WorkGiversInOrderNormal` holds only work types with priority > 0, so the command walks the work types in `DefDatabase` order (the game's float-menu order: Mining; Growing then PlantCutting; PlantCutting) and skips only what the colonist is incapable of or lacks the capacity for. Only directly orderable thing scanners; no fallback to the cell-scanning `WorkGiver_GrowerHarvest` (it harvests up to 40 plants and reads `WorkGiver_Grower.wantedPlantDef`, a protected static the interface's float menu also writes). Harvest and cut orders accept only `JobDriver_PlantWork` jobs (Ideology's pruning giver answers a Gauranlen tree otherwise).
+- **The command** checks the issuer controls the pawn, the target is spawned on its map and not fogged, `KindOf` still gives the same kind, the colonist isn't drafted and can do the work and reach the target; calls `FpWork.ForfeitPending` before the new job (as the bill commands); sets `job.workGiverDef`; messages only the issuer, with the game's designator warnings (ideology mining or tree cutting, important plants).
+- **Interface:** `TryOrderWork` also checks reach, the game's order gate (lord, deathrest) and whether the colonist can do the work (incapable, missing capacity, outside the allowed area): a refusal is a toast and nothing is sent; a target the colonist already works toasts "already on it". Drafted colonists fall through to the float menu. `FpOrders.RefusalHint(p, hit)` (internal) gives the same reason for the hint: `FpActions` shows it in red (Invalid) after the order hint (integration).
+- **Open:** an order the player walks away from (W ends the job) leaves its designation, so the colony's AI may finish the work, as with a designator.
+
 ---
 
 ## 12. Shooting (G, M5): vanilla odds only
@@ -1323,6 +1366,13 @@ For each bill in `fpBills`, in list order:
 - A warmup arc from `p.stances.curStance as Stance_Warmup`, a thinner cooldown arc, and the weapon label.
 
 **No advantages:** no StatPart or patch on `ShootingAccuracyPawn`, `AimingDelayFactor`, `Verb.WarmupTime` or `MoveSpeed`. There is no sprint.
+
+**Integration changes (M4-M6, review findings):**
+- **No Rand in `FpFire`:** the validation (`FloatMenuUtility.GetMeleeAttackAction` picks the melee verb for a new target through `Pawn_MeleeVerbs.ChooseMeleeVerb`, which draws from Rand) runs inside `Rand.PushState()`/`PopState()`. Every machine runs the same; the map's sequence is left as the game's own order would leave it until the strike.
+- **The wider aim on an invalid hit:** `FpPick.Ray` gives no hit when the ray rises past the pick height (over a standing pawn's shoulder) or runs out, so the 1.3× radius was only tried beside a target's legs. `Resolve`, `Hint` and `TryPrimaryDown` (called before `FpActions.PrimaryDown`'s own valid-hit test) now try the wider radius on an invalid hit too; `FpActions` shows the combat hint for an invalid hit when `FpCombat.NearHostile(p)`. Scenario m5-wide.
+- **Hints:** a combat hint that can't be acted on (`FpCombat.LastHintBlocked`: a friendly, out of range, no line of fire) is Invalid (red crosshair, §14); the undrafted "R: raise your weapon" (`LastHintNoClick`) is drawn without "[LMB]" and with a white crosshair. The combat hint is worked out again at every 0.25 s slot while it holds (where the shooter stands and the target's cover change it), without building a float menu.
+- **Every frame:** `FpCombat.Update()` runs from `FpInput.OnRootUpdate`, not only from the reticle, so a release held back until the next attack also goes out undrafted or over the world map.
+- **Reload:** a press held (or a release owed) across a Multiplayer reload is rebound to the same colonist by id once play resumes, and released (`FpStopFire`); given up after 15 s if play doesn't come back.
 
 ---
 
@@ -1354,6 +1404,8 @@ These are per player and never read by simulation code. They are saved inside Is
 
 Reused from IsoRim: `invertY`, `fpFov`, `fpEyeHeight`.
 
+Integration of M4-M6: every option is drawn (M5's `showHitChance`, M6's `eyeLead`, `headBob` and `friendTags` after the M3 block); `headBob` defaults to 0.
+
 When `autoNeeds` or `skillChecks` changes while Playing and Confirmed, FpPlay re-sends `FpSetControl(on, newFlags)`. Without the synced Checks flag, a player who had turned checks off would make the simulation hold at 97% until the deadline.
 
 ### 13.2 `FpTuningDef` `IsoRimFp_Tuning` (`Source/IsoRim/Defs/IsoRimFp_Tuning.xml`)
@@ -1369,6 +1421,8 @@ These are gameplay numbers. The join check compares Defs, so every player runs t
 | Interaction | `reachCells` 2.5, `interactionCellReach` 1.5, `pickMaxCells` 60, `pawnPickRadius` 0.45, `ingredientRadius` 20, `maxBillStack` 15 |
 
 `FpTuning.Get` caches `DefDatabase<FpTuningDef>.GetNamed("IsoRimFp_Tuning")`.
+
+Integration of M4-M6: `constructFail` is `[1.40,1.36,1.28,1.16,1,0.97,0.92,0.89,0.84]` (§10.5).
 
 ### 13.3 Key bindings (`IsoRimFp_Keys.xml`, I)
 
@@ -1393,7 +1447,8 @@ The postfix on `UIRoot_Play.UIRootOnGUI` draws on Repaint only, while `Mode == P
 | Invalid, or no line of fire | #E05A5A |
 
   It is hidden while the ring shows.
-- **Hint** 18 px below the crosshair: "[LMB] <label>   [RMB] More" (Small font, shadowed), or "Too far — [RMB] More".
+- **Hint** 18 px below the crosshair: "[LMB] <label>   [RMB] More" (Small font, shadowed), or "Too far — [RMB] More". Integration: "<label>   [RMB] more" for a hint that names a key rather than a click (undrafted on a hostile); with several float-menu options the label carries "(k/n)" and the mouse wheel moves along the best three (§7.1, `FpActions.CycleOption`). The status band and the toasts never reach into the time controls (they wrap instead).
+- **Hint cache (test-copy run, Oct 30):** the hint is worked out again when the colonist's primary weapon changes on the same target (m5-cell: after swapping the rifle for grenades on the same ground cell it kept the rifle's "Too far" while a click threw the grenade).
 - **Status line**, bottom centre at y = `screenHeight − 112` (test-copy run, M2/M3: raised above the game's gizmo grid while one is drawn, `FpHud.StatusTop` from `GizmoGridDrawer.HeightDrawnRecently`; at 1280×720 the line, its toasts and the skill-check bar sat on the selected colonist's gizmo row, whose top is 115 px from the bottom):
   - "<Name> — <`curDriver.GetReport()`>";
   - plus one of: "Taking control…" (unconfirmed), "Autopilot: <reason> — F5 to leave", "Drafted";
@@ -1458,7 +1513,7 @@ On the first Playing frame of a `-quicktest -isorim3d` game:
 
 ### 15.3 Runners
 
-**`scripts/fp_selftest.py <scenario> [--mp] [--timeout 900] [--proton PATH] [--host-windowed]`.** It runs on the host through `distrobox-host-exec`. The defaults and prefix handling follow `scripts/check_isorim_shaders.py`: `DEFAULT_PROTON`, ModsConfig writing, and the LocalLow path.
+**`scripts/fp_selftest.py <scenario> [--mp] [--timeout 900] [--proton PATH] [--host-windowed]`** (integration: the default timeout is longer for the scenarios in `LONG_TIMEOUTS`: mp6-both 1500 s, mp6-soak 2400 s, mp4-work 1200 s, m5-odds 1500 s). It runs on the host through `distrobox-host-exec`. The defaults and prefix handling follow `scripts/check_isorim_shaders.py`: `DEFAULT_PROTON`, ModsConfig writing, and the LocalLow path.
 
 - **Prefixes:** `~/.rw-mp-test/fptest-{solo,host,client}/prefix`.
 - **Per prefix:**
@@ -1589,7 +1644,11 @@ Multiplayer scenarios (`--mp`; host headless with Direct, client windowed with i
 | m4-repair | LMB on the damaged wall → Repair; check results change HP; never held |
 | m4-surgery | add a medical bill (dev) for C2 in bed; C1 LMB → operation (DoBill with `Bill_Medical`); checks; `MedicalSurgerySuccessChance` FP line |
 | m4-smooth | designate a floor to smooth; LMB → checks on `JobDriver_AffectFloor` |
-| mp4-work | client mines and builds for 10 min; compare OK, no desync |
+| mp4-work | client mines and builds for 10 min; compare OK, no desync (as built: four targets, about three minutes, every ring answered in a fixed pattern; covers D's mp4-order) |
+| m4-minehold (F) | Direct control: mining held before its last pick hit while a check waits |
+| m4-deconstruct (F) | RemoveBuilding on a wall of the scene's line, with checks |
+| m4-levers (F) | every M4 lever's formula from forced tallies, the ConstructSuccessChance floor at a chance of 1, DrugHarvestYield taking the form once, no speed or combat lever, every adapter on |
+| m4-order-refuse (D, F) | a stale kind refused in the command; an allowed area without the rock: no order hint, the refusal in red under the crosshair (Invalid, the area's name), the click sends nothing, the command refuses; an order abandoned with W keeps its designation |
 
 ### M5: Shooting (G)
 
@@ -1602,6 +1661,10 @@ Multiplayer scenarios (`--mp`; host headless with Direct, client windowed with i
 | m5-undrafted | undrafted LMB on the pirate → no attack; hint contains "R" |
 | m5-wasd | while holding fire, W → attack job ends, job control |
 | mp5-fire | client fires 20 bursts; compare OK; the pirate's health digest is equal on both sides |
+| m5-reclick (G) | a click between the attacks of a running attack gets exactly one more attack |
+| m5-wide (integration) | a standing, stunned, damage-shielded pirate; the crosshair half a cell beside his chest (outside 0.45, inside 0.585): the combat hint on an invalid hit, and the click attacks him |
+
+m5-undrafted also checks (integration) that the undrafted hint is drawn without "[LMB]" and that drafted on another colonist the hint is Invalid.
 
 ### M6: Hardening and polish
 
@@ -1615,7 +1678,9 @@ Tracks: B (order guard, `FpSetFacing`, optional force release), A (friend tags, 
 | mp6-guard | the host Direct-orders C2 (controlled by the client) → refused on both sides, `Order refused` > 0 |
 | mp6-both | both players in first person for 5 min with checks and firing; one autosave join point during a pending check → the ring reappears for the same seq; compare OK |
 | m6-facing | idle, turn the camera 90° → after ≤ 300 ms `C1.Rotation` changes on the host (mp) |
-| mp6-soak | 30 min with slow tracing on, both in first person: no desync |
+| mp6-soak | 30 min with slow tracing on, both in first person: no desync (as built: 25 min, inside the harness's 30-minute limit) |
+| m6-lead, m6-hover, m6-status, m6-cheatsheet, m6-flash, mp6-facing, mp6-tags (A, B) | the lead and the bob (integration: the bob moves `View3D.EyePosition.y`), the pointer pin, the status and needs strip at 1280 × 720, the cheat sheet clear of messages, the damage flash, the facing on the host, the friend tags |
+| m6-wheel (integration) | on the scene's grenades the wheel moves the left button's option, the hint follows, a click takes the option shown, another target starts at its best (test-copy run: the grenades' cell is taken out of the scene's stockpile first; at home the game offers no "Pick up", so stored grenades have "Equip" alone, out of storage also "Prioritize hauling") |
 
 ---
 

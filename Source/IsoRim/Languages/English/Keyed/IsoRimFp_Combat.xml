@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- First-person play, firing while drafted (Source/IsoRim/Fp: FpCombat). The odds are the game's own: these strings
+       only name what the left button does and why it can't. -->
+
+  <!-- ==================== Hint under the crosshair (the HUD puts "[LMB] ... [RMB] more" round it) ==================== -->
+  <!-- {0}: the draft key ("R"). Shown undrafted, on a hostile. -->
+  <R3D_Fp_Combat_Raise>{0}: raise your weapon</R3D_Fp_Combat_Raise>
+  <R3D_Fp_Combat_NotHostile>Not hostile: the right button has every order</R3D_Fp_Combat_NotHostile>
+  <!-- A weapon aimed at a place whose verb has no label. -->
+  <R3D_Fp_Combat_FireGround>Fire at the ground</R3D_Fp_Combat_FireGround>
+
+  <!-- ==================== Reticle ==================== -->
+  <R3D_Fp_Combat_Unarmed>unarmed</R3D_Fp_Combat_Unarmed>
+
+  <!-- ==================== Refusals (only the player who fired sees them) ==================== -->
+  <R3D_Fp_Combat_NotDrafted>{0} isn't drafted.</R3D_Fp_Combat_NotDrafted>
+  <R3D_Fp_Combat_TargetGone>The target is gone.</R3D_Fp_Combat_TargetGone>
+  <R3D_Fp_Combat_NotHostileMsg>{0} isn't hostile: use the right button for orders.</R3D_Fp_Combat_NotHostileMsg>
+  <R3D_Fp_Combat_NoGround>{0}'s weapon can't be aimed at the ground.</R3D_Fp_Combat_NoGround>
+  <!-- {0}: the colonist, {1}: the game's reason ("out of range"). -->
+  <R3D_Fp_Combat_Cant>{0} can't attack: {1}.</R3D_Fp_Combat_Cant>
+  <R3D_Fp_Combat_CantStart>{0} couldn't start the attack.</R3D_Fp_Combat_CantStart>
+
+</LanguageData>

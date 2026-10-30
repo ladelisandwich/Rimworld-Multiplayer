@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-  <!-- First-person play, bills (Source/IsoRim/Fp: FpBills, FpRecipeWindow): the recipe picker the left button opens on a
-       bench, and the messages of its two commands. Only the player who chose sees a command's message. -->
+  <!-- First-person play, bills and work orders (Source/IsoRim/Fp: FpBills, FpRecipeWindow, FpOrders): the recipe picker the
+       left button opens on a bench, the work orders it gives on rocks and plants, and the messages of their commands.
+       Only the player who chose sees a command's message. -->
 
   <!-- ==================== The hint under the crosshair ==================== -->
   <R3D_Fp_UseBench>Use {0}…</R3D_Fp_UseBench>
@@ -53,5 +54,29 @@
   <R3D_Fp_Recipes_NoFuel>Out of fuel</R3D_Fp_Recipes_NoFuel>
   <R3D_Fp_Recipes_Broken>Broken down</R3D_Fp_Recipes_Broken>
   <R3D_Fp_Recipes_Bills>Bills {0}/{1}</R3D_Fp_Recipes_Bills>
+
+  <!-- ==================== Work orders (FpOrders): the left button on a rock or plant ==================== -->
+  <!-- The hint under the crosshair and the toast of the order; {0} is the target ("granite", "oak tree"). -->
+  <R3D_Fp_OrderMine>Mine {0}</R3D_Fp_OrderMine>
+  <R3D_Fp_OrderHarvest>Harvest {0}</R3D_Fp_OrderHarvest>
+  <R3D_Fp_OrderChop>Chop {0}</R3D_Fp_OrderChop>
+  <R3D_Fp_OrderCut>Cut {0}</R3D_Fp_OrderCut>
+  <!-- The left button on what the colonist ({0}) is already working on. -->
+  <R3D_Fp_OrderAlready>{0} is already on it.</R3D_Fp_OrderAlready>
+  <!-- An order refused ({0} is the colonist's short name, {1} the target unless noted). -->
+  <R3D_Fp_OrderDrafted>{0} is drafted: undraft to work.</R3D_Fp_OrderDrafted>
+  <!-- {1}: the work type's gerund ("mining"). -->
+  <R3D_Fp_OrderIncapable>{0} is incapable of {1}.</R3D_Fp_OrderIncapable>
+  <!-- {1}: the missing capacity ("manipulation"). -->
+  <R3D_Fp_OrderCapacity>{0} can't do this: no {1}.</R3D_Fp_OrderCapacity>
+  <!-- {2}: the game's reason ("outside allowed area (Home)"). -->
+  <R3D_Fp_OrderForbidden>{0} can't work on the {1}: {2}.</R3D_Fp_OrderForbidden>
+  <R3D_Fp_OrderNoPath>{0} can't reach the {1}.</R3D_Fp_OrderNoPath>
+  <R3D_Fp_OrderNoJob>{0} can't work on the {1} now.</R3D_Fp_OrderNoJob>
+  <R3D_Fp_OrderCantStart>{0} couldn't start on the {1}.</R3D_Fp_OrderCantStart>
+  <!-- {0}: the target. -->
+  <R3D_Fp_OrderGone>The {0} can't be worked from here any more.</R3D_Fp_OrderGone>
+  <R3D_Fp_OrderChanged>The {0} changed before the order arrived: look at it again.</R3D_Fp_OrderChanged>
+  <R3D_Fp_OrderNoGiver>Nobody can work on the {0} this way.</R3D_Fp_OrderNoGiver>
 
 </LanguageData>

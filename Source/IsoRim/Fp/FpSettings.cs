@@ -20,8 +20,7 @@ namespace IsoRim.Fp
         public static bool resume = true;               // take control again after a Multiplayer reload (join points, resyncs)
         public static float hudScale = 1f;
 
-        // M2-M6: saved from the start so a later milestone needs no settings change; shown once their feature lands (M2 and
-        // M3 are shown).
+        // M2-M6: saved from the start so a later milestone needs no settings change; all shown since M6.
         public static bool autoNeeds = true;            // M2: autopilot for urgent hunger, exhaustion, medical rest
         public static bool skillChecks = true;          // M3
         public static int checkLatencyMs = 16;          // M3: subtracted from a press's time
@@ -101,7 +100,7 @@ namespace IsoRim.Fp
 
         // Drawn inside IsoRim's camera section, right after the first-person eye height (Port 15): a small heading of its
         // own, the options indented under it, and a rule after them so the camera options that follow don't read as part
-        // of it. Only the options of milestones that have landed are shown.
+        // of it.
         public static void DrawSection(Listing_Standard l)
         {
             if (l == null)
@@ -139,6 +138,12 @@ namespace IsoRim.Fp
                     l.CheckboxLabeled("R3D_Fp_Settings_CheckSounds".Translate(), ref checkSounds, "R3D_Fp_Settings_CheckSoundsTip".Translate());
                     l.CheckboxLabeled("R3D_Fp_Settings_ColourBlind".Translate(), ref colourBlind, "R3D_Fp_Settings_ColourBlindTip".Translate());
                 }
+                // M5
+                l.CheckboxLabeled("R3D_Fp_Settings_ShowHitChance".Translate(), ref showHitChance, "R3D_Fp_Settings_ShowHitChanceTip".Translate());
+                // M6
+                l.CheckboxLabeled("R3D_Fp_Settings_EyeLead".Translate(), ref eyeLead, "R3D_Fp_Settings_EyeLeadTip".Translate());
+                headBob = Slider(l, "R3D_Fp_Settings_HeadBob".Translate(), headBob, 0f, 1f, headBob.ToStringPercent(), "R3D_Fp_Settings_HeadBobTip".Translate());
+                l.CheckboxLabeled("R3D_Fp_Settings_FriendTags".Translate(), ref friendTags, "R3D_Fp_Settings_FriendTagsTip".Translate());
                 if (Widgets.ButtonText(l.GetRect(26f).LeftPart(0.5f), "R3D_Fp_Settings_Reset".Translate()))
                 {
                     ResetAll();

@@ -24,8 +24,10 @@ namespace IsoRim.Fp
         public float grantMiss = -0.30f;
         public List<float> xp = new List<float> { 0f, 0f, 0f, 0f };
 
-        // Levers by form F = -4..+4 (index F + 4, spec 10.5).
-        public List<float> constructFail = new List<float> { 2.0f, 1.75f, 1.5f, 1.25f, 1f, 0.9f, 0.8f, 0.7f, 0.6f };
+        // Levers by form F = -4..+4 (index F + 4, spec 10.5). constructFail is retuned toward neutral (integration, review
+        // finding): the build toil rolls its failure per interval with the work that interval did, so a grant's work skips
+        // rolls and a miss's adds them; with these values the two together come to the spec's intended 2.0 .. 0.6.
+        public List<float> constructFail = new List<float> { 1.40f, 1.36f, 1.28f, 1.16f, 1f, 0.97f, 0.92f, 0.89f, 0.84f };
         public List<float> surgery = new List<float> { 0.80f, 0.85f, 0.90f, 0.95f, 1f, 1.02f, 1.04f, 1.06f, 1.08f };
         public List<float> foodPoison = new List<float> { 2.0f, 1.75f, 1.5f, 1.25f, 1f, 0.85f, 0.7f, 0.6f, 0.5f };
         public List<float> yield = new List<float> { 0.80f, 0.85f, 0.90f, 0.95f, 1f, 1.03f, 1.06f, 1.08f, 1.10f };

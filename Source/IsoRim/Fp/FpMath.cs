@@ -33,12 +33,21 @@ namespace IsoRim.Fp
         // so a single Great is +2, not +4) and doubled. 0 with no checks.
         public static int Form(int great, int hit, int miss)
         {
+            return Form(great, hit, miss, 0);
+        }
+
+        // The same, averaged over at least the checks the piece was planned to get (expected, FpTally.expected): a check
+        // that was never answered (voided, skipped by stopping play or turning checks off, the piece finished without
+        // first person) counts as a zero, so stopping after a good start can't lock in a good form (integration change,
+        // spec 10.4). 0 with no checks answered.
+        public static int Form(int great, int hit, int miss, int expected)
+        {
             int n = great + hit + miss;
             if (n == 0)
             {
                 return 0;
             }
-            int f = RoundDiv(2 * (2 * great + hit - 2 * miss), Math.Max(n, 2));
+            int f = RoundDiv(2 * (2 * great + hit - 2 * miss), Math.Max(Math.Max(n, expected), 2));
             return f < -4 ? -4 : f > 4 ? 4 : f;
         }
 

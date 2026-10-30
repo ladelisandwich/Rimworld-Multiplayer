@@ -294,8 +294,9 @@ IsoRim.dll; spec docs/fp-play-spec.md): its defs
 (Source/IsoRim/Defs) are staged into IsoRim/Defs/IsoRimMp/ and its keyed 
 strings (Source/IsoRim/Languages) merged into IsoRim/Languages/ 
 (stage_isorim). The only subtree edits are one-line calls into 
-Fp/FpHooks.cs marked "// Port: first-person play" (15 in IsoRim/Source, 
-one in Source/IsoRim/MpView.cs); re-check them after every subtree pull. 
+Fp/FpHooks.cs marked "// Port: first-person play" (16 in IsoRim/Source, 
+one in Source/IsoRim/MpView.cs; the 16th, FirstPerson.Eye's return line, 
+lets the head bob reach the eye); re-check them after every subtree pull. 
 Self-test: python3 scripts/fp_selftest.py <scenario> [--mp] (install 
 first; windowed Proton instances under ~/.rw-mp-test/fptest-<role>, so 
 only while nobody plays; refuses when a RimWorld is running unless 
@@ -304,7 +305,9 @@ ISORIM_FPTEST=<scenario>[:solo|host|client]; it logs FPTEST PASS/FAIL
 lines and FPSTATE lines, which scripts/fp_compare.py compares between host 
 and client, together with the FPTEST CMD lines (every first-person command 
 as each side ran it, in the common tick range). fp_selftest.py refuses an id 
-no FpTestM<n>.Register lists, and an mp* id without --mp. In game: dev mode, 
+no FpTestM<n>.Register lists, and an mp* id without --mp. Its default 
+--timeout is 900 s, longer for mp6-both (1500), mp6-soak (2400), mp4-work 
+(1200) and m5-odds (1500) (LONG_TIMEOUTS). In game: dev mode, 
 Debug actions > IsoRim > "FP: patch hit counts".
 - Two instances on this PC: ./scripts/run_two.sh (host, then Enter, then a 
 client that auto-joins 127.0.0.1:30502 with -connect=). Each instance has 
@@ -471,7 +474,31 @@ matched with no desync file. The feature code needed no fix; the harness
 did (mp2-cook's host, mp3-craft's kit, an m3-deadline expectation, the 
 scene's colonist choice, the runner's game detection), and the HUD and 
 picker were made readable at 1280 x 720 (Known gaps, first-person play, 
-M2 and M3, test-copy run). Next: the user's in-game check.
+M2 and M3, test-copy run). M4 (all skilled work), M5 (shooting with the 
+game's own odds) and M6 (hardening and polish) code complete, Oct 30, NOT 
+yet run in game or in the test copies: tracks D (FpOrders), F (the M4 
+adapters and levers, FpTestM4), G (FpCombat, FpTestM5) and A+B (order 
+guard, FpSetFacing, force release, pointer pin, eye lead and head bob, 
+needs strip, damage flash, friend tags, status and cheat sheet placement, 
+FpTestM6) landed; the integration finished the cut-off work, applied the 
+tracks' cross requests and fixed a review (Known gaps, first-person play, 
+M4, M5 and M6). Builds with no warnings in the new files, 241 tests pass, 
+staging passes check_staged, fp_selftest.py --dry-run starts all 32 
+M4-M6 scenarios (m4-construct, m4-mine, m4-minehold, m4-order-refuse, 
+m4-plants, m4-repair, m4-surgery, m4-smooth, m4-deconstruct, m4-levers, 
+mp4-work --mp; m5-click, m5-hold, m5-reclick, m5-cell, m5-odds, 
+m5-undrafted, m5-wasd, m5-wide, mp5-fire --mp; m6-facing, m6-lead, 
+m6-hover, m6-status, m6-cheatsheet, m6-flash, m6-wheel, mp6-guard, 
+mp6-facing, mp6-tags, mp6-both, mp6-soak --mp). Next: run them and the 
+M1-M3 regressions in the test copies, then the user's in-game check. 
+Oct 30: all 32 M4-M6 scenarios pass in the Proton test copies and the 48 
+M1-M3 ones still pass, 0 error lines in any log, every --mp compare 
+matched with no desync file; five feature fixes (clicks over the skill 
+check's ring, thing tooltips at the crosshair, the hint after a weapon 
+swap, a false trace mismatch of a headless host with slow tracing, the 
+ring's label cut off) and 
+harness fixes (Known gaps, first-person play, M4, M5 and M6, test-copy 
+run). Next: the user's in-game check.
 ## Known gaps
 - DontSetResolution (debug builds only) is now a Harmony patch applied in the 
 mod constructor, so it can't stop resolution changes the game makes before 
@@ -516,7 +543,9 @@ maps native addresses from the Mono stack walker; Harmony's public API can't).
   setting is now persisted). Frames are hashed by declaring type and method 
   name with GenText.StableStringHash; frames from System.*, HarmonyLib, 
   MonoMod and the tracer itself are dropped (their IL differs per OS and the 
-  frame count is part of the hash); Harmony's _PatchN suffix is stripped. 
+  frame count is part of the hash), and so (Oct 30) are the engine's host 
+  loop frames, Waylith.* and RimWorldWaylith.* (a -Headless instance has one 
+  more, RunHeadlessLoop); Harmony's _PatchN suffix is stripped. 
   Trace hash lists are only compared when both sides recorded some, so one 
   player tracing alone can't cause a false "Trace hashes don't match", but 
   two tracing players must run the same build. The host's "Log desync 
@@ -1167,12 +1196,9 @@ read of both codebases before merging. What changed and why:
   subtree (Humanlike_PostMentalState) and ThinkTreeDef.TryGetThinkNodeWithSaveKey 
   searches only the main tree. Same on every machine, harmless 
   (CheckForJobOverride is skipped for controlled pawns).
-  - While the cursor is captured, IMGUI hover still follows GLFW's invisible 
-  virtual pointer: a gizmo tooltip ("<name> - Under first-person control.") 
-  was seen staying on screen and will drift as the player looks around (spec 
-  7.4's pointer pin is gated on m1-leak failing, which it doesn't). The 
-  cheat-sheet line at the top left overlaps IsoRim's "First person with X" 
-  message.
+  - (M1 hover and cheat-sheet notes replaced in M6: the pointer pin keeps 
+  IMGUI's hover at the screen's centre while captured, and the cheat sheet 
+  sits under the colonist bar; Known gaps, first-person play, M6.)
   - Harness: about 1 in 10 headless Proton 11 host launches hangs before 
   writing any Player.log (RimWorld.exe asleep in ntsync); fp_selftest.py 
   relaunches once after 180 s. Headless hosting needs FpSelfTestHost to mark 
@@ -1198,8 +1224,8 @@ read of both codebases before merging. What changed and why:
   session (FpIds.PlayOff). Both players need the same build, as always.
   - First-person settings are static (FpSettings) inside IsoRim's settings 
   file; IsoRim's "Reset all" doesn't reset them (the section has its own 
-  reset button). Only the M1 options are drawn; later ones are saved with 
-  their defaults until their milestone shows them.
+  reset button). Every option is drawn since M6 (showHitChance, eyeLead, 
+  headBob, friendTags added at the M4-M6 integration).
   - Deviations from the spec in M1, all deliberate:
     - Entry waits for Multiplayer: IsoRim's toggle with the 3D view off 
     queues "Preparing 3D" as a long event, and Multiplayer takes no command 
@@ -1256,13 +1282,8 @@ read of both codebases before merging. What changed and why:
     - R3D_Fp_RefuseBusy: a colonist that just left a map keeps its entry on 
     that map until that map ticks, and can't be taken until then; with 
     async time and that map paused, until it is unpaused.
-  - Not fixed (review findings judged not worth it now): while the cursor 
-  is captured, IMGUI hover (tooltips, mouse-over sounds) still follows 
-  GLFW's invisible virtual pointer. Setting Event.current.mousePosition 
-  doesn't help: RimWorld.dll's ImGuiGuiBackend.UpdateEventMouse rewrites it 
-  from the physical pointer at every clip push and pop. The working fix 
-  (pin the virtual pointer each frame, spec 7.4 fallback) pollutes the look 
-  delta; keep it for a failed leak test. On a release for the right-button 
+  - Not fixed (review findings judged not worth it now): IMGUI hover 
+  while captured is pinned since M6 (Known gaps, M6, pointer pin). On a release for the right-button 
   menu or the Esc menu, the cursor reappears where it was when capture 
   began (GLFW), not under the menu; moving it needs Brutal.GlfwApi 
   (GlfwWindow.CursorPos, window coordinates) and a pointer warp, which a 
@@ -1397,10 +1418,12 @@ record what changed below):
   miss when the player walks away from it (FpSetIntent ends the job), takes 
   another bill (FpStartRecipe, FpWorkBill), turns checks off (FpSetControl's 
   flags) or leaves (F5, as the spec had it): FpWork.ForfeitPending, work and 
-  tally. Drafting or a float-menu order ends the job in the game's own code, 
-  so the next map tick counts the miss on the piece's tally only 
-  (FpWork.LeftJob; a piece's tally is created when its first check is 
-  raised for this). A job that ends on its own still voids the check. The 
+  tally. Drafting ends the job in the game's own code, so the next map 
+  tick counts the miss on the piece's tally only (FpWork.LeftJob; a piece's 
+  tally is created when its first check is raised for this); since the 
+  M4-M6 integration a float-menu order off a shown check counts in full, 
+  work and tally (TryTakeOrderedJob's order-guard prefix calls 
+  ForfeitPending; Known gaps, M4). A job that ends on its own still voids the check. The 
   ring shows such a miss as "MISS, left the work". The ring's clock stops 
   while the game is paused; a free cursor (Alt, a menu, a window, the world 
   map, focus lost) holds only the warning, for 3 s in all 
@@ -1485,3 +1508,229 @@ record what changed below):
   the "Bill complete" messages with two players; at your resolution, the 
   status line and the skill-check bar clear of the selected colonist's 
   commands (raised above them since the test-copy run).
+- First-person play, M4, M5 and M6 (Oct 30, code complete, all scenarios 
+pass in the test copies, NOT yet run in game; spec docs/fp-play-spec.md 
+10-12, 14, 16, whose "integration changes", "as built" and "test-copy run" 
+notes record what changed):
+  - All skilled work (M4, F): checks in construction (FinishFrame), mining, 
+  harvesting and cutting (each plant of a job's queue its own piece: 
+  tracking starts again when the tally key changes within a job), sowing, 
+  repair (never held: its work runs in tickAction), smoothing floors and 
+  walls, deconstructing, surgery (the bill adapter), and since the 
+  integration extracting trees, planting seeds and fixing broken-down 
+  machines (a fixed 1000-tick wait: a grant takes ticks off it; never held; 
+  no lever). Levers: ConstructSuccessChance (the failure part, only under a 
+  chance of 1), MiningYield, PlantHarvestYield (DrugHarvestYield takes it as 
+  a factor, so it has no part of its own), and the quality patch reaches 
+  buildings (Frame.CompleteConstruction). The M4 adapters hold at M3's rule 
+  (3% or what one 15-tick interval does), mining before the last pick hit; 
+  a mining grant books its hit points in the rock's yield record as a pick 
+  hit would. FpWorkAdapterBase carries internal members the spec's 
+  interface lacks (MatchesJob, KeyForJob, BeginTracking, helpers).
+  - Not covered, against the user's "all skilled work" (spec 10.1, still 
+  without checks): too short ever to get a check (roof building and 
+  removing, painting); not a piece of work (deep drilling, pruning a 
+  Gauranlen tree, repairing a mech); research and the other Intellectual 
+  work, and tending (left out by the spec). The user's call whether any of 
+  these should get checks in a later milestone.
+  - Work orders (M4, D, FpOrders): the left button on a rock or plant in 
+  reach orders the work the game's designators would give (Mine; Harvest, 
+  "Chop" for a ripe tree; Cut for an unripe tree or a stump), designated or 
+  not; the command adds the designation if missing (and removes it again 
+  on a refusal), walks the work types in the float menu's order without 
+  needing work priorities, takes only thing scanners (not the 40-plant 
+  WorkGiver_GrowerHarvest, which reads a static the float menu writes), 
+  counts a shown check as missed before the new job, carries the queue key 
+  (QueueOrder_Down) and tells only the issuer. Smoothed walls, grass, unripe 
+  crops and targets with other designations go to the float menu. The hint 
+  shows why an order can't be given (incapable, outside the allowed area, 
+  forbidden) in red (FpOrders.RefusalHint, wired at integration). Open: an 
+  order the player walks away from keeps its designation, so the colony's AI 
+  may finish the work, as with a designator; refusals only the simulation 
+  knows (no path, the work giver's own reason) reach the issuer as a game 
+  message after the toast; no confirmation for mining under an overhead 
+  mountain (the game's designator has none either).
+  - No free way out of a good start (review finding, integration): a 
+  piece's tally now records the checks it was planned to get 
+  (FpTally.expected, saved; set at tracking start to the answers so far 
+  plus the plan), and the form averages over at least that many 
+  (FpMath.Form with a fourth argument; unit tests FormExpected): before, 
+  two Greats and F5 (or checks off, or walking off in a warning) left +4 on 
+  a six-check piece for the AI to finish; now +1. The progress bar's Form 
+  shows the diluted value while working. A float-menu order off a shown 
+  check counts it in full (order-guard prefix, ForfeitPending); drafting 
+  stays the tally-only miss (the emergency recall). The controller's own 
+  forced release (the dev action) counts like leaving; only another 
+  player's voids.
+  - Construction failure retuned (review finding, integration): the build 
+  toil rolls its failure per interval with that interval's work, so 
+  grants (work without rolls) and misses (work done again) already move a 
+  frame's failures; constructFail is now [1.40 .. 0.84] so the two together 
+  give the spec's intended 2.0 .. 0.6 for a typical mix of results.
+  - Shooting (M5, G, FpCombat): drafted, the left button on a hostile sends 
+  FpFire(hold): the game's own AttackStatic (or AttackMelee with no gun or 
+  a hostile within 1.5 cells), validated by the drafted float menu's own 
+  checks (range, line of fire, violence, ideology), taken with 
+  TryTakeOrderedJob; the release sends FpStopFire, which caps the attacks at 
+  those started, so a click always gets its burst and holding keeps firing; 
+  a click between attacks of the same attack asks for one more. While held, 
+  the crosshair moving onto another hostile retargets (at most 4 a second). 
+  Nothing touches a stat, a warmup, a cooldown, a burst or a roll; the only 
+  aid is where the click lands (a hostile within 1.3 times the picker's 
+  radius of the ray counts as aimed at). A gun can't be aimed at the ground 
+  (a cell shot would skip the cover roll); grenades can. Reticle: brackets 
+  (red when the verb can't hit), the game's own hit estimate (option "Show 
+  the hit chance"), warmup and cooldown arcs, the weapon. Undrafted on a 
+  hostile the hint names the draft key. Integration fixes (review): the 
+  command's validation runs inside Rand.PushState/PopState (the melee check 
+  draws from Rand); the wider aim also works on an invalid hit (a ray over a 
+  standing target's shoulder; before, the help only worked beside his legs; 
+  scenario m5-wide); a blocked combat hint is red (Invalid), the undrafted 
+  one has no "[LMB]" and a white crosshair, and the combat hint is worked 
+  out again at every 0.25 s slot (it went stale while walking); FpCombat 
+  .Update runs every frame (a held-back release over the world map or 
+  undrafted went out never); a press held across a Multiplayer reload is 
+  released once play resumes on the same colonist (the saved attack job kept 
+  firing).
+  - M5 self-test deviations (FpTestM5's header): the shooter is C1 or C2 
+  (whoever can do violence, with the rifle); shooting scenarios shield the 
+  target from damage with a test-only Harmony prefix; m5-hold holds until a 
+  second attack starts; m5-odds audits every patch on the shot's path, 
+  compares the first-person job with the game's "Fire at" field by field, and 
+  measures both hit rates (4 blocks of 12 attacks each, a two-proportion z 
+  test); the lane to the pirates is cleared; mp5-fire's target health 
+  digests ride the command lines fp_compare.py compares. Added m5-reclick 
+  and (integration) m5-wide.
+  - Order guard (M6, B): another player's vanilla order or draft for a 
+  colonist someone controls in first person is refused on every machine 
+  (TryTakeOrderedJob, TryTakeOrderedJobPrioritizedWork, the Drafted setter; 
+  only inside a command, issuer from the server's stamp; the issuer told 
+  "controlled by"). The Drafted setter still runs as a side effect of what 
+  happens to the pawn (downed, a mental break, a lost faction, a prisoner, a 
+  lord): those leave control anyway. Dev action "FP: force release selected 
+  colonist" (FpSetControl off with Force, any player of the faction).
+  - Idle facing (M6, B and A): the camera's quadrant (10 degrees of 
+  hysteresis, at most every 250 ms) goes out as FpSetFacing; the control job 
+  turns the standing colonist that way (not while walking or in a 
+  full-body stance), through FaceCell so MpFacing sees it.
+  - Pointer pin (M6, A; replaces M1's hover note): both IMGUI passes of a 
+  frame (ImguiDispatch.DispatchInput and Draw) run with the engine's mouse 
+  position moved to the screen's centre and moved back after (two opposite 
+  QueueMouseMove calls, so the look delta is unchanged and GLFW's own cursor 
+  is never warped): hover, tooltips and mouse-over sounds no longer follow 
+  the invisible virtual pointer while captured.
+  - HUD (M6, A): the cheat sheet sits centred under the colonist bar and 
+  steps down past live messages (replaces M1's overlap note); the status 
+  wraps between its parts into one or two centred lines or a band between 
+  the inspect pane (its real width, 72 px per visible tab) and the time 
+  controls, and (integration, review) the band and the toasts never reach 
+  into the time controls (they wrap instead); a needs strip (food, rest, 
+  mood, health) above the inspect pane's tab row; a red edge flash when the 
+  colonist's summary health drops; other players' tags over the colonists 
+  they control (flat and in 3D, with a small ring while their check runs 
+  and the result over it; option "Show who plays which colonist").
+  - Camera (M6, A): the eye leads along the movement key's heading at the 
+  colonist's walking speed until the colonist walks that way (at most 0.35 
+  cells, never over an unwalkable cell; option "Camera lead when walking"), 
+  and an optional head bob (0.012 cells at 100%, default 0). The bob reaches 
+  the picture through a 16th Port line in FirstPerson.Eye (integration; it 
+  was computed and dropped before).
+  - Wheel (M6, built at integration, spec 7.1): the mouse wheel moves the 
+  left button's float-menu option along the best three (the hint shows 
+  "(k/n)"; a new target starts at its best); not for bills, orders or 
+  combat.
+  - M6 self-test (FpTestM6): m6-facing is solo (mp6-facing checks the host 
+  side), mp6-soak runs 25 minutes (the harness's limit is 30 of real time), 
+  and m6-lead, m6-hover, m6-status, m6-cheatsheet, m6-flash, mp6-facing, 
+  mp6-tags and (integration) m6-wheel were added for items the spec's table 
+  had no scenario for. fp_selftest.py gives mp6-both 1500 s and mp6-soak 
+  2400 s by default (900 was too short).
+  - Hit counters added: Order work sent, Order work, Order work designated, 
+  Order work refused (D); Fire sent, Fire, Fire refused, Fire extended, Fire 
+  retarget, Fire not resent (in flight), StopFire sent, StopFire, Reticle 
+  drawn (G); Order refused, Facing sent, Pointer pinned (A, B); Order ended 
+  a checked job, LMB option cycled, Fire released after a reload 
+  (integration). The tally's expected count shows as e=N in FpState 
+  .Describe (desync digests, FPSTATE lines).
+  - Test-copy run (Oct 30, Proton test copies, scripts/fp_selftest.py): 
+  all 32 M4-M6 scenarios pass and the 48 M1-M3 ones still pass, 0 error 
+  lines from the mod, no hook missing, every --mp compare matched, no 
+  desync file (m5-odds: same job, verb, warmup, cooldown and estimate as 
+  the game's "Fire at", hit rates 24/144 vs 24/144 at a 15% estimate, z 
+  0.00; earlier runs 7.6% vs 10.4%, z -0.82, and 5.0% vs 3.5%, z 0.62; with 
+  -quicktest shooters at a downed pirate the rates are low, so the z test 
+  only catches a gap of about 0.1). 
+  IL sizes of the new targets: TryTakeOrderedJob 693, 
+  TryTakeOrderedJobPrioritizedWork 83, the Drafted setter 791 (try), 
+  ImguiDispatch.DispatchInput 343 and Draw 127 (both try), 
+  TooltipGiverList.DispenseAllThingTooltips 423; CheckSplitPatches 
+  reported nothing in any log. Feature fixes: (1) clicks over the skill 
+  check's ring were lost: Waylith's ImguiDispatch.Dispatch marks a mouse 
+  event used (type only, not rawType) before the OnGUI pass when the pointer 
+  is over a window drawn in the last pass (ImGuiGuiBackend 
+  .InlineControlsObscured), and M6's pin puts the pointer on the ring's 
+  immediate window, so every click, release and wheel step from the ring's 
+  warning to 0.8 s after its result vanished (mp4-work's next rock ordered 
+  nothing); FpInput's filter now takes such events while captured (counter 
+  "Obscured mouse event taken", m4-mine checks a click over the result). 
+  (2) The map's thing tooltips (name, health, the game's "Shot by" report) 
+  came up at the pinned pointer and covered the crosshair's hint: skipped 
+  while captured (prefix on TooltipGiverList.DispenseAllThingTooltips, 
+  "Thing tooltips skipped", m6-hover). (3) The hint is worked out again when 
+  the primary weapon changes on the same target (m5-cell kept "Too far" 
+  after swapping to grenades). (4) Multiplayer's ManagedStackTracing drops 
+  the engine's host loop frames (Waylith.*, RimWorldWaylith.*): a -Headless 
+  instance has EngineApplication.RunHeadlessLoop, one frame more, so with 
+  slow tracing every trace of the headless test host differed from its 
+  windowed client's and mp6-soak "desynced" 2 s in (random states equal). 
+  (5) The ring's label (skill, level, passion flame) takes the Tiny font 
+  when it doesn't fit inside the ring: "Construction 10" with a flame lost 
+  its level (screenshots). 
+  Diagnostics added: "LMB down", "Click swallowed after capture", "Cursor 
+  captured/released" counters, FpHud.LastToast. Harness fixes: jobs 
+  followed by loadID in FpTestM4 (pooled Job objects: the finished stool's 
+  job came back as the control job and mp4-work waited 7 minutes, 
+  m4-deconstruct 9); M6 host scenarios find the scene again after the 
+  client's join point (it reloads the host's game; mp6-guard and mp6-facing 
+  read the old C2); m4-surgery tends the patient first (the game puts 
+  "Prioritize tending" before the operation); m6-wheel takes the grenades' 
+  cell out of the stockpile (at home a stored weapon offers "Equip" alone); 
+  m6-status compares the reason case-insensitively (the game capitalises it 
+  after "Autopilot: "); the M4 work-change check accepts the adapters' 99% 
+  clamp (a check raised late asks for more than is left); ClearLane lifts 
+  the destroy guard (a steam geyser in the lane) and the scene removes wild 
+  animals (one attacked the colonists and downed m4-repair's doer; a 
+  wandering pawn took one m5-odds click, which now waits for the crosshair 
+  on the pirate); screenshots of each M4 work type's ring and result and of 
+  the M5 reticle; shots taken before the state they show is changed. Seen 
+  in the runs, not the mod's: Proton 11 headless host launches hung before 
+  any log twice in a row once (mp5-fire, rerun). mp3-craft (M3) failed 2 
+  of 6 runs, both from the client's scene differing from the host's after 
+  the ~30 s between hosting and the join: once the kit's cloth or bench not 
+  at its cells, once another C1 adopted (Human193 instead of the host's 
+  Human190) and F5 on the doer sending no command; the other 4 passed. 
+  Cause not found (a colonist whose Stand a need interrupted, then hauling 
+  or changing state, is the guess); the client now logs the doer's state 
+  and the colonists it found ("mp3-craft doer ..."). Not fixed. mp6-soak: 
+  90010 ticks with slow tracing on both sides, no desync.
+  - To check in game (the harness can't): mine, chop, harvest, sow, build, 
+  repair, smooth and deconstruct from first person with checks, alone and 
+  with the friend (both see the same progress and tally), and the stat 
+  explanations while working a piece (construct success chance, mining 
+  yield, plant harvest yield: "First-person skill checks (form ...)"); the 
+  Form on the progress bar now starts low and rises as checks land; an 
+  order refused for the allowed area (red hint); firing feels responsive 
+  while the odds stay the game's (click, hold, release mid-burst, retarget 
+  while held, a standing raider just beside the crosshair), and the hit 
+  chance next to the crosshair; a reload (join point) while holding fire 
+  stops it; the friend unable to order or draft your colonist; the idle 
+  facing following your view with the friend watching; tooltips no longer 
+  popping up while you look round; the needs strip, the status and the 
+  cheat sheet at your resolution and UI scale (and clear of the date and 
+  time controls); the damage flash; the friend's tag; the camera lead with 
+  the friend's latency, and the head bob if you turn it on; the wheel on 
+  something with several options; a click right after a skill check's 
+  result (it used to vanish while the ring showed), and no tooltip under 
+  the crosshair while captured (the free cursor keeps them); the friend's 
+  tag in 3D at close range (it floats well over the head: about 70 px at 
+  1.5 cells in the test copy).

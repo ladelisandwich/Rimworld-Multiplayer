@@ -24,6 +24,9 @@ scripts/fp_compare.py on the two logs and any new MpDesyncs files.
 
 Exit code: the scenario's fail count, plus 1 per mod error line, desync file or compare failure; 99 on a timeout;
 98 when the setup failed (no game, a game already running).
+
+The run's timeout (--timeout) is 900 s, longer for the scenarios in LONG_TIMEOUTS (mp6-both plays 5 minutes and
+mp6-soak 25 after hosting and the join; the harness's own whole-scenario limit is 30 minutes of real time).
 """
 import argparse
 import os
@@ -38,6 +41,9 @@ DEFAULT_GAME = os.environ.get(
     "RIMWORLD_DIR", "/run/media/ahearn/Big and Slow guy/SteamLibrary/steamapps/common/RimWorld")
 DEFAULT_PROTON = "/run/media/system/Fast_AF_Guy/SteamLibrary/steamapps/common/Proton 11.0/proton"
 LOCAL_LOW = "pfx/drive_c/users/steamuser/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios"
+DEFAULT_TIMEOUT = 900
+# Seconds for scenarios that run longer than DEFAULT_TIMEOUT allows (launch, hosting and the join included).
+LONG_TIMEOUTS = {"mp6-both": 1500, "mp6-soak": 2400, "mp4-work": 1200, "m5-odds": 1500}
 TEST_ROOT = os.path.expanduser("~/.rw-mp-test")
 PREFS_SOURCE = os.path.join(TEST_ROOT, "proton-isorim", "prefix", LOCAL_LOW, "Config", "Prefs.xml")
 CONNECT = "127.0.0.1:30502"
@@ -299,7 +305,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("scenario", help="scenario id, e.g. m0-noop, m1-walk, mp1-walk")
     ap.add_argument("--mp", action="store_true", help="host (headless) and client instead of one solo instance")
-    ap.add_argument("--timeout", type=int, default=900, help="seconds for the whole run (default 900)")
+    ap.add_argument("--timeout", type=int, default=None,
+                    help=f"seconds for the whole run (default {DEFAULT_TIMEOUT}, longer for " + ", ".join(sorted(LONG_TIMEOUTS)) + ")")
     ap.add_argument("--proton", default=DEFAULT_PROTON, help="Proton's 'proton' script, on the host")
     ap.add_argument("--game", default=DEFAULT_GAME, help="RimWorld 1.7 folder (default: RIMWORLD_DIR or the Steam one)")
     ap.add_argument("--host-windowed", action="store_true", help="--mp: the host gets a window too")
@@ -307,6 +314,8 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="print the commands only")
     args = ap.parse_args()
 
+    if args.timeout is None:
+        args.timeout = LONG_TIMEOUTS.get(args.scenario, DEFAULT_TIMEOUT)
     known = registered_scenarios()
     if known and args.scenario not in known:
         print(f"unknown scenario {args.scenario}: not registered in Source/IsoRim/Fp/Test (known: {', '.join(sorted(known))})")

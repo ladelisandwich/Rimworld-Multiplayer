@@ -55,6 +55,7 @@ namespace IsoRim.Fp
         public byte lastOutcome = 255;
         public int lastOutcomeTick = -99999;
         public float carry;                    // repair rounding
+        public int startHp;                    // M4, Repair: the building's hit points when tracking started
 
         // The component whose list holds this entry. Not saved: set when the entry is added, after loading and by
         // FpRegistry.Rebuild. An entry only counts on its own map (a pawn that just left it is released by that map).
@@ -84,6 +85,7 @@ namespace IsoRim.Fp
             Scribe_Values.Look(ref lastOutcome, "lastOutcome", (byte)255);
             Scribe_Values.Look(ref lastOutcomeTick, "lastOutcomeTick", -99999);
             Scribe_Values.Look(ref carry, "carry", 0f);
+            Scribe_Values.Look(ref startHp, "startHp", 0);
         }
     }
 
@@ -96,9 +98,14 @@ namespace IsoRim.Fp
         public int jobLoadId;
         public int great, hit, miss, lastTick;
 
+        // The checks the piece was planned to get (integration change, spec 10.4): FpWork raises it to the answers so far
+        // plus each new plan when tracking of the piece starts. The form is averaged over at least this many, so checks
+        // left unanswered (stopping play, turning checks off, a void) dilute it instead of locking in a good start.
+        public int expected;
+
         public int Count => great + hit + miss;
 
-        public int Form => FpMath.Form(great, hit, miss);
+        public int Form => FpMath.Form(great, hit, miss, expected);
 
         public void ExposeData()
         {
@@ -110,6 +117,7 @@ namespace IsoRim.Fp
             Scribe_Values.Look(ref hit, "hit", 0);
             Scribe_Values.Look(ref miss, "miss", 0);
             Scribe_Values.Look(ref lastTick, "lastTick", 0);
+            Scribe_Values.Look(ref expected, "expected", 0);
         }
     }
 
@@ -740,7 +748,8 @@ namespace IsoRim.Fp
                 + " q=" + (e?.issued ?? 0).ToString(inv) + "/" + (e?.planned ?? 0).ToString(inv)
                 + " s=" + (e?.pendingSeq ?? 0).ToString(inv)
                 + " h=" + (e != null && e.held ? "1" : "0")
-                + " t=" + (t?.great ?? 0).ToString(inv) + "/" + (t?.hit ?? 0).ToString(inv) + "/" + (t?.miss ?? 0).ToString(inv);
+                + " t=" + (t?.great ?? 0).ToString(inv) + "/" + (t?.hit ?? 0).ToString(inv) + "/" + (t?.miss ?? 0).ToString(inv)
+                + (t != null && t.expected > 0 ? " e=" + t.expected.ToString(inv) : "");   // M4: the checks the piece was planned to get
         }
     }
 }

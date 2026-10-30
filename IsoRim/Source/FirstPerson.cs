@@ -59,7 +59,7 @@ namespace IsoRim
                 float h = Mathf.Clamp(IsoRimMod.Settings.fpEyeHeight, 0.3f, 3f) + headRise;
                 // A little forward, so the eye is not inside the back of the head.
                 Vector3 f = Quaternion.Euler(0f, Fp.FpHooks.Steering ? Fp.FpHooks.Yaw : heading, 0f) * Vector3.forward * 0.12f + Fp.FpHooks.EyeOffset;   // Port: first-person play
-                return new Vector3(p.x + o.x + f.x, h + o.y, p.z + o.z + f.z);
+                return new Vector3(p.x + o.x + f.x, h + o.y + f.y, p.z + o.z + f.z);   // Port: first-person play
             }
         }
 

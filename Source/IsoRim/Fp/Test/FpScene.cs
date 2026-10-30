@@ -14,7 +14,7 @@ namespace IsoRim.Fp
     // (the AI would otherwise haul the steel, finish the table frame and harvest the rice before a scenario gets to them;
     // a scenario that needs a work type enables it with EnableWork; C1 and C2 keep hauling, for the left button's order on
     // the steel, with one empty stockpile cell next to the grenade's), C1 and C2 are undrafted and wait on their cells
-    // (Stand), and C2 stands at (-2, -2). The cleared ground reaches 20 cells south of C1 (the spec's square is 21 x 21):
+    // (Stand), and C2 stands at (-2, -2). The map's wild animals are removed (one attacked the colonists in a run). The cleared ground reaches 20 cells south of C1 (the spec's square is 21 x 21):
     // north of C1 the stove and the wall line stop a walk within 7 cells, so the walking scenarios walk south. The game
     // speed is Normal and the camera is turned back to yaw 0.
     public static class FpScene
@@ -98,6 +98,13 @@ namespace IsoRim.Fp
                 {
                     p.drafter.Drafted = false;
                 }
+            }
+            // The map's wild animals go: a predator or a manhunter that turns on the colonists downs one mid-scenario (the
+            // M4-M6 test-copy run, m4-repair: C2 bleeding, the third colonist fleeing, the doer downed at 57% of the repair),
+            // and one wandering into the line of sight takes a click (m5-odds). Animals spawned later stay (rare in a run).
+            foreach (Pawn a in map.mapPawns.AllPawnsSpawned.Where(x => x.Faction == null && x.RaceProps != null && x.RaceProps.Animal).ToList())
+            {
+                a.Destroy(DestroyMode.Vanish);
             }
             Place(C1, o);
             Place(C2, o + C2At);

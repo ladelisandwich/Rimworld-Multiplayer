@@ -28,16 +28,21 @@
     </xp>
 
     <!-- Levers by form -4 .. +4 -->
+    <!-- constructFail (integration of M4-M6): the build toil rolls its failure every interval with the work that interval
+         did (JobDriver_ConstructFinishFrame: 1 - chance ^ (work / WorkToBuild)), so a check's grant, which adds work
+         without a roll, already lowers the failures of a well worked frame and a miss, whose work is done again, raises
+         them. These factors are the intended 2.0 .. 0.6 divided by that effect for a typical mix of results at each form
+         (1 / (1 + the average grant)), so the two together land on the intended values. -->
     <constructFail>
-      <li>2.0</li>
-      <li>1.75</li>
-      <li>1.5</li>
-      <li>1.25</li>
+      <li>1.40</li>
+      <li>1.36</li>
+      <li>1.28</li>
+      <li>1.16</li>
       <li>1</li>
-      <li>0.9</li>
-      <li>0.8</li>
-      <li>0.7</li>
-      <li>0.6</li>
+      <li>0.97</li>
+      <li>0.92</li>
+      <li>0.89</li>
+      <li>0.84</li>
     </constructFail>
     <surgery>
       <li>0.80</li>

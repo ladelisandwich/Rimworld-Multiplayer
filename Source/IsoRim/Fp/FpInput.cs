@@ -48,6 +48,18 @@ namespace IsoRim.Fp
         private static float interruptFill = -1f;
         private static int autopilotToldJob = -1;   // the autopilot job a held movement key was last answered for (a toast)
 
+        // The idle facing (M6, spec 9.2): the camera's quadrant with hysteresis, and what was last sent.
+        private const float FacingHysteresisDeg = 10f;
+        private const double FacingMinGap = 0.25;
+        private const byte NoFacing = 255;
+        private static byte facingQuadrant = NoFacing;
+        private static byte facingSent = NoFacing;
+        private static double facingSentAt = -1;
+
+        // The pointer pin (M6): while captured, IMGUI's passes see the pointer at the screen's centre (see Install).
+        private static bool pinned;
+        private static Vector2 pinSaved;
+
         private static KeyBindingDef mpToggleChat, mpPingKey;
         private static List<KeyBindingDef> devKeys;
         private static bool keysLooked;
@@ -117,6 +129,95 @@ namespace IsoRim.Fp
             FpHooks.Patch(h, "first-person selection click block (Selector.HandleMapClicks)",
                 AccessTools.DeclaredMethod(typeof(Selector), "HandleMapClicks"),
                 prefix: new HarmonyMethod(typeof(FpInput), nameof(SelectorHandleMapClicks_Prefix)));
+            // M6, the hover leak (CLAUDE.md, Known gaps, first-person play M1): IMGUI takes the pointer from
+            // Input.mousePosition, which while captured is GLFW's invisible virtual cursor, drifting with every look; hover,
+            // tooltips and mouse-over sounds followed it (a gizmo tooltip stayed up while looking round). Setting
+            // Event.current.mousePosition doesn't hold (ImGuiGuiBackend.UpdateEventMouse rewrites it from that pointer at
+            // every clip). Instead both IMGUI passes of a frame, RimWorld.dll's ImguiDispatch.DispatchInput (input events)
+            // and Draw (layout and repaint), run with the engine's mouse position moved to the screen's centre, and moved
+            // back after: the two InputSystem.QueueMouseMove calls add opposite deltas, so the frame's look delta (read
+            // later, in the camera's update) is unchanged, and GLFW's own cursor is never touched (a warp would leave the
+            // input bridge's last cursor position stale, which comes back as a look jerk on the next click). Last of the
+            // prefixes, so the self-test's input for the frame is in first. Both methods have exception handlers, so the
+            // JIT never inlines them.
+            Type dispatch = AccessTools.TypeByName("RimWorldWaylith.Imgui.ImguiDispatch");
+            FpHooks.Patch(h, "first-person pointer pin (ImguiDispatch.DispatchInput)",
+                dispatch == null ? null : AccessTools.DeclaredMethod(dispatch, "DispatchInput"),
+                prefix: new HarmonyMethod(typeof(FpInput), nameof(ImguiPass_Prefix)) { priority = Priority.Last },
+                finalizer: new HarmonyMethod(typeof(FpInput), nameof(ImguiPass_Finalizer)));
+            FpHooks.Patch(h, "first-person pointer pin (ImguiDispatch.Draw)",
+                dispatch == null ? null : AccessTools.DeclaredMethod(dispatch, "Draw"),
+                prefix: new HarmonyMethod(typeof(FpInput), nameof(ImguiPass_Prefix)) { priority = Priority.Last },
+                finalizer: new HarmonyMethod(typeof(FpInput), nameof(ImguiPass_Finalizer)));
+            // With the pointer pinned, the map's thing tooltips (a pawn's name, health and, with a drafted colonist
+            // selected, the game's "Shot by" report) popped up at the crosshair after the tooltip delay and covered the
+            // hint under it (seen in the M5 self-test's screenshots at 1280 x 720). The crosshair's hint and the reticle
+            // already say what is there, and the cursor is hidden, so they are skipped while captured. 423 bytes of IL,
+            // the map's own (TooltipGiverList is Verse's; nothing else patches it); interface only.
+            FpHooks.Patch(h, "first-person thing tooltips off while captured (TooltipGiverList.DispenseAllThingTooltips)",
+                AccessTools.DeclaredMethod(typeof(TooltipGiverList), nameof(TooltipGiverList.DispenseAllThingTooltips)),
+                prefix: new HarmonyMethod(typeof(FpInput), nameof(DispenseAllThingTooltips_Prefix)));
+        }
+
+        public static bool DispenseAllThingTooltips_Prefix()
+        {
+            if (!captured || FpPlay.Mode != FpMode.Playing)
+            {
+                return true;
+            }
+            FpHits.Hit("Thing tooltips skipped");
+            return false;
+        }
+
+        // ---------------------------------------------------------------- the pointer pin (M6)
+
+        // The screen's centre in the engine's mouse coordinates (framebuffer pixels from the bottom left, as the GLFW bridge
+        // reports the cursor and the self-test's VirtualPointer takes it).
+        internal static Vector2 PinPoint
+        {
+            get { return new Vector2(Screen.width / 2f, Screen.height / 2f); }
+        }
+
+        public static void ImguiPass_Prefix()
+        {
+            if (pinned || !captured || FpPlay.Mode != FpMode.Playing)
+            {
+                return;
+            }
+            try
+            {
+                UnityEngine.InputSystem.Mouse mouse = UnityEngine.InputSystem.Mouse.current;
+                if (mouse == null)
+                {
+                    return;
+                }
+                pinSaved = mouse.position.ReadValue();
+                UnityEngine.InputSystem.InputSystem.QueueMouseMove(PinPoint);
+                pinned = true;
+                FpHits.Hit("Pointer pinned");
+            }
+            catch (Exception e)
+            {
+                pinned = false;
+                Log.ErrorOnce("[IsoRim] First person: pinning the pointer for the interface failed: " + e, 93652309);
+            }
+        }
+
+        public static void ImguiPass_Finalizer()
+        {
+            if (!pinned)
+            {
+                return;
+            }
+            pinned = false;
+            try
+            {
+                UnityEngine.InputSystem.InputSystem.QueueMouseMove(pinSaved);
+            }
+            catch (Exception e)
+            {
+                Log.ErrorOnce("[IsoRim] First person: giving the pointer back after the interface failed: " + e, 93652310);
+            }
         }
 
         // Port 2 (every frame, every program state, from Root.Update): the play state machine, then the capture, then the
@@ -181,6 +282,14 @@ namespace IsoRim.Fp
                 {
                     Log.ErrorOnce("[IsoRim] First person: the skill check update failed: " + e, 93652304);
                 }
+                try
+                {
+                    FpCombat.Update();   // a held-back release goes out undrafted or over the world map too (once a frame)
+                }
+                catch (Exception e)
+                {
+                    Log.ErrorOnce("[IsoRim] First person: the trigger update failed: " + e, 93652312);
+                }
             }
             if (!playing)
             {
@@ -195,6 +304,14 @@ namespace IsoRim.Fp
             {
                 Log.ErrorOnce("[IsoRim] First person: the movement update failed: " + e, 93652305);
             }
+            try
+            {
+                UpdateFacing();
+            }
+            catch (Exception e)
+            {
+                Log.ErrorOnce("[IsoRim] First person: the facing update failed: " + e, 93652311);
+            }
         }
 
         // From FpPlay.Start: a new play (or a resumed one after a reload) starts with no intent known to have been sent.
@@ -203,6 +320,56 @@ namespace IsoRim.Fp
             ResetIntent();
             focusLostLatch = false;
             primaryDown = false;
+            facingQuadrant = NoFacing;
+            facingSent = NoFacing;
+            facingSentAt = -1;
+        }
+
+        // ---------------------------------------------------------------- the idle facing (M6)
+
+        // Spec 9.2: the quadrant the camera looks into (with 10 degrees of hysteresis) goes to the simulation as FpSetFacing
+        // whenever it changes, at most every 250 ms, latest wins. The control job turns the colonist that way whenever it
+        // stands (FaceIdle). Sent while walking too, so the facing is already there when the colonist stops (otherwise the
+        // colonist would first turn back to the old facing for a command's round trip). The first value goes out once
+        // control is confirmed.
+        private static void UpdateFacing()
+        {
+            Pawn p = FpPlay.Pawn;
+            if (p == null)
+            {
+                return;
+            }
+            facingQuadrant = Quadrant(FpCamera.Yaw, facingQuadrant);
+            if (!FpPlay.Confirmed || facingQuadrant == facingSent)
+            {
+                return;
+            }
+            double now = Time.realtimeSinceStartupAsDouble;
+            if (facingSentAt >= 0 && now - facingSentAt < FacingMinGap || !FpSync.CanSend)
+            {
+                return;   // the latest quadrant goes out once the gap has passed (or Multiplayer takes commands again)
+            }
+            FpSync.SendFacing(p, facingQuadrant);
+            FpHits.Hit("Facing sent");
+            facingSent = facingQuadrant;
+            facingSentAt = now;
+        }
+
+        // Rot4 as a byte (0 north, 1 east, 2 south, 3 west) for a yaw clockwise from north; the current quadrant is kept
+        // until the yaw is more than 45 + FacingHysteresisDeg degrees from its middle.
+        internal static byte Quadrant(float yaw, byte current)
+        {
+            if (current <= 3 && Mathf.Abs(Mathf.DeltaAngle(yaw, current * 90f)) <= 45f + FacingHysteresisDeg)
+            {
+                return current;
+            }
+            return (byte)(Mathf.RoundToInt(Mathf.Repeat(yaw, 360f) / 90f) & 3);
+        }
+
+        // The facing last sent (255 before the first), for the self-test.
+        internal static byte FacingSent
+        {
+            get { return facingSent; }
         }
 
         private static void ResetIntent()
@@ -272,6 +439,7 @@ namespace IsoRim.Fp
             if (want != captured)
             {
                 captured = want;
+                FpHits.Hit(want ? "Cursor captured" : "Cursor released");
                 settleUntilFrame = Time.frameCount + SettleFrames;
                 if (want)
                 {
@@ -457,6 +625,18 @@ namespace IsoRim.Fp
             {
                 if (captured)
                 {
+                    // Waylith's dispatch (ImguiDispatch.Dispatch) marks a mouse event used before the OnGUI pass when the pointer
+                    // is over a window drawn in the last pass (ImGuiGuiBackend.InlineControlsObscured): it sets the type only,
+                    // while Event.Use sets the raw type as well. With the pointer pinned to the screen's centre (M6), that is
+                    // the skill-check ring's own window, so every click, release and wheel step from the ring's warning to
+                    // 0.8 s after its result was lost (M4-M6 test-copy run: mp4-work's click on the next rock right after a
+                    // check's result ordered nothing). While captured no window gets a mouse event
+                    // (DispatchInputToWindows_Prefix), so such an event is this filter's.
+                    if (t == EventType.Used && IsMouseEvent(e.rawType))
+                    {
+                        t = e.rawType;
+                        FpHits.Hit("Obscured mouse event taken");
+                    }
                     CapturedEvent(e, t);
                     return;
                 }
@@ -479,6 +659,11 @@ namespace IsoRim.Fp
             }
         }
 
+        private static bool IsMouseEvent(EventType t)
+        {
+            return t == EventType.MouseDown || t == EventType.MouseUp || t == EventType.MouseDrag || t == EventType.ScrollWheel;
+        }
+
         private static void CapturedEvent(Event e, EventType t)
         {
             switch (t)
@@ -490,6 +675,7 @@ namespace IsoRim.Fp
                         {
                             if (e.button == 0)
                             {
+                                FpHits.Hit("LMB down");
                                 primaryDown = true;
                                 FpActions.PrimaryDown();
                             }
@@ -497,6 +683,10 @@ namespace IsoRim.Fp
                             {
                                 FpActions.Secondary();
                             }
+                        }
+                        else
+                        {
+                            FpHits.Hit("Click swallowed after capture");
                         }
                     }
                     finally
@@ -518,8 +708,21 @@ namespace IsoRim.Fp
                         Consume(e);
                     }
                     return;
+                case EventType.ScrollWheel:
+                    // M6 (spec 7.1): the wheel cycles the left button's option among the best few (down: the next one).
+                    try
+                    {
+                        if (e.delta.y != 0f)
+                        {
+                            FpActions.CycleOption(e.delta.y > 0f ? 1 : -1);
+                        }
+                    }
+                    finally
+                    {
+                        Consume(e);
+                    }
+                    return;
                 case EventType.MouseDrag:
-                case EventType.ScrollWheel:   // M6: cycles the left button's option
                 case EventType.ContextClick:
                     Consume(e);
                     return;

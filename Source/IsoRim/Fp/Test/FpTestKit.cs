@@ -442,6 +442,13 @@ namespace IsoRim.Fp
             return 0;
         }
 
+        // One mouse wheel step (dy as the input system counts it: positive is the wheel turned up) at the pointer's position.
+        public static int Scroll(float dy)
+        {
+            input.Enqueue(() => InputSystem.QueueMouseScroll(new Vector2(0f, dy), InputMouse.current.position.ReadValue()));
+            return 0;
+        }
+
         // Moves the (virtual, while captured) pointer to a screen point in engine pixels.
         public static int VirtualPointer(Vector2 screenPx)
         {

@@ -33,6 +33,23 @@ public class FpMathTest
     public void Form(int great, int hit, int miss, int expected)
     {
         Assert.That(FpMath.Form(great, hit, miss), Is.EqualTo(expected));
+        Assert.That(FpMath.Form(great, hit, miss, 0), Is.EqualTo(expected));
+    }
+
+    // Diluted by the checks the piece was planned to get (FpTally.expected): checks never answered count as zeros.
+    [TestCase(2, 0, 0, 6, 1)]     // two Greats of six planned: RoundDiv(8, 6) = 1, not +4
+    [TestCase(2, 0, 0, 2, 4)]     // all planned checks answered: as without
+    [TestCase(2, 0, 0, 1, 4)]     // fewer planned than answered (re-planned on a later job): the answers count
+    [TestCase(1, 0, 0, 0, 2)]     // nothing planned: at least two, as without
+    [TestCase(0, 1, 0, 12, 0)]    // one Hit of twelve: RoundDiv(2, 12) = 0
+    [TestCase(0, 0, 1, 6, -1)]    // one Miss of six: RoundDiv(-4, 6) = -1
+    [TestCase(0, 0, 3, 4, -3)]    // RoundDiv(-12, 4) = -3
+    [TestCase(6, 0, 0, 6, 4)]
+    [TestCase(0, 0, 0, 6, 0)]     // nothing answered
+    [TestCase(1, 4, 1, 12, 1)]    // RoundDiv(2 * 4, 12) = 1
+    public void FormExpected(int great, int hit, int miss, int expected, int form)
+    {
+        Assert.That(FpMath.Form(great, hit, miss, expected), Is.EqualTo(form));
     }
 
     [TestCase(0f, 0)]

@@ -11,6 +11,16 @@
   <R3D_Fp_RefuseBusy>{0} is still being released from first-person control on the map they left. Try again in a moment.</R3D_Fp_RefuseBusy>
   <R3D_Fp_RefuseTaken>{0} is already controlled by another player.</R3D_Fp_RefuseTaken>
 
+  <!-- ==================== Order guard (M6): another player's order or draft for a controlled colonist ==================== -->
+  <!-- {0} the colonist's short name, {1} the controlling player's name. -->
+  <R3D_Fp_ControlledBy>{0} is controlled by {1} in first person: your order was refused.</R3D_Fp_ControlledBy>
+
+  <!-- ==================== Force release (M6, dev mode: Debug actions > IsoRim) ==================== -->
+  <R3D_Fp_ForceNone>Select one colonist that someone controls in first person.</R3D_Fp_ForceNone>
+  <R3D_Fp_ForceLater>Multiplayer takes no command right now; try again in a moment.</R3D_Fp_ForceLater>
+  <!-- {0} the colonist's short name, {1} the player who controlled them. -->
+  <R3D_Fp_ForceSent>Releasing {0} from first-person control ({1}).</R3D_Fp_ForceSent>
+
   <!-- ==================== Autopilot reasons (the colonist acts on their own while controlled) ==================== -->
   <R3D_Fp_AutoNotControlled>not under your control</R3D_Fp_AutoNotControlled>
   <R3D_Fp_AutoLord>taking part in a group activity</R3D_Fp_AutoLord>

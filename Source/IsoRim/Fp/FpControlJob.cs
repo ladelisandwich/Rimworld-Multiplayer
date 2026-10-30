@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HarmonyLib;
+using Multiplayer.API;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -104,6 +105,7 @@ namespace IsoRim.Fp
             }
             Move(e.dir);
             FaceWalk();
+            FaceIdle(e.facing);
         }
 
         // Spec 5.5. The pather walks one cell at a time towards a destination one cell ahead; the next cell is requested
@@ -178,6 +180,19 @@ namespace IsoRim.Fp
             {
                 pawn.rotationTracker.FaceCell(next);
             }
+        }
+
+        // Spec 5.4 step 4 (M6): standing, the pawn faces the way its controller's camera looks (FpEntry.facing, set by
+        // FpSetFacing; 255 until the first one). Not while walking (FaceWalk), and not during a full-body stance (a warmup or
+        // cooldown faces its target). Through FaceCell, which IsoRim's drawn-facing memory (MpFacing) hooks, and only on a
+        // change.
+        private void FaceIdle(byte facing)
+        {
+            if (facing > 3 || pawn.pather.Moving || pawn.Rotation.AsByte == facing || pawn.stances.FullBodyBusy)
+            {
+                return;
+            }
+            pawn.rotationTracker.FaceCell(pawn.Position + new Rot4(facing).FacingCell);
         }
     }
 
@@ -567,6 +582,139 @@ namespace IsoRim.Fp
                 prefix: new HarmonyMethod(typeof(FpControlJob), nameof(CheckForJobOverride_Prefix)));
             FpHooks.Patch(h, "control: index cleared for each game", AccessTools.Constructor(typeof(Game)),
                 postfix: new HarmonyMethod(typeof(FpControlJob), nameof(GameCtor_Postfix)));
+            // The order guard (M6, spec 16). TryTakeOrderedJob (693 bytes of IL) and the Drafted setter (791) are far too
+            // large to inline; TryTakeOrderedJobPrioritizedWork (83 bytes) calls TryTakeOrderedJob, so the first prefix
+            // also covers it, and its own prefix is there for a caller that reaches it first. All three are Multiplayer's
+            // synced calls (SyncMethods), patched through the same declaring types, so they share Multiplayer's records.
+            FpHooks.Patch(h, "control: order guard (Pawn_JobTracker.TryTakeOrderedJob)",
+                AccessTools.DeclaredMethod(typeof(Pawn_JobTracker), nameof(Pawn_JobTracker.TryTakeOrderedJob)),
+                prefix: new HarmonyMethod(typeof(FpControlJob), nameof(TakeOrderedJob_Prefix)));
+            FpHooks.Patch(h, "control: order guard (Pawn_JobTracker.TryTakeOrderedJobPrioritizedWork)",
+                AccessTools.DeclaredMethod(typeof(Pawn_JobTracker), nameof(Pawn_JobTracker.TryTakeOrderedJobPrioritizedWork)),
+                prefix: new HarmonyMethod(typeof(FpControlJob), nameof(OrderedJob_Prefix)));
+            FpHooks.Patch(h, "control: order guard (Pawn_DraftController.Drafted)",
+                AccessTools.DeclaredPropertySetter(typeof(Pawn_DraftController), nameof(Pawn_DraftController.Drafted)),
+                prefix: new HarmonyMethod(typeof(FpControlJob), nameof(Drafted_Prefix)));
+        }
+
+        // ---------------------------------------------------------------- the order guard (M6)
+        //
+        // Another player can't order or draft a pawn someone controls in first person: a command from player A that gives
+        // B's pawn an ordered job, or drafts or undrafts it, does nothing on every machine (the issuer is the server-stamped
+        // FpIds.Executing, the same everywhere). Only inside a command of a session (Executing >= 0): outside one, in a
+        // tick, or for the controller's own commands, nothing changes. Synced state only.
+
+        // A command of another player than the pawn's controller is running now.
+        internal static bool OrderRefused(Pawn p)
+        {
+            if (FpRegistry.ControlledCount == 0 || p == null)
+            {
+                return false;
+            }
+            int me = FpIds.Executing;
+            if (me < 0)
+            {
+                return false;
+            }
+            FpEntry e = FpRegistry.EntryOf(p);
+            return e != null && e.controller >= 0 && e.controller != me && e.comp != null && e.comp.map == p.Map;
+        }
+
+        // TryTakeOrderedJobPrioritizedWork: refused orders return false, as an order the pawn can't take does. An allowed
+        // one calls TryTakeOrderedJob, whose prefix does the rest.
+        private static bool OrderedJob_Prefix(Pawn ___pawn, ref bool __result)
+        {
+            if (!OrderRefused(___pawn))
+            {
+                return true;
+            }
+            Refused(___pawn);
+            __result = false;
+            return false;
+        }
+
+        // TryTakeOrderedJob: the guard as above. An order the controller gives their own colonist (a float-menu option, a
+        // queued order run early) that replaces the job counts a skill check the ring has shown as missed, work and tally,
+        // before the job ends (review finding, M4: the M3 rule counted only a tally miss there, so ordering the colonist
+        // off a check whose needle had already passed the arc dodged the work part of a known miss; on adapters whose work
+        // stays with the piece, a frame, a rock, a damaged building, an unfinished thing, the work was all kept). Drafting
+        // stays the tally-only miss of FpWork.LeftJob: it is the emergency recall.
+        private static bool TakeOrderedJob_Prefix(Pawn ___pawn, Job job, bool requestQueueing, ref bool __result)
+        {
+            if (OrderRefused(___pawn))
+            {
+                Refused(___pawn);
+                __result = false;
+                return false;
+            }
+            ForfeitBeforeOrder(___pawn, job, requestQueueing);
+            return true;
+        }
+
+        // As TryTakeOrderedJob decides whether the new job replaces the current one (Pawn_JobTracker.cs:896-910): not the
+        // same job, the current one interruptible by a player, and not queued behind it (the queue key, or requestQueueing,
+        // with a current job that isn't idle). Only the controller's own order (in a session the server-stamped issuer; in
+        // single player FpIds.Executing is the controller id), and only with a check open: ForfeitPending does nothing
+        // otherwise, voids a check raised too recently for the ring to have shown it, and counts a shown one as missed.
+        private static void ForfeitBeforeOrder(Pawn p, Job job, bool requestQueueing)
+        {
+            if (FpRegistry.ControlledCount == 0 || p?.jobs == null || job == null)
+            {
+                return;
+            }
+            FpEntry e = FpRegistry.EntryOf(p);
+            int me = FpIds.Executing;
+            if (e == null || e.pendingSeq == 0 || me == FpIds.None || e.controller != me)
+            {
+                return;
+            }
+            Job cur = p.jobs.curJob;
+            if (cur == null || cur.JobIsSameAs(p, job) || !p.jobs.IsCurrentJobPlayerInterruptible() || cur.def.forceCompleteBeforeNextJob)
+            {
+                return;
+            }
+            bool idle = p.mindState.IsIdle || cur.def.isIdle;
+            if ((KeyBindingDefOf.QueueOrder.IsDownEvent || requestQueueing) && !idle)
+            {
+                return;   // queued behind the work: the work carries on
+            }
+            FpHits.Hit("Order ended a checked job");
+            FpWork.ForfeitPending(e);
+        }
+
+        // The Drafted setter: refused only while the pawn is in a state a player's draft button acts on. The game also sets
+        // it as a side effect of what a command does to the pawn (downed, a mental break, a lost faction, a prisoner, a
+        // caravan or ritual taking it into its lord), and those must still happen: the pawn has left control then anyway.
+        private static bool Drafted_Prefix(Pawn_DraftController __instance, bool value)
+        {
+            Pawn p = __instance?.pawn;
+            if (p == null || value == __instance.Drafted || !OrderRefused(p))
+            {
+                return true;
+            }
+            if (!p.Spawned || p.Dead || p.Downed || p.InMentalState || p.Faction != Faction.OfPlayer || p.IsPrisoner || p.GetLord() != null)
+            {
+                return true;
+            }
+            Refused(p);
+            return false;
+        }
+
+        // Counted on every machine; only the player whose command it was is told (historical false: the message archive is
+        // saved game state, and the name is looked up only on that player's machine).
+        private static void Refused(Pawn p)
+        {
+            FpHits.Hit("Order refused");
+            if (FpTestKit.Active)
+            {
+                FpTestKit.OnCommand(FpIds.Executing, "order refused p=" + p.thingIDNumber + " by=" + FpIds.Executing + " controller=" + FpState.ControllerOf(p));
+            }
+            if (MpBridge.InSession && !MP.IsExecutingSyncCommandIssuedBySelf)
+            {
+                return;
+            }
+            Messages.Message("R3D_Fp_ControlledBy".Translate(p.LabelShort, FpIds.NameOf(FpState.ControllerOf(p))), new LookTargets(p),
+                MessageTypeDefOf.RejectInput, historical: false);
         }
 
         // Spec 5.7: a controlled pawn on a player-forced job (the control job, or an order given in first person) keeps
