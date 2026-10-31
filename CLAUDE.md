@@ -1531,8 +1531,8 @@ notes record what changed):
   without checks): too short ever to get a check (roof building and 
   removing, painting); not a piece of work (deep drilling, pruning a 
   Gauranlen tree, repairing a mech); research and the other Intellectual 
-  work, and tending (left out by the spec). The user's call whether any of 
-  these should get checks in a later milestone.
+  work, and tending (left out by the spec). Oct 30 the user chose to leave 
+  them without checks for now and to play first and give feedback.
   - Work orders (M4, D, FpOrders): the left button on a rock or plant in 
   reach orders the work the game's designators would give (Mine; Harvest, 
   "Chop" for a ripe tree; Cut for an unripe tree or a stump), designated or 
