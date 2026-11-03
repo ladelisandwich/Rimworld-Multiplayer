@@ -1,13 +1,18 @@
 # Performance in the 3D view: large colony, 4K, multiplayer
 
-Research of Nov 3 2026, game 1.7.4995 rev309 (the port was built for 4990; branch port-1.7 at 20ccd737). This
-was read-only work: nothing has been measured, changed or launched. Every gain below is an estimate until the
-plan in section 4 has been run. Section 6 adds the CPU-side measurements of the same day (1280x720 test copy)
-and an updated ranking. Sources:
+Research of Nov 3 2026, game 1.7.4995 rev309 (the port was built for 4990; branch port-1.7 at 20ccd737). Sections
+1-5 are read-only research, and their gains are estimates. Section 6 holds the measurements of the same day in the
+Proton test copy of the user's colony:
+- the CPU side at 1280x720 (6.1-6.8);
+- the GPU side at 3840x2160 full screen (6.9);
+- the updated ranking (6.10), which replaces the order of section 2.
+
+Sources:
 - Five research passes covering IsoRim, the Waylith engine, the simulation, other performance mods, and
   reduced-resolution and foveated rendering. The claims used here were re-checked against the code they cite.
 - The Proton Player.log of the Nov 3 session.
 - The user's Prefs.xml, ModsConfig.xml and IsoRim settings.
+- The user's answers of Nov 3 (section 5).
 
 **The player's setup**
 - RTX 3080 10 GB (driver 615.78.08) and a Ryzen 7 5800X (8 cores, 16 threads).
@@ -25,27 +30,39 @@ and an updated ranking. Sources:
   - The user hosts even when playing alone. On Nov 3 the log shows "Starting the server", and the only
     connection was LocalServerConn. So this applies to solo play too.
   - Vanilla single player is different: it runs up to two ticks per frame to make up for a slow frame.
-- **The most likely bottleneck is the CPU main thread, not the GPU.** Two things load it:
-  - The tick work. The colony is large, and since Oct 27 every non-animal pawn on a viewed map runs its
-    interval work every tick.
-  - IsoRim's per-frame draw submission. Every lit draw is doubled by the light pass, and every colonist takes at
-    least 6 draw commands.
-
-  An RTX 3080 at 4K could still be the limit, but the log's frame counters average 85-98 fps over several
-  minutes (pauses included). Neither is measured yet.
+  - Measured: frame time = drawing + one Timer tick, as the model of 1.1 says (6.2).
+- **Measured: the CPU main thread is the bottleneck, at 4K full screen as at 1280x720.**
+  - Drawing the 3D view at the user's far zoom takes about 12.7 ms of main thread per frame: about 5,000 draw
+    items, against 6.4 ms for the flat view. Each Timer tick then adds about 3 ms at Normal, 6 ms at Fast and
+    10 ms at Superfast.
+  - The GPU (RTX 3080) is busy about a third of each frame at 4K, at clocks the driver lowers to 0.9-1.5 GHz. The
+    render thread never waits for it. Frame times at 4K equal those at 1280x720 within 1-4% (6.9).
+  - Real speed in 3D at 4K: Normal 94%; Fast 83% at night and 64% by day. By day, hauling makes 3D map sections
+    rebuild at 7-10 ms each (6.4). At 720p, Superfast reached 69% at night and about 50% by day.
+- **This fits what the user reported.**
+  - It feels slowest at Fast. Measured: Fast in 3D runs at 64-83% of full speed.
+  - It didn't get slower around Oct 27: the pawn tick-rate change of that day is about 4% of tick time (6.5).
+  - It is slower with the friend in the game, because the slower player's frame paces both (1.1). The friend's PC
+    is unmeasured.
 - **The user's ideas:**
-  - **Lower resolution: workable.** Render the 3D world at a lower resolution and keep the interface sharp.
-    Waylith already draws the map into its own render target and upscales it in a final full-screen pass, with
-    the interface drawn afterwards at full resolution. It takes about 1-2 days of work and helps only if the GPU
-    is the limit.
+  - **Lower resolution: no gain, measured.** 2560x1440 full screen cut the GPU work by 35-40% and left frame time
+    and speed unchanged (6.9). Rendering the 3D world at a lower resolution (render scale, section 2 item 3) would
+    only save GPU power. Not worth building on this PC.
   - **Foveated rendering: not workable as such.** Waylith never turns on the GPU feature that foveated rendering
-    needs (Vulkan's variable-rate shading), and it creates the GPU device before any mod loads. A cheap variant
-    is workable: lighter shading away from the screen centre.
-- **Order of work:**
-  1. Measure (one evening in the test copy).
-  2. If tick work is the limit: the two tick-side changes (catch-up ticks, and a synced pawn rate of 3).
-  3. If the GPU is the limit: render scale.
-  4. Either way: IsoRim's CPU fixes, which don't change the look.
+    needs (Vulkan's variable-rate shading), and it creates the GPU device before any mod loads. The cheap variant,
+    lighter lamp and shadow shading away from the screen centre, would also save only GPU power. Lamp facing is
+    about a third of the GPU work (6.9), but the GPU doesn't limit speed.
+- **Order of work (6.10):**
+  1. Session pacing: up to 2 Timer ticks per frame and a smoothed frame-time report. Est. full speed at Fast in 3D,
+     by night and by day. It needs the two-instance soak test of section 2.
+  2. Cheaper 3D section rebuilds: the day/night swing and the 7-10 ms spikes.
+  3. Fewer draw items in 3D.
+
+  Meanwhile, without code:
+  - Zooming in is the biggest drawing saving measured: 4.8-5.4 ms instead of 12.7 ms at root size 15.
+  - Turning 3D weather off while it rains saves 1.8 ms per frame.
+
+  Dropped for this PC, at 0 speed measured: render scale, merged FXAA and grade, and foveated shading.
 
 ## 1. What is probably slow, and why
 
@@ -307,6 +324,10 @@ shows "Current map avg TPS" (`IngameUI.cs:175`). The targets are:
 For fps, frame time and GPU load, launch with `MANGOHUD=1 DOTNET_TieredCompilation=0 %command%` (Bazzite ships
 MangoHud). If GPU load stays near 97-100%, the GPU is the limit.
 
+**Measured since (6.6, 6.9):** on this PC only zooming in and turning 3D weather off while it rains save main-thread
+time, and the main thread is what limits speed. The GPU settings below (FXAA, grade, lamp facing, halos, face
+shadows, aniso, water) save GPU work and power, not speed.
+
 | Change (IsoRim settings unless noted) | Saves | What it costs visually |
 |---|---|---|
 | 3D weather off (`weather3D`, on now; the default is off) | CPU every frame while it rains or snows; the fog curtain | The game's flat rain, snow and fog sheets |
@@ -318,13 +339,14 @@ MangoHud). If GPU load stays near 97-100%, the GPU is the limit.
 | Water style off (`waterStyle`) | The per-frame sparkle scan and draws | The game's water |
 | 3D effects off (`effects3D`) | The unbatched per-frame effects | Flat effects |
 | 3D trees, 3D small plants off | Unmeasured: possibly many plant draws in forests | Flat plants |
-| Zoom in a little | Fewer sections and things drawn | Less map on screen |
+| Zoom in a little | Fewer sections and things drawn. Measured: root size 15 instead of the user's 47.4 cut the 3D frame's main thread from 12.7 to 4.8-5.4 ms (6.9) | Less map on screen |
 | Multiplayer: slow (.NET) desync tracing off on both PCs; dev mode off | About 4 ms per map tick if on; a lookup per thing per tick | None |
 
 **Lower resolution without code**
 - **Through the game's options:** with exclusive fullscreen, 2560x1440 should make the monitor scale the image,
-  interface included. The Nov 3 log shows a `Dialog_ResolutionConfirm` at 10:02:58, and Prefs.xml still says
-  3840x2160, so that test may already have been tried.
+  interface included. The Nov 3 log shows a `Dialog_ResolutionConfirm` at 10:02:58, but the user says the test
+  never happened: the dialog only switched to exclusive full screen. Measured instead (6.9): 2560x1440 exclusive
+  full screen left frame time and speed unchanged.
 - **Through gamescope** (FSR on the whole window, interface included):
   `gamescope -W 3840 -H 2160 -w 2560 -h 1440 -F fsr -f -- env DOTNET_TieredCompilation=0 %command%`. Flag
   names differ between versions; check `gamescope --help`.
@@ -428,10 +450,20 @@ hauling churn.
     as your friend, which is safer for determinism (cross-OS float maths is untested,
     `docs/desync-risks-1.7.md`), so a native Linux run would only be a measurement.
 
-## 6. Measurements (Nov 3, 1280x720 test copy)
+**Answered on Nov 3**
+- 1: it is slowest at Fast. (Whether only in 3D: not answered.)
+- 2: it is slower with the friend in the game, and slower still when both run Fast.
+- 3: it didn't get slower around Oct 27.
+- 5: the resolution test never happened; the dialog only switched to exclusive full screen.
+- 9: yes. The 4K full-screen run is 6.9.
 
-CPU side of the section 4 plan: S1, S3, S4, S5 and S7, plus a paused 1280x720 versus 2560x1440 comparison.
-Nothing here ran at 4K or full screen, so every GPU statement below is a hint, not a measurement.
+## 6. Measurements (Nov 3, test copy)
+
+- **6.1-6.8, the CPU side of the section 4 plan at 1280x720 windowed:** S1, S3, S4, S5 and S7, plus a paused 1280x720
+  versus 2560x1440 comparison. Their GPU statements are hints.
+- **6.9, the GPU side at 3840x2160 full screen:** S1, S2, S5 and S6, plus render scale (2560x1440 full screen).
+- **6.10:** the interpretation and the updated ranking.
+- **6.11:** what is measured, estimated and still open.
 
 ### 6.1 Setup
 
@@ -659,21 +691,188 @@ the time of day, so only the draw-only frames compare.
 
 - **2560x1440 has 44% of 4K's pixels, and the frame time didn't move.** The render thread never waited for the
   GPU, and the GPU clocked up only to about 1.1 GHz. So the GPU isn't the limit at 1440p.
-- **4K is still unmeasured.** With 2.25x the pixels of 1440p it is plausible that the GPU stays below the 12 ms CPU
-  frame at this zoom, but that is an extrapolation.
+- **4K, measured later (6.9):** the GPU stays far below the CPU frame at 4K full screen too, about a third busy at
+  reduced clocks.
 - **GPU during the running scenarios:** 13-38% load at 270-670 MHz.
 
-### 6.9 Interpretation and updated ranking
+### 6.9 4K full screen (GPU side)
+
+The GPU half of the section 4 plan: S1 and S2 at 3840x2160 full screen, S5 on the GPU, S6, and the same views at
+2560x1440 full screen for render scale. The user approved the full-screen run on Nov 3 (section 5, question 9).
+
+**Setup.** As in 6.1 (same replay copy, mod list, IsoRim settings, hosting and camera), except:
+- **Display:** 3840x2160 exclusive full screen, UI scale 2 and dev mode off, as in the user's Prefs. Run in
+  background was on, so a focus change couldn't stall the run. The engine still presented with FIFO ("3840x2160
+  FifoKHR, 3 images") on the 119.88 Hz panel, so 8.33 ms is the floor.
+- **The 1440p scenarios:** exclusive full screen at 2560x1440 (the engine's swapchain was 2560x1440). The display
+  stack scaled it up to the panel.
+- **Two runs:**
+  - Run 4 (11:56-12:18): 39 scenarios.
+  - Set 5 (12:24-12:29): 9 scenarios at the replay's own 21.6 h, because run 4's zoomed "night" views landed at
+    6.5 h.
+
+  Both logs had 0 errors.
+- **Time of day:**
+  - Run 4 began at 21.6 h. Its S5 night set ran at 4.8 h, before dawn.
+  - The day set ran at 11.0 h, reached by running the game at Ultrafast in the flat view.
+  - The colony map had fog weather throughout.
+- **Zoomed views (S6):** root size 15, against the user's 47.4.
+  - "Indoors" is centred on the colony's most built-up roofed spot (cell 134,62, a large tiled room), scored by
+    constructed roofs and lit lamps within 10 cells. The map has 105 lit colony lamps.
+  - "Outdoors" is the nearest open ground with no roof within 12 cells (cell 109,73, fields, 27 cells away).
+
+**New instruments**
+- **GPU timestamps** at the top and bottom of every frame's command buffer: GPU time per frame (a Harmony prefix and
+  postfix on `FrameRenderer.RecordFrame`, results read 8 frames later without waiting).
+- **The render thread's wait split in two:**
+  - The fence wait: waiting for the GPU to finish the frame that last used this slot.
+  - The swapchain image acquire (`GetNextFrameIndex`): vsync and presentation.
+- **nvidia-smi** every 0.5 s: load, graphics clock and power.
+
+**Reading the GPU numbers.** The driver lowers the graphics clock when the GPU has little to do. In these runs it
+ran at 500-1,600 MHz (the maximum is 2,160 MHz), and nvidia-smi showed 32-45% load in every scenario, because the
+clock followed the load. So GPU milliseconds depend on the clock the driver picked. To compare settings, the tables
+also give GPU work in million cycles (ms × MHz / 1000). That conversion assumes the work scales with the core
+clock; the memory clock stayed at 9,501 MHz throughout. It is an estimate, and so is every "at boost clock" figure
+below (1.7-1.9 GHz).
+
+**S1 and S2: speed and frame time, 4K against 1280x720**
+
+The 720p columns are run 1 of 6.2 (UI scale 1, windowed). Real speed is Timer ticks/s ÷ 60 at Normal and map TPS ÷
+180 at Fast.
+
+| Scenario | 720p: fps / frame ms (median) / real speed | 4K: fps / frame ms (median / p99) | 4K: Timer ticks/s (TPS) | 4K: real speed | 4K: draw-only frames, busy ms | 4K: Timer tick ms |
+|---|---|---|---|---|---|---|
+| Flat, paused | 120 / 8.3 / - | 119.8 / 8.36 / 10.0 | - | - | 6.43 | - |
+| Flat, Normal | 113 / 8.4 / 95% | 114.3 / 8.74 / 15.4 | 57.1 (57) | 95% | 6.80 | 3.49 |
+| Flat, Fast | not run | 94.3 / 12.16 / 17.9 | 57.2 (172) | 95% | 6.31 | 6.53 |
+| 3D, paused | 79 / 12.8 / - | 78.0 / 12.66 / 15.8 | - | - | 12.63 | - |
+| 3D, Normal | 65 / 15.4 / 94% | 62.1 / 15.83 / 29.0 | 56.3 (56) | 94% | 12.72 | 3.20 |
+| 3D, Fast (2-5 h) | 54 / 18.0 / 85% | 52.9 / 18.38 / 31.9 | 50.1 (150) | 83% | 12.29 | 6.19 |
+| 3D, Fast by day (11-13 h) | not run | 42.1 / 20.36 / 50.3 | 38.4 (115) | 64% | 12.75 | 6.98 |
+
+- **4K full screen runs as fast as 1280x720.** Frame times match within 1-4%, which is within the time-of-day drift.
+- **At Fast in 3D the session runs at 83% at night and 64% by day.** This matches the user's report that the slowdown
+  shows at Fast. The day penalty is the section rebuilds of 6.4: 12.8 per second by day against 3.4 at night,
+  and `Map.MapUpdate` at 9.3 ms per frame against 5.5.
+- **Normal speed is nearly full speed** (94%), and flat Fast reaches 95%.
+
+**Where the frame waits, 4K** (ms per frame, means unless marked)
+
+| Scenario | Main thread frame (median) | Main thread waiting for the render thread | Render thread recording | Render thread fence wait (GPU) | Render thread image acquire (vsync) | GPU time per frame (mean / p95) | GPU clock, MHz | GPU work, M cycles | Power, W |
+|---|---|---|---|---|---|---|---|---|---|
+| Flat, paused | 8.36 | 1.89 | 3.14 | 0.005 | 4.86 | 2.12 / 2.57 | 629 | 1.3 | 116 |
+| 3D, paused | 12.66 | 0.01 | 7.18 | 0.005 | 0.04 | 4.21 / 4.54 | 1,412 | 5.9 | 138 |
+| 3D, Normal | 15.83 | 0.01 | 8.02 | 0.006 | 0.04 | 5.29 / 5.68 | 1,103 | 5.8 | 129 |
+| 3D, Fast | 18.38 | 0.01 | 7.78 | 0.008 | 0.05 | 6.14 / 6.61 | 951 | 5.8 | 124 |
+| 3D, Fast by day | 20.36 | 0.01 | 7.66 | 0.008 | 0.05 | 6.93 / 7.90 | 869 | 6.0 | 119 |
+| 3D, paused, zoomed indoors (night) | 8.36 (vsync) | 3.44 | 1.55 | 0.006 | 6.53 | 2.65 / 2.92 | 1,508 | 4.0 | 144 |
+
+- **The main thread is still the limit in every 3D scenario at 4K.**
+  - It waits 0.01 ms per frame for the render thread.
+  - The render thread waits 0.005-0.008 ms for the GPU and 0.04-0.06 ms for a swapchain image.
+  - Neither the render thread nor the GPU holds the frame back.
+- **The GPU is busy about a third of each frame, at any speed.** The driver lowers the clock to match: 1,400 MHz
+  paused, 870-950 MHz at Fast.
+  - A 3D frame of the far view costs 5.8-6.2 million GPU cycles.
+  - At boost clock that is an estimated 3.1-3.6 ms, against a 12.7-20 ms main-thread frame.
+  - So the GPU would become the limit only above an estimated 280-330 fps, far above the 120 Hz cap.
+- **The render thread costs the same at 4K as at 720p:** 7.2-8.0 ms of recording per 3D frame, against 7.2-8.6 ms
+  in 6.3. Its cost is per draw item, not per pixel.
+- **Flat paused and the zoomed views reach the 120 Hz cap.** The waiting there is the render thread's image acquire
+  (vsync, 4.9-7.4 ms), not the GPU.
+- **Zooming in is the largest drawing saving measured so far.**
+  - At root size 15 the 3D frame's main thread needs 4.8-5.4 ms (1,000-1,200 draw items), against 12.7 ms at the
+    user's 47.4 (about 5,000 items).
+  - With T = 6.2 ms per Timer tick, the model of 1.1 then gives about 11 ms per frame at Fast, which is full speed.
+    That is an estimate: Fast wasn't run zoomed in.
+
+**S5 on the GPU: one setting off at a time, paused, 4K, far view**
+
+M cycles per frame. The change is against the baseline in the same column.
+
+| Setting turned off | Night (4.8 h) | Day (11.0 h) | Night (21.6 h, set 5) | Est. saving at boost clock |
+|---|---|---|---|---|
+| None (baselines) | 6.00 and 6.01 | 6.18, 6.19 and 6.19 | 5.93 and 5.94 | - |
+| antiAlias (FXAA) | 5.61 (-6%) | 5.77 (-7%) | - | about 0.2 ms |
+| grade | 5.67 (-6%) | 5.86 (-5%) | - | about 0.2 ms |
+| lampFacing | 4.12 (-31%) | 4.26 (-31%) | 4.03 (-32%) | about 1.0 ms |
+| lampHalos | 6.01 (0) | - | - | 0 |
+| faceShadows | 5.96 (-1%) | 6.01 (-3%) | - | about 0.1 ms or less |
+| outlines | 5.77 (-4%) | - | - | about 0.1 ms |
+| trees3D | 5.78 (-4%) | - | - | about 0.1 ms |
+| smallPlants3D | 5.84 (-3%) | - | - | under 0.1 ms |
+| waterStyle | 6.00 (0) | - | - | 0 |
+| aniso 16 → 4 | 5.97 (-0.5%) | - | - | 0 |
+| All five of antiAlias, grade, lampFacing, lampHalos, faceShadows | 3.43 (-43%) | 3.42 (-45%) | - | about 1.4-1.6 ms |
+
+- **Lamp facing is the only expensive GPU feature.**
+  - It is about a third of the GPU work in the far view, by day as much as at night.
+  - IsoRim skips the lamp loop where the sky alone reaches the game's clamp, which should be most pixels outdoors
+    by day (CLAUDE.md, Known gaps, IsoRim lighting). The fog on the colony map may have kept the sky below that
+    clamp. Not checked.
+- **FXAA and the grade cost about 6% each.** Outlines and 3D trees cost about 4% each; they are also the largest
+  CPU-side items in 6.6.
+- **Halos, water and aniso are within noise** (the baselines agree within 0.2%). Face shadows cost 3% by day and
+  nothing at night.
+- **None of this changes the frame time,** because the main thread takes 12-20 ms. The measured milliseconds hardly
+  moved at all (4.26 → 4.15 ms with lamp facing off): the driver dropped the clock from 1,408 to 993 MHz instead.
+  Turning these settings off saves GPU power (138 → 125 W with all five off), not time.
+
+**S6: day against night, indoors against outdoors** (paused, 3D, 4K, M cycles per frame, main-thread busy ms in
+brackets)
+
+| View | Night (21.6 h, set 5) | Morning (6.5 h) | Day (11.0 h) |
+|---|---|---|---|
+| Far view (the save's camera, root size 47.4) | 5.93 (12.8) | 6.00 at 4.8 h (12.7) | 6.18 (13.3) |
+| Zoomed in, indoors | 3.99 (4.8) | 4.14 (4.9) | 4.08 (4.8) |
+| Zoomed in, indoors, lampFacing off | 2.40 (-40%) | - | - |
+| Zoomed in, indoors, all five off | 1.75 (-56%) | 1.73 (-58%) | - |
+| Zoomed in, outdoors | 2.82 (5.0) | 3.12 (5.4) | 3.04 (5.1) |
+| Zoomed in, outdoors, lampFacing off | 2.18 (-23%) | - | - |
+| Zoomed in, outdoors, faceShadows off | - | - | 2.93 (-4%) |
+| Zoomed in, indoors, flat view | 0.92 (3.1) | - | - |
+
+- **Time of day changes the GPU work by 2-11% in every view.** It is highest in the morning and by day; face
+  shadows account for an estimated 3-4% by day. The sun-shadow march is cheap at this pitch.
+- **Indoors costs a third to 40% more GPU work than open ground at the same zoom.** That is lamp facing on lamp-lit
+  faces: turning it off indoors at night removes 40%.
+- **The paused far view costs the main thread 0.5-0.6 ms more by day** (`Map.MapUpdate` 6.1 against 5.6 ms). The
+  cause wasn't broken down.
+
+**Render scale: 2560x1440 against 3840x2160, both exclusive full screen, same views**
+
+| Scenario | 4K: frame ms / GPU M cycles / W | 1440p: frame ms / GPU M cycles / W | GPU work at 1440p |
+|---|---|---|---|
+| Flat, paused | 8.36 (vsync) / 1.34 / 116 | 8.36 (vsync) / 0.81 / 112 | -40% |
+| 3D, paused, night | 12.93 / 6.01 / 137 | 12.89 / 3.67 / 124 | -39% |
+| 3D, paused, day | 13.27 / 6.19 / 137 | 13.45 / 3.75 / 123 | -39% |
+| 3D, Fast, night | 18.38 / 5.84 / 124 (50.1 Timer ticks/s) | 18.98 / 3.81 / 115 (46.7 Timer ticks/s) | -35% |
+
+- **1440p has 44% of the pixels and cut the GPU work by 35-40%, but frame time and speed didn't change.**
+  - Paused frames are within 1.5%.
+  - The lower Fast figure at 1440p most likely comes from the hour: it ran from 4.8 h into dawn, with 5.7 section
+    rebuilds per second against 3.4.
+- **Render scale therefore buys no speed on this PC, at 4K or below.** It would only lower GPU power by 9-14 W.
+  This also answers the user's untried resolution test (section 3): a lower resolution won't make the game faster.
+
+### 6.10 Interpretation and updated ranking
 
 **What the measurements settle**
-- **The user's slowdown on this PC is CPU-bound,** at least up to 1440p.
+- **The user's slowdown on this PC is CPU-bound, at every resolution up to 4K full screen (6.9).**
+  - At 4K the GPU is busy about a third of each frame, at clocks the driver lowers to 0.9-1.5 GHz. The render thread
+    never waits for it (0.005-0.008 ms per frame), and frame times equal those at 1280x720 within 1-4%.
   - Normal speed is almost full speed (94% in 3D).
+  - Fast in 3D, where the user notices the slowdown most, reaches 83-85% at night and 64% by day (4K, 6.9).
   - Superfast in 3D reaches 69% at night and about 50% by day.
   - Ultrafast in 3D reaches 29%, no faster than Superfast.
   - The flat view reaches 87% at Superfast and 50% at Ultrafast.
 - **About half of a Superfast frame is the 3D draw (R ≈ 12 ms) and half the ticks (T ≈ 10 ms),** and the session
   runs one Timer tick per frame.
 - **By day, 3D section rebuilds add 5-11 ms per frame.**
+- **The 3D draw cost follows the number of draw items, not the pixels.** At the user's far zoom (root size 47.4)
+  about 5,000 items take 12.7 ms of main thread. Zoomed in to root size 15, 1,000-1,200 items take 4.8-5.4 ms, at
+  4K (6.9).
 - **The "large colony" is large in things and animals, not in colonists:** 87,000 things on 2 maps, 144 animals,
   11 colonists. Pawn-rate changes therefore have little to work on.
 
@@ -682,20 +881,20 @@ the measured R and T)
 
 | # | Option | Measured basis | Expected gain |
 |---|---|---|---|
-| 1 | Session pacing: up to 2 Timer ticks per frame plus a smoothed report (old 1) | R ≈ 12 ms and T ≈ 10 ms at Superfast in 3D | Est. Superfast in 3D from 69% to about 100% at night, and from about 50% to about 85% by day; Ultrafast from 17 to about 24 Timer ticks/s |
+| 1 | Session pacing: up to 2 Timer ticks per frame plus a smoothed report (old 1) | R ≈ 12 ms and T ≈ 10 ms at Superfast in 3D; R ≈ 12.3-13.4 ms and T ≈ 6.2-7.0 ms at Fast in 3D at 4K | Est. Fast in 3D from 83% to 100% at night and from 64% to about 100% by day; Superfast in 3D from 69% to about 100% at night, and from about 50% to about 85% by day; Ultrafast from 17 to about 24 Timer ticks/s |
 | 2 | **New:** cheaper 3D section rebuilds | `SectionLayer_Things` takes 8-9 ms per rebuild in 3D, 21-24x flat; 7-21 rebuilds/s; 5-11 ms per frame by day; 7-10 ms spikes | Up to 5-11 ms per frame by day at fast speeds, most of the day/night swing, and smaller p99. Options: rebuild only the moved thing's part (cache each thing's baked mesh), keep haulable items out of the section mesh (draw them instanced), and a per-frame rebuild budget. Old 4(a) covers only the walls layer (about 15%) |
-| 3 | Fewer draw items in 3D (old 7, level of detail at this far zoom, and old 8, single-pass lighting) | 5,200 items in 3D against 2,350 flat; about 2 µs per item on the main thread (capture 1.0, submission 0.8-0.9) and 1.2-1.4 µs on the render thread | Est. 2-3 ms per frame if IsoRim's extra 2,850 items drop by a third to a half. The render thread, at 7-8.6 ms, then becomes the limit |
+| 3 | Fewer draw items in 3D (old 7, level of detail at this far zoom, and old 8, single-pass lighting) | 5,200 items in 3D against 2,350 flat; about 2 µs per item on the main thread (capture 1.0, submission 0.8-0.9) and 1.2-1.4 µs on the render thread. The same at 4K: recording 7.2-8.0 ms per frame (6.9) | Est. 2-3 ms per frame if IsoRim's extra 2,850 items drop by a third to a half. The render thread, at 7-8.6 ms, then becomes the limit |
 | 4 | Allocation in the 3D draw path | 28 MB/s paused in 3D against 5 MB/s flat; up to 113 MB/s at Ultrafast | Fewer gen0 and gen1 collections and smaller spikes; size unknown until profiled |
 | 5 | Tick-side items other than the pawn rate | World tick 17% (0.29 ms per world tick, contents unknown); Multiplayer's per-tick post-tick visuals 6%; animals' `Tick()` 12% | Each a few percent of T. They need a look before any claim: post-tick visuals were moved into the tick on purpose, and determinism comes first |
 | 6 | Synced pawn interval rate 3 (old 2) | Interleaved A/B: 0.40 ms of 10 ms per Superfast Timer tick | About 4%. Demoted |
-| 7 | 3D weather off while it rains (user setting) | 1.8 ms per frame CPU | Quick win, no code |
-| 8 | Render scale (old 3), FXAA and grade merged (old 5), foveated shading (old 6) | GPU not the limit at 720p or 1440p; their settings cost nothing on the CPU | 0 on this evidence. Revisit only if a 4K run is GPU-bound |
+| 7 | User settings, no code: zoom in a little; 3D weather off while it rains | Zoom: 12.7 ms of main thread at root size 47.4, 4.8-5.4 ms at 15 (6.9). Weather: 1.8 ms per frame CPU (6.6) | Zoom: est. full speed at Fast at root size 15 (not run at Fast); a middle zoom wasn't measured. Weather: 1.8 ms per frame while it rains |
+| 8 | Render scale (old 3), FXAA and grade merged (old 5), foveated shading (old 6), a cheaper lamp loop | Measured at 4K full screen (6.9): the GPU is busy a third of each frame at reduced clocks, the render thread's fence wait is 0.005-0.008 ms, and 2560x1440 cut the GPU work by 35-40% with frame time unchanged. Lamp facing is a third of the GPU work, FXAA and the grade 6% each | 0 speed, measured. Lower GPU power only (9-14 W at 1440p, 12-13 W with the five lighting and post settings off). Dropped for this PC |
 | 9 | Batching IsoRim's per-frame effects (old 4(b)) and pawn preparation on worker threads (old 9) | `View3D.Tick` 0.3 ms; thing draw 2.5-3.1 ms in 3D against 0.8 ms flat | Small: est. up to about 1.5 ms |
 
 The session-pacing estimate assumes a second Timer tick in a frame costs the same T. It is the change with the
 most core-timing risk, so it still needs the two-instance soak test of section 2.
 
-### 6.10 Measured, estimated and still open
+### 6.11 Measured, estimated and still open
 
 **Measured, at 1280x720 windowed (2560x1440 for 6.8 only), on this PC**
 - Frame time and busy time distributions.
@@ -706,19 +905,26 @@ most core-timing risk, so it still needs the two-instance soak test of section 2
 - CPU effect of the IsoRim settings.
 - GC counts, pauses and allocation rate.
 
+**Measured, at 3840x2160 and 2560x1440 exclusive full screen (6.9)**
+- S1 and S2: frame time, speed and tick time at Normal and Fast, 3D and flat.
+- GPU time per frame from GPU timestamps, GPU clock, load and power.
+- The render thread's fence wait and image acquire, and the main thread's wait for the render thread.
+- The GPU side of S5, by night and by day.
+- S6: day, morning and night, far view and zoomed in over indoors and open ground.
+- Render scale: the same views at 2560x1440.
+
 **Estimated**
 - All gains in the ranking, from the measured R and T and per-item costs.
 - The cause of cheaper back-to-back ticks (warm caches).
-- The 4K GPU headroom (6.8).
-
-**Still needs a 4K or GPU run (the user hasn't agreed to a full-screen run yet)**
-- S1 and S2 at 3840x2160 full screen: GPU time per frame, and whether the render thread starts waiting.
-- The GPU cost of FXAA, grade, lamp facing, halos, face shadows and anisotropic filtering (S5 on the GPU side).
-- S6 day against night shading.
-- The value of render scale.
+- GPU cycles and milliseconds at boost clock (6.9): they assume the GPU work scales with the core clock.
+- Speed at Fast when zoomed in.
 
 **Not covered here**
-- The friend's PC and the two-instance pacing check (S8).
+- The friend's PC and the two-instance pacing check (S8). The user reports that the game is slower with the friend
+  in it and slower still when both run Fast.
+- Fast at a closer zoom, and any zoom between 15 and 47.4.
+- Why lamp facing costs as much by day as at night (the fog on the colony map is a guess).
+- The GPU cost of 3D weather and 3D effects at 4K (not in this run; their CPU cost is in 6.6).
 - The contents of the world tick.
 - A profile of the 3D allocation sources.
 - The perspective camera and first person: the user plays orthographic.
@@ -729,3 +935,5 @@ most core-timing risk, so it still needs the two-instance soak test of section 2
 - Superfast numbers swing ±20% with the in-game hour (6.4).
 - The harness's own hooks were cheap in run 1. The per-pawn hooks of sets 2 and 3 add about 2-4% to their tick
   times.
+- At 4K the GPU ran at the clocks the driver chose (500-1,600 MHz). The colony map had fog weather in every 4K
+  scenario.
