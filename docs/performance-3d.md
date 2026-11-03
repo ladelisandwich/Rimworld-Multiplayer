@@ -2,7 +2,8 @@
 
 Research of Nov 3 2026, game 1.7.4995 rev309 (the port was built for 4990; branch port-1.7 at 20ccd737). This
 was read-only work: nothing has been measured, changed or launched. Every gain below is an estimate until the
-plan in section 4 has been run. Sources:
+plan in section 4 has been run. Section 6 adds the CPU-side measurements of the same day (1280x720 test copy)
+and an updated ranking. Sources:
 - Five research passes covering IsoRim, the Waylith engine, the simulation, other performance mods, and
   reduced-resolution and foveated rendering. The claims used here were re-checked against the code they cite.
 - The Proton Player.log of the Nov 3 session.
@@ -426,3 +427,305 @@ hauling churn.
 10. Steam forces Proton for RimWorld since Oct 22. Was that deliberate? It keeps you on the same Windows build
     as your friend, which is safer for determinism (cross-OS float maths is untested,
     `docs/desync-risks-1.7.md`), so a native Linux run would only be a measurement.
+
+## 6. Measurements (Nov 3, 1280x720 test copy)
+
+CPU side of the section 4 plan: S1, S3, S4, S5 and S7, plus a paused 1280x720 versus 2560x1440 comparison.
+Nothing here ran at 4K or full screen, so every GPU statement below is a hint, not a measurement.
+
+### 6.1 Setup
+
+- **Build and game:** port-1.7 at 5ce4a4bc with a temporary harness (`Source/Client/Diag/PerfTest.cs`, gated by
+  `MP_DIAG_PERF=1`, removed afterwards). Game 1.7.4995 rev309, Windows build under Proton 11.0, prefix
+  `~/.rw-mp-test/proton-isorim/prefix`, `DOTNET_TieredCompilation=0`, `-TargetFrameRate=0`.
+- **Window:** 1280x720 windowed, UI scale 1, dev mode off. The engine still presented with FIFO (vsync) at 120 Hz
+  ("game target 120, present mode FifoKHR"), so frames never ran faster than 8.33 ms. The monitor the game sees
+  runs at 120 Hz.
+- **Save:** the Nov 3 session's own replay, `MpReplays/Cold Rocks.zip` (10:04), copied read-only as
+  `PerfTest-ColdRocks.zip` and hosted the way the host window hosts a replay.
+  - Gods.rws was the planned save, but it is a fresh game: one colonist, 5.9 s of play, game tick 280 on load,
+    36,405 mostly natural things. It ran first and is kept below as a small-colony control.
+  - Cold Rocks matches the Nov 3 log: 86,933 spawned things on 2 maps (the log said 86,354).
+- **Mods and settings:** the user's mod list (Harmony, DLCs, Multiplayer, Prepare Carefully, Replace Stuff) and
+  the user's IsoRim settings: orthographic, isoPitch 65, weather3D on, everything else at its default (on).
+- **Hosting:** asyncTime and multifaction on, as the user plays. No network listeners, autosave off, pause on
+  letter never.
+  - The storyteller was switched off (`DebugSettings.enableStoryteller`) so no raid would land mid-run. Quests
+    still ran.
+  - Both maps were set to the same speed. Async time lets the user leave the second map paused, which would make
+    ticks about 30% cheaper (6.3).
+- **Camera:** the colony map's saved camera, root size 47.4. That is the user's last view and is zoomed far out.
+  - The 3D view rect is 187x138 cells, with about 18,300 things and 39 pawns.
+  - The flat view rect is 172x98 cells, with about 11,600 things.
+- **Timing:** 10 s warm-up and 30 s measured per scenario (S5: 8 s and 20 s; set 2 pawn-rate windows: 4 s and
+  10 s).
+- **"Busy"** is frame time minus `EngineApplication.ThrottleToTargetFrameRate`, which is the main thread's wait for
+  the render thread and for vsync. Where busy equals frame time, the main thread is the limit.
+
+| Map | Pawns | Colonists | Humanlike | Animals | Other (mechs etc.) | Hostile to player | Things |
+|---|---|---|---|---|---|---|---|
+| 0, Colony (viewed) | 125 | 11 | 11 | 98 | 16 | 56 | 43,840 |
+| 1, Settlement | 57 | 0 | 11 | 46 | 0 | 0 | 43,090 |
+
+Three runs: run 1 (all 48 scenarios, 10:58-11:25), set 2 (tick breakdown and interleaved pawn rates, 11:26-11:31)
+and set 3 (section layer breakdown, 11:33-11:35). All three logs had 0 errors.
+
+### 6.2 Speed and frame time (S1, S3), run 1
+
+The real speed is Timer ticks per second ÷ 60. The draw-only and tick-frame columns give the median busy time of
+frames that ran no Timer tick and of frames that ran one.
+
+| Scenario | fps | Frame ms (median / p95 / p99) | Draw-only frames, busy ms | Tick frames, busy ms | Timer ticks/s | Map TPS (target) | Real speed | Timer tick ms (mean / p95) | Map tick ms (colony / settlement) |
+|---|---|---|---|---|---|---|---|---|---|
+| Flat, paused | 120 | 8.3 / 10.3 / 11.7 | 6.5 | - | - | - | - | - | - |
+| Flat, Normal | 113 | 8.4 / 12.0 / 14.4 | 6.6 | 10.4 | 57.1 | 57 (60) | 95% | 3.4 / 4.5 | 1.94 / 0.83 |
+| 3D, paused | 79 | 12.8 / 14.6 / 16.9 | 12.6 | - | - | - | - | - | - |
+| 3D, Normal | 65 | 15.4 / 18.1 / 26.9 | 12.1 | 15.6 | 56.5 | 56 (60) | 94% | 3.0 / 3.9 | 1.69 / 0.79 |
+| 3D, Fast | 54 | 18.0 / 23.9 / 31.9 | 12.0 | 18.0 | 51.2 | 154 (180) | 85% | 6.0 / 7.7 | 1.09 / 0.55 |
+| 3D, Superfast | 44 | 22.3 / 31.2 / 40.5 | 11.8 | 22.4 | 41.2 | 247 (360) | 69% | 10.1 / 12.8 | 0.93 / 0.47 |
+| 3D, Ultrafast | 18 | 52.9 / 85.5 / 103.4 | 11.6 | 55.1 | 17.2 | 257 (900) | 29% | 28.4 / 34.9 | 1.17 / 0.46 |
+| Flat, Superfast | 58 | 17.7 / 23.1 / 27.0 | 5.3 | 18.0 | 52.2 | 314 (360) | 87% | 11.5 / 14.8 | 1.17 / 0.47 |
+| Flat, Ultrafast | 32 | 31.3 / 37.9 / 41.9 | 5.1 | 31.6 | 30.0 | 449 (900) | 50% | 25.7 / 29.9 | 1.02 / 0.39 |
+
+- **The main thread is the limit in every 3D scenario.** The throttle wait is 0.01 ms per frame and the render
+  thread waits only 0.04-0.06 ms per frame for the next image, so neither the render thread nor the GPU holds it
+  back.
+- **The model of 1.1 holds:** F = R + T per Timer tick.
+  - R (a draw-only frame) is about 12 ms in 3D and 5-6.5 ms flat.
+  - T is about 3 ms at Normal, 10 ms at Superfast and 28 ms at Ultrafast. That covers 6 or 15 ticks of each map
+    plus the world.
+  - At Superfast in 3D, 11.8 + 10.1 = 21.9 ms predicts 46 Timer ticks/s; 41 were measured.
+- **Normal speed is nearly full speed** (94% in 3D). The slowdown starts at Fast. In 3D, Ultrafast (257 TPS) is
+  no faster than Superfast (247 TPS).
+- **Ticks cost less when they run back to back.** The colony map costs 1.7-1.9 ms per tick at Normal but 0.9-1.2
+  ms at Superfast. CPU caches staying warm is the likely cause (estimated, not measured).
+- **Small-colony control (Gods.rws, run before the switch):**
+  - 3D paused: 2.5 ms busy.
+  - Superfast in 3D: Timer tick 3.7 ms, 57 Timer ticks/s (full speed).
+  - Ultrafast in 3D: Timer tick 6.8 ms, still 57/s.
+
+  So the slowdown comes from the colony's size, not from the port or the 3D view as such.
+
+### 6.3 Where the time goes
+
+**Main thread, ms per frame (means), run 1**
+
+The map update covers both maps; its drawing parts belong to the viewed map only.
+
+| Scenario | Frame | Ticks (TickManagerUpdate) | Map.MapUpdate | of which section rebuilds | section draw | thing draw | rest | View3D.Tick | UI (OnGUI + Update) | FrameRenderer.CaptureFrame (map part) | Throttle | Draw items per frame | Render thread: record / GPU wait |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Flat, paused | 8.3 | 0.01 | 2.15 | 0.01 | 1.05 | 0.84 | 0.24 | 0.01 | 0.86 | 3.21 (2.44) | 2.10 | 2,346 | 2.9 / 4.97 |
+| 3D, paused | 12.7 | 0.01 | 5.23 | 0.02 | 2.03 | 2.67 | 0.51 | 0.32 | 0.96 | 6.19 (5.34) | 0.01 | 5,221 | 7.2 / 0.04 |
+| 3D, Normal | 15.3 | 2.64 | 5.19 | 0.16 | 1.97 | 2.57 | 0.49 | 0.30 | 1.10 | 6.12 (5.28) | 0.01 | 5,184 | 7.6 / 0.04 |
+| 3D, Superfast | 22.9 | 9.55 | 5.64 | 0.60 | 1.99 | 2.54 | 0.50 | 0.31 | 1.11 | 6.38 (5.48) | 0.01 | 5,169 | 7.3 / 0.06 |
+| 3D, Ultrafast | 54.6 | 26.56 | 17.99 | 11.28 | 3.06 | 3.09 | 0.57 | 0.40 | 1.30 | 7.86 (6.78) | 0.01 | 5,043 | 8.6 / 0.06 |
+| Flat, Superfast | 17.4 | 10.41 | 2.31 | 0.18 | 1.04 | 0.83 | 0.25 | 0.01 | 0.97 | 3.39 (2.62) | 0.03 | 2,364 | 3.0 / 0.05 |
+
+- **Drawing in 3D costs per draw item.** The 3D view more than doubles the items: 2,350 flat, 5,200 in 3D. Each
+  costs:
+  - about 1.0 µs in `MapRenderFeature.CaptureFrame` on the main thread (the doc's "re-sorts every frame" cost);
+  - about 0.8-0.9 µs to submit (`DrawMapMesh` and `DrawDynamicThings`);
+  - about 1.2-1.4 µs to record on the render thread.
+
+  In all, the paused 3D frame costs 6.2 ms more than the flat one.
+- **IsoRim's own frame update is small.** `View3D.Tick`, which holds the unbatched effects of 1.3, takes 0.3 ms.
+- **The render thread is the next limit.** It records for 7.2-8.6 ms per frame in 3D, against 12.7 ms on the main
+  thread. Any main-thread saving beyond about 4-5 ms in 3D makes the render thread the limit.
+- **Persistent draws are always 0.** Section meshes go through the same per-frame immediate path as everything
+  else.
+
+**Tick work per Timer tick, set 2** (ms; per-pawn hooks added about 2-4% of overhead)
+
+| Part | 3D, Superfast (36.8 Timer/s) | 3D, Normal (51.8 Timer/s) | Flat, Superfast (55.8 Timer/s) |
+|---|---|---|---|
+| Normal tick list, all | 5.87 | 1.98 | 5.70 |
+| … pawns: animals, `Tick()` | 1.32 | 0.62 | 1.51 |
+| … pawns: animals, `TickInterval` | 0.42 | 0.18 | 0.61 |
+| … pawns: humanlike, `Tick()` | 0.88 | 0.31 | 0.69 |
+| … pawns: humanlike, `TickInterval` | 1.02 | 0.27 | 1.04 |
+| … pawns: other (mechs etc.), both | 0.50 | 0.15 | 0.52 |
+| … everything else in the normal list | 1.73 | 0.46 | 1.32 |
+| `Map.MapPostTick` | 1.51 | 0.27 | 0.84 |
+| Multiplayer's per-tick `ProcessPostTickVisuals` | 0.64 | 0.19 | 0.46 |
+| `Map.MapPreTick` | 0.36 | 0.20 | 0.52 |
+| Long and rare tick lists, quests, path jobs | 0.37 | 0.12 | 0.42 |
+| World tick (`AsyncWorldTimeComp.Tick`) | 1.74 | 0.57 | 1.73 |
+| **Sum / measured Timer tick** | **10.50 / 10.66** | **3.32 / 3.36** | **9.68 / 9.77** |
+
+- **Pawns are about 40% of the tick:** animals 17%, humanlike 18%, other 5%.
+- **Other large parts:**
+  - non-pawn normal tickers: 16%;
+  - `MapPostTick`: 14%;
+  - the world tick: 17%, that is 0.29 ms per world tick. Its contents weren't broken down.
+  - Multiplayer's per-tick post-tick visuals: 6%.
+- **The settlement map** (no colonists) costs 0.47 ms per tick against the colony's 0.93 ms, so about 28% of a
+  Superfast Timer tick.
+
+### 6.4 Section rebuilds in 3D (S7)
+
+Set 3, 3D at Superfast. Run 1 shows the same pattern in every running scenario.
+
+| Window | Sections rebuilt/s | Section rebuild time per frame (ms) | `SectionLayer_Things` | `SectionLayer_IsoRimWalls` | `SectionLayer_IsoRimBodies` | Other layers |
+|---|---|---|---|---|---|---|
+| 3D, quiet (night) | 7.6 | 1.31 (54 ms/s) | 8.1 ms per call, 46 ms/s | 1.2 ms, 6.6 ms/s | 0.05 ms, 0.3 ms/s | 0.6 ms/s |
+| 3D, busy (day) | 16.0 | 5.00 (161 ms/s) | 9.0 ms per call, 136 ms/s | 1.5 ms, 23 ms/s | 0.06 ms, 1.0 ms/s | 0.7 ms/s |
+| Flat | 4.1 | 0.03 (1.7 ms/s) | 0.38 ms per call | 0.004 ms | - | - |
+
+- **One section rebuild costs 7-10 ms in 3D, against 0.4 ms flat.** 85% of it is the game's
+  `SectionLayer_Things` printed in 3D, and 15% is IsoRim's walls layer. A rebuild runs whenever an item in the
+  section moves, so hauling drives it.
+- **This is the day/night swing.**
+  - At Superfast in 3D, run 1 measured 41-44 Timer ticks/s at night against 30-31 by day (S5 baselines at 03h,
+    14h and 02h).
+  - At Ultrafast it took 11.3 ms per frame (21 rebuilds/s).
+  - One rebuild in a frame is also a 7-10 ms spike.
+- **4(a) as written in section 2 fixes only the walls layer**, about 15% of this cost. Cell texture uploads were
+  0-0.3 per second and IsoRim's cell map update cost 0.05 ms per frame or less: negligible.
+
+### 6.5 Pawn interval rate (S4)
+
+Run 1 compared the rates in sequence, and its windows drifted with the time of day. Set 2 therefore interleaved
+them at Superfast in 3D: three cycles of 1, 15 and 3, 10 s each, game hours 2 to 12. The pawn-interval columns are
+`Pawn.TickInterval` time per Timer tick.
+
+| Window | Timer ticks/s | Timer tick ms | Colony map tick ms | Humanlike interval | Other pawns' interval | Interval total |
+|---|---|---|---|---|---|---|
+| Cycle 1, rate 1 | 40.3 | 10.16 | 0.911 | 1.07 | 0.18 | 1.25 |
+| Cycle 1, rate 15 | 39.8 | 10.04 | 0.899 | 0.60 | 0.06 | 0.66 |
+| Cycle 1, rate 3 | 39.5 | 10.18 | 0.907 | 0.74 | 0.11 | 0.85 |
+| Cycle 2, rate 1 | 33.6 | 11.72 | 1.093 | 1.30 | 0.18 | 1.48 |
+| Cycle 2, rate 15 | 28.1 | 11.86 | 1.163 | 0.85 | 0.07 | 0.92 |
+| Cycle 2, rate 3 (settlement forced to Normal) | 30.3 | 10.00 | 1.212 | 0.94 | 0.14 | 1.07 |
+| Cycle 3, rate 1 (settlement forced to Normal) | 29.6 | 10.02 | 1.220 | 1.23 | 0.20 | 1.43 |
+| Cycle 3, rate 15 (settlement forced to Normal) | 31.6 | 8.92 | 1.060 | 0.66 | 0.07 | 0.73 |
+| Cycle 3, rate 3 (settlement forced to Normal) | 30.1 | 9.61 | 1.168 | 0.94 | 0.13 | 1.08 |
+
+- **Rate 3 saves 0.40 ms per Superfast Timer tick, about 4%** (mean interval total 1.39 → 1.00 ms). Rate 15
+  saves 0.62 ms. That is smaller than the drift between windows.
+- **Calls fall about 15-fold, time only about 2-fold.** Each call does more work at a longer interval: 6.6 µs per
+  humanlike call at rate 1, 57-82 µs at rate 15. Most interval work is gated by hash intervals, as 1.2 expected.
+- **Only 27 pawns use the rate** (11 colonists and 16 mechs); animals stay at 15. "Settlement forced to Normal" is
+  the game's threat slowdown (`forceNormalSpeedUntil`), which made that map tick once per Timer tick.
+
+### 6.6 IsoRim settings (S5), CPU side only
+
+The paused runs were at game hour 0, night, with no state drift. At Superfast, every Timer-tick figure followed
+the time of day, so only the draw-only frames compare.
+
+| Setting turned off | Paused: busy ms (median) | Paused: draw items | Superfast: draw-only busy ms (hour) |
+|---|---|---|---|
+| None (baselines) | 12.33 and 12.39 | 5,196 | 11.62 (03h), 11.15 (14h), 11.50 (02h), 11.37 (10h) |
+| antiAlias | 12.43 | 5,195 | 11.56 (06h) |
+| grade | 12.39 | 5,195 | 11.27 (08h) |
+| lampFacing | 12.35 | 5,196 | 11.61 (10h) |
+| lampHalos | 12.33 | 5,195 | 11.01 (12h) |
+| faceShadows | 12.33 | 5,196 | 11.32 (16h) |
+| outlines | 12.26 | 5,053 | 11.02 (19h) |
+| trees3D | 12.09 | 4,930 | 11.01 (21h) |
+| smallPlants3D | 12.44 | 5,151 | 11.42 (23h) |
+| effects3D | 12.31 | 5,051 | 11.33 (05h) |
+| waterStyle | 12.21 | 5,055 | 11.39 (08h) |
+| weather3D, rain forced: on → off | 14.10 → 12.34 | 5,196 → 5,197 | 13.05 → 11.82 (12h, 14h) |
+
+- **Only 3D weather has a CPU cost: 1.8 ms per frame while it rains.** Every other setting stays within ±0.25 ms
+  of the baseline. trees3D (-0.24 ms, 266 fewer items) and outlines (-0.07 ms) are the largest.
+- **FXAA, grade, lamp facing, halos and face shadows are GPU work.** Their cost can only show in a GPU-bound
+  (4K) run.
+
+### 6.7 Hitches and garbage collection (run 1)
+
+| Scenario | Frame median ms | p99 | Max | GC gen0 / gen1 / gen2 in 30 s | GC pause, ms in 30 s | Allocated MB/s |
+|---|---|---|---|---|---|---|
+| Flat, paused | 8.3 | 11.7 | 23 | 10 / 0 / 0 | 25 | 5 |
+| 3D, paused | 12.8 | 16.9 | 19 | 52 / 3 / 0 | 201 | 28 |
+| 3D, Normal | 15.4 | 26.9 | 53 | 53 / 8 / 0 | 228 | 31 |
+| 3D, Fast | 18.0 | 31.9 | 85 | 62 / 17 / 1 | 272 | 37 |
+| 3D, Superfast | 22.3 | 40.5 | 72 | 69 / 19 / 0 | 324 | 44 |
+| 3D, Ultrafast | 52.9 | 103.4 | 132 | 98 / 53 / 2 | 535 | 113 |
+| Flat, Superfast | 17.7 | 27.0 | 63 | 56 / 11 / 0 | 329 | 30 |
+
+- **Drawing the paused 3D view allocates 28 MB/s, against 5 MB/s flat:** a gen0 collection every 0.6 s.
+- **GC pauses take 0.7-1.8% of the time,** about 3-4 ms each.
+- **What makes p99 1.7-2x the median in running 3D:** section rebuilds (7-10 ms each) and GC pauses.
+  Multiplayer's two-sample frame-time average passes such spikes on to the server's pacing (1.1).
+
+### 6.8 GPU hint: 2560x1440 against 1280x720, windowed, paused
+
+| Scenario | fps | Busy ms (median) | Render thread: record / GPU wait (ms per frame) | GPU load (nvidia-smi, 1 s samples) |
+|---|---|---|---|---|
+| 3D, 1280x720 | 81.8 | 12.44 | 7.0 / 0.04 | 38%, 652 MHz, 114 W |
+| 3D, 2560x1440 | 81.5 | 12.44 | 7.1 / 0.04 | 39%, 1134 MHz, 126 W |
+| Flat, 2560x1440 | 119.8 (vsync) | 6.86 | 3.0 / 4.80 (vsync) | 36%, 628 MHz, 111 W |
+
+- **2560x1440 has 44% of 4K's pixels, and the frame time didn't move.** The render thread never waited for the
+  GPU, and the GPU clocked up only to about 1.1 GHz. So the GPU isn't the limit at 1440p.
+- **4K is still unmeasured.** With 2.25x the pixels of 1440p it is plausible that the GPU stays below the 12 ms CPU
+  frame at this zoom, but that is an extrapolation.
+- **GPU during the running scenarios:** 13-38% load at 270-670 MHz.
+
+### 6.9 Interpretation and updated ranking
+
+**What the measurements settle**
+- **The user's slowdown on this PC is CPU-bound,** at least up to 1440p.
+  - Normal speed is almost full speed (94% in 3D).
+  - Superfast in 3D reaches 69% at night and about 50% by day.
+  - Ultrafast in 3D reaches 29%, no faster than Superfast.
+  - The flat view reaches 87% at Superfast and 50% at Ultrafast.
+- **About half of a Superfast frame is the 3D draw (R ≈ 12 ms) and half the ticks (T ≈ 10 ms),** and the session
+  runs one Timer tick per frame.
+- **By day, 3D section rebuilds add 5-11 ms per frame.**
+- **The "large colony" is large in things and animals, not in colonists:** 87,000 things on 2 maps, 144 animals,
+  11 colonists. Pawn-rate changes therefore have little to work on.
+
+**Updated ranking** (replaces the order of section 2 for this user; gains marked "est." are model estimates from
+the measured R and T)
+
+| # | Option | Measured basis | Expected gain |
+|---|---|---|---|
+| 1 | Session pacing: up to 2 Timer ticks per frame plus a smoothed report (old 1) | R ≈ 12 ms and T ≈ 10 ms at Superfast in 3D | Est. Superfast in 3D from 69% to about 100% at night, and from about 50% to about 85% by day; Ultrafast from 17 to about 24 Timer ticks/s |
+| 2 | **New:** cheaper 3D section rebuilds | `SectionLayer_Things` takes 8-9 ms per rebuild in 3D, 21-24x flat; 7-21 rebuilds/s; 5-11 ms per frame by day; 7-10 ms spikes | Up to 5-11 ms per frame by day at fast speeds, most of the day/night swing, and smaller p99. Options: rebuild only the moved thing's part (cache each thing's baked mesh), keep haulable items out of the section mesh (draw them instanced), and a per-frame rebuild budget. Old 4(a) covers only the walls layer (about 15%) |
+| 3 | Fewer draw items in 3D (old 7, level of detail at this far zoom, and old 8, single-pass lighting) | 5,200 items in 3D against 2,350 flat; about 2 µs per item on the main thread (capture 1.0, submission 0.8-0.9) and 1.2-1.4 µs on the render thread | Est. 2-3 ms per frame if IsoRim's extra 2,850 items drop by a third to a half. The render thread, at 7-8.6 ms, then becomes the limit |
+| 4 | Allocation in the 3D draw path | 28 MB/s paused in 3D against 5 MB/s flat; up to 113 MB/s at Ultrafast | Fewer gen0 and gen1 collections and smaller spikes; size unknown until profiled |
+| 5 | Tick-side items other than the pawn rate | World tick 17% (0.29 ms per world tick, contents unknown); Multiplayer's per-tick post-tick visuals 6%; animals' `Tick()` 12% | Each a few percent of T. They need a look before any claim: post-tick visuals were moved into the tick on purpose, and determinism comes first |
+| 6 | Synced pawn interval rate 3 (old 2) | Interleaved A/B: 0.40 ms of 10 ms per Superfast Timer tick | About 4%. Demoted |
+| 7 | 3D weather off while it rains (user setting) | 1.8 ms per frame CPU | Quick win, no code |
+| 8 | Render scale (old 3), FXAA and grade merged (old 5), foveated shading (old 6) | GPU not the limit at 720p or 1440p; their settings cost nothing on the CPU | 0 on this evidence. Revisit only if a 4K run is GPU-bound |
+| 9 | Batching IsoRim's per-frame effects (old 4(b)) and pawn preparation on worker threads (old 9) | `View3D.Tick` 0.3 ms; thing draw 2.5-3.1 ms in 3D against 0.8 ms flat | Small: est. up to about 1.5 ms |
+
+The session-pacing estimate assumes a second Timer tick in a frame costs the same T. It is the change with the
+most core-timing risk, so it still needs the two-instance soak test of section 2.
+
+### 6.10 Measured, estimated and still open
+
+**Measured, at 1280x720 windowed (2560x1440 for 6.8 only), on this PC**
+- Frame time and busy time distributions.
+- Timer ticks/s, TPS, and tick time per Timer tick, per map tick and by part.
+- The main-thread breakdown, render-thread recording and GPU-wait time, and draw items per frame.
+- Section rebuilds by layer.
+- Pawn-rate A/B.
+- CPU effect of the IsoRim settings.
+- GC counts, pauses and allocation rate.
+
+**Estimated**
+- All gains in the ranking, from the measured R and T and per-item costs.
+- The cause of cheaper back-to-back ticks (warm caches).
+- The 4K GPU headroom (6.8).
+
+**Still needs a 4K or GPU run (the user hasn't agreed to a full-screen run yet)**
+- S1 and S2 at 3840x2160 full screen: GPU time per frame, and whether the render thread starts waiting.
+- The GPU cost of FXAA, grade, lamp facing, halos, face shadows and anisotropic filtering (S5 on the GPU side).
+- S6 day against night shading.
+- The value of render scale.
+
+**Not covered here**
+- The friend's PC and the two-instance pacing check (S8).
+- The contents of the world tick.
+- A profile of the 3D allocation sources.
+- The perspective camera and first person: the user plays orthographic.
+
+**Caveats**
+- The storyteller was off.
+- Both maps ran at the same speed.
+- Superfast numbers swing ±20% with the in-game hour (6.4).
+- The harness's own hooks were cheap in run 1. The per-pawn hooks of sets 2 and 3 add about 2-4% to their tick
+  times.
